@@ -2,63 +2,66 @@ package squirrel
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 )
 
-type Eq map[string]any
+type Eq map[string]interface{}
 
 type wherePart struct {
 	sql  string
-	args []any
+	args []interface{}
 }
 
-func newWherePart(pred any, args ...any) wherePart {
+func newWhereParts(pred interface{}, args ...interface{}) []wherePart {
 	switch p := pred.(type) {
+	case nil:
+		return nil
 	case Eq:
-		return whereEqMap(map[string]any(p))
-	case map[string]any:
+		return whereEqMap(map[string]interface{}(p))
+	case map[string]interface{}:
 		return whereEqMap(p)
 	case string:
-		return wherePart{sql: p, args: args}
-	default:
-		log.Panicf("expected string-keyed map or string, not %T", pred)
-	}
-	return wherePart{}
-}
-
-func whereEqMap(m map[string]any) wherePart {
-	sqlParts := []string{}
-	args := []any{}
-	
-	for key, val := range m {
-		var sqlPart string
-		
-		valVal := reflect.ValueOf(val)
-		if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
-			placeholders := make([]string, valVal.Len())
-			for i := 0; i < valVal.Len(); i++ {
-				placeholders[i] = "?"
-				args = append(args, valVal.Index(i).Interface())
-			}
-			sqlPart = fmt.Sprintf("%s IN (%s)", key, strings.Join(placeholders, ","))
+		if len(p) > 0 {
+			return []wherePart{{sql: p, args: args}}
 		} else {
-			args = append(args, val)
-			sqlPart = fmt.Sprintf("%s = ?", key)
+			return nil
 		}
-		
-		sqlParts = append(sqlParts, sqlPart)
+	default:
+		panic(fmt.Errorf("expected string-keyed map or string, not %T", pred))
 	}
-	
-	return wherePart{sql: strings.Join(sqlParts, " AND "), args: args}
 }
 
-func wherePartsToSql(parts []wherePart) (string, []any) {
-	sqls := make([]string, len(parts))
-	var args []any
-	for i, part := range parts {
-		sqls[i] = part.sql
+func whereEqMap(m map[string]interface{}) (parts []wherePart) {
+	for key, val := range m {
+		var part wherePart
+		if val == nil {
+			part.sql = fmt.Sprintf("%s IS NULL", key)
+		} else {
+			valVal := reflect.ValueOf(val)
+			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
+				placeholders := make([]string, valVal.Len())
+				for i := 0; i < valVal.Len(); i++ {
+					placeholders[i] = "?"
+					part.args = append(part.args, valVal.Index(i).Interface())
+				}
+				placeholdersStr := strings.Join(placeholders, ",")
+				part.sql = fmt.Sprintf("%s IN (%s)", key, placeholdersStr)
+			} else {
+				part.sql = fmt.Sprintf("%s = ?", key)
+				part.args = []interface{}{val}
+			}
+		}
+		parts = append(parts, part)
+	}
+	return
+}
+
+func wherePartsToSql(parts []wherePart) (string, []interface{}) {
+	sqls := make([]string, 0, len(parts))
+	var args []interface{}
+	for _, part := range parts {
+		sqls = append(sqls, part.sql)
 		args = append(args, part.args...)
 	}
 	return strings.Join(sqls, " AND "), args

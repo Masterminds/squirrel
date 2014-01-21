@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"strings"
 	"github.com/lann/builder"
@@ -19,7 +20,7 @@ type selectData struct {
 	Offset      string
 }
 
-func (data *selectData) ToSql() (sqlStr string, args []any, err error) {
+func (data *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(data.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
@@ -32,9 +33,9 @@ func (data *selectData) ToSql() (sqlStr string, args []any, err error) {
 	if data.Distinct {
 		sql.WriteString("DISTINCT ")
 	}
-	
+
 	sql.WriteString(strings.Join(data.Columns, ", "))
-	
+
 	if len(data.From) > 0 {
 		sql.WriteString(" FROM ")
 		sql.WriteString(data.From)
@@ -46,7 +47,7 @@ func (data *selectData) ToSql() (sqlStr string, args []any, err error) {
 		sql.WriteString(whereSql)
 		args = append(args, whereArgs...)
 	}
-	
+
 	if len(data.GroupBys) > 0 {
 		sql.WriteString(" GROUP BY ")
 		sql.WriteString(strings.Join(data.GroupBys, ", "))
@@ -63,7 +64,7 @@ func (data *selectData) ToSql() (sqlStr string, args []any, err error) {
 		sql.WriteString(" ORDER BY ")
 		sql.WriteString(strings.Join(data.OrderBys, ", "))
 	}
-	
+
 	if len(data.Limit) > 0 {
 		sql.WriteString(" LIMIT ")
 		sql.WriteString(data.Limit)
@@ -73,24 +74,41 @@ func (data *selectData) ToSql() (sqlStr string, args []any, err error) {
 		sql.WriteString(" OFFSET ")
 		sql.WriteString(data.Offset)
 	}
-	
+
 	sqlStr = sql.String()
+	fmt.Println("XXX")
+	fmt.Println(sqlStr)
+	fmt.Println("XXX")
 	return
 }
 
 type selectBuilder builder.Builder
 
-var emptySelectBuilder = builder.Register(selectBuilder{}, selectData{}).(selectBuilder)
+var newSelectBuilder = builder.Register(selectBuilder{}, selectData{}).(selectBuilder)
 
 func Select(columns ...string) selectBuilder {
-	return emptySelectBuilder.Columns(columns...)
+	return newSelectBuilder.Columns(columns...)
 }
 
-func (b selectBuilder) ToSql() (sqlStr string, args []any, err error) {
+func (b selectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
 }
-	
+
+func (b selectBuilder) ExecWith(db Execer) (sql.Result, error) {
+	return ExecWith(db, b)
+}
+
+func (b selectBuilder) QueryWith(db Queryer) (*sql.Rows, error) {
+	return QueryWith(db, b)
+}
+
+func (b selectBuilder) QueryRowWith(db QueryRower) *Row {
+	return QueryRowWith(db, b)
+}
+
+// Builder methods
+
 func (b selectBuilder) Distinct() selectBuilder {
 	return builder.Set(b, "Distinct", true).(selectBuilder)
 }
@@ -103,16 +121,16 @@ func (b selectBuilder) From(from string) selectBuilder {
 	return builder.Set(b, "From", from).(selectBuilder)
 }
 
-func (b selectBuilder) Where(pred any, rest ...any) selectBuilder {
-	return builder.Append(b, "WhereParts", newWherePart(pred, rest...)).(selectBuilder)
+func (b selectBuilder) Where(pred interface{}, rest ...interface{}) selectBuilder {
+	return builder.Extend(b, "WhereParts", newWhereParts(pred, rest...)).(selectBuilder)
 }
 
 func (b selectBuilder) GroupBy(groupBys ...string) selectBuilder {
 	return builder.Extend(b, "GroupBys", groupBys).(selectBuilder)
 }
 
-func (b selectBuilder) Having(pred any, rest ...any) selectBuilder {
-	return builder.Append(b, "HavingParts", newWherePart(pred, rest...)).(selectBuilder)
+func (b selectBuilder) Having(pred interface{}, rest ...interface{}) selectBuilder {
+	return builder.Extend(b, "HavingParts", newWhereParts(pred, rest...)).(selectBuilder)
 }
 
 func (b selectBuilder) OrderBy(orderBys ...string) selectBuilder {

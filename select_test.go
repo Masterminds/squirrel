@@ -3,11 +3,11 @@ package squirrel
 import (
 	"fmt"
 	"testing"
+	"github.com/lann/builder"
 )
 
 func TestSelectBuilderToSql(t *testing.T) {
-	sql, args, err := 
-		Select("x", "y", "z").
+	b := Select("x", "y", "z").
 		Distinct().
 		From("some_table").
 		Where("w = ?", 1).
@@ -17,7 +17,10 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Having("foo = bar").
 		OrderBy("x").
 		Limit(1).
-		Offset(2).
-		ToSql()
+		Offset(2)
+
+	fmt.Printf("%#v", builder.GetStruct(b))
+
+	sql, args, err := b.ToSql()
 	fmt.Println(sql, args, err)
 }
