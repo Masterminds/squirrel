@@ -15,7 +15,7 @@ type Queryer interface {
 }
 
 type QueryRower interface {
-	QueryRow(query string, args ...interface{}) *sql.Row
+	QueryRow(query string, args ...interface{}) RowScanner
 }
 
 type Runner interface {
@@ -40,19 +40,7 @@ func QueryWith(db Queryer, s Sqlizer) (rows *sql.Rows, err error) {
 	return db.Query(query, args...)
 }
 
-func QueryRowWith(db QueryRower, s Sqlizer) *Row {
+func QueryRowWith(db QueryRower, s Sqlizer) RowScanner {
 	query, args, err := s.ToSql()
-	return &Row{Row: db.QueryRow(query, args...), err: err}
-}
-
-type Row struct {
-	*sql.Row
-	err error
-}
-
-func (r *Row) Scan(dest ...interface{}) error {
-	if r.err != nil {
-		return r.err
-	}
-	return r.Row.Scan(dest...)
+	return &Row{RowScanner: db.QueryRow(query, args...), err: err}
 }

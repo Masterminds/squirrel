@@ -37,7 +37,7 @@ func (d *selectData) Query() (*sql.Rows, error) {
 	return QueryWith(d.RunWith, d)
 }
 
-func (d *selectData) QueryRow() *Row  {
+func (d *selectData) QueryRow() RowScanner  {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
@@ -133,7 +133,7 @@ func (b selectBuilder) Query() (*sql.Rows, error) {
 	return data.Query()
 }
 
-func (b selectBuilder) QueryRow() *Row  {
+func (b selectBuilder) QueryRow() RowScanner  {
 	data := builder.GetStruct(b).(selectData)
 	return data.QueryRow()
 }

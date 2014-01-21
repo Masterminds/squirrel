@@ -20,7 +20,6 @@ func (sc *stmtCacher) Prepare(query string) (*sql.Stmt, error) {
 	if ok {
 		return stmt, nil
 	}
-
 	return sc.prep.Prepare(query)
 }
 
@@ -29,7 +28,6 @@ func (sc *stmtCacher) Exec(query string, args ...interface{}) (res sql.Result, e
 	if err != nil {
 		return
 	}
-
 	return stmt.Exec(args...)
 }
 
@@ -38,6 +36,13 @@ func (sc *stmtCacher) Query(query string, args ...interface{}) (rows *sql.Rows, 
 	if err != nil {
 		return
 	}
-
 	return stmt.Query(args...)
+}
+
+func (sc *stmtCacher) QueryRow(query string, args ...interface{}) RowScanner {
+	stmt, err := sc.Prepare(query)
+	if err != nil {
+		return &Row{err: err}
+	}
+	return stmt.QueryRow(args...)
 }
