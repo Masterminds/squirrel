@@ -20,7 +20,11 @@ func (sc *stmtCacher) Prepare(query string) (*sql.Stmt, error) {
 	if ok {
 		return stmt, nil
 	}
-	return sc.prep.Prepare(query)
+	stmt, err := sc.prep.Prepare(query)
+	if err == nil {
+		sc.cache[query] = stmt
+	}
+	return stmt, err
 }
 
 func (sc *stmtCacher) Exec(query string, args ...interface{}) (res sql.Result, err error) {

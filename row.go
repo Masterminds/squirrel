@@ -1,7 +1,5 @@
 package squirrel
 
-import "database/sql"
-
 type RowScanner interface {
 	Scan(...interface{}) error
 }
