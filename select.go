@@ -9,6 +9,7 @@ import (
 )
 
 type selectData struct {
+	RunWith     Runner
 	Distinct    bool
 	Columns     []string
 	From        string
@@ -20,8 +21,31 @@ type selectData struct {
 	Offset      string
 }
 
-func (data *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
-	if len(data.Columns) == 0 {
+var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
+
+func (d *selectData) Exec() (sql.Result, error) {
+	if d.RunWith == nil {
+		return nil, RunnerNotSet
+	}
+	return ExecWith(d.RunWith, d)
+}
+
+func (d *selectData) Query() (*sql.Rows, error) {
+	if d.RunWith == nil {
+		return nil, RunnerNotSet
+	}
+	return QueryWith(d.RunWith, d)
+}
+
+func (d *selectData) QueryRow() *Row  {
+	if d.RunWith == nil {
+		return &Row{err: RunnerNotSet}
+	}
+	return QueryRowWith(d.RunWith, d)
+}
+
+func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
+	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
 	}
@@ -30,57 +54,56 @@ func (data *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("SELECT ")
 
-	if data.Distinct {
+	if d.Distinct {
 		sql.WriteString("DISTINCT ")
 	}
 
-	sql.WriteString(strings.Join(data.Columns, ", "))
+	sql.WriteString(strings.Join(d.Columns, ", "))
 
-	if len(data.From) > 0 {
+	if len(d.From) > 0 {
 		sql.WriteString(" FROM ")
-		sql.WriteString(data.From)
+		sql.WriteString(d.From)
 	}
 
-	if len(data.WhereParts) > 0 {
+	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		whereSql, whereArgs := wherePartsToSql(data.WhereParts)
+		whereSql, whereArgs := wherePartsToSql(d.WhereParts)
 		sql.WriteString(whereSql)
 		args = append(args, whereArgs...)
 	}
 
-	if len(data.GroupBys) > 0 {
+	if len(d.GroupBys) > 0 {
 		sql.WriteString(" GROUP BY ")
-		sql.WriteString(strings.Join(data.GroupBys, ", "))
+		sql.WriteString(strings.Join(d.GroupBys, ", "))
 	}
 
-	if len(data.HavingParts) > 0 {
+	if len(d.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		havingSql, havingArgs := wherePartsToSql(data.HavingParts)
+		havingSql, havingArgs := wherePartsToSql(d.HavingParts)
 		sql.WriteString(havingSql)
 		args = append(args, havingArgs...)
 	}
 
-	if len(data.OrderBys) > 0 {
+	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(data.OrderBys, ", "))
+		sql.WriteString(strings.Join(d.OrderBys, ", "))
 	}
 
-	if len(data.Limit) > 0 {
+	if len(d.Limit) > 0 {
 		sql.WriteString(" LIMIT ")
-		sql.WriteString(data.Limit)
+		sql.WriteString(d.Limit)
 	}
 
-	if len(data.Offset) > 0 {
+	if len(d.Offset) > 0 {
 		sql.WriteString(" OFFSET ")
-		sql.WriteString(data.Offset)
+		sql.WriteString(d.Offset)
 	}
 
 	sqlStr = sql.String()
-	fmt.Println("XXX")
-	fmt.Println(sqlStr)
-	fmt.Println("XXX")
 	return
 }
+
+// Builder
 
 type selectBuilder builder.Builder
 
@@ -90,24 +113,41 @@ func Select(columns ...string) selectBuilder {
 	return newSelectBuilder.Columns(columns...)
 }
 
-func (b selectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+func selectWith(runner Runner, columns ...string) selectBuilder {
+	return Select(columns...).RunWith(runner)
+}
+
+// Runner methods
+
+func (b selectBuilder) RunWith(runner Runner) selectBuilder {
+	return builder.Set(b, "RunWith", runner).(selectBuilder)
+}
+
+func (b selectBuilder) Exec() (sql.Result, error) {
+	data := builder.GetStruct(b).(selectData)
+	return data.Exec()
+}
+
+func (b selectBuilder) Query() (*sql.Rows, error) {
+	data := builder.GetStruct(b).(selectData)
+	return data.Query()
+}
+
+func (b selectBuilder) QueryRow() *Row  {
+	data := builder.GetStruct(b).(selectData)
+	return data.QueryRow()
+}
+
+func (b selectBuilder) Scan(dest ...interface{}) error {
+	return b.QueryRow().Scan(dest...)
+}
+
+// SQL methods
+
+func (b selectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
 }
-
-func (b selectBuilder) ExecWith(db Execer) (sql.Result, error) {
-	return ExecWith(db, b)
-}
-
-func (b selectBuilder) QueryWith(db Queryer) (*sql.Rows, error) {
-	return QueryWith(db, b)
-}
-
-func (b selectBuilder) QueryRowWith(db QueryRower) *Row {
-	return QueryRowWith(db, b)
-}
-
-// Builder methods
 
 func (b selectBuilder) Distinct() selectBuilder {
 	return builder.Set(b, "Distinct", true).(selectBuilder)
