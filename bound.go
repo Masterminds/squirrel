@@ -1,10 +1,14 @@
 package squirrel
 
+type BoundBuilder interface {
+	Select(columns ...string) selectBuilder
+}
+
 type boundBuilder struct {
 	runner Runner
 }
 
-func NewBoundBuilder(runner Runner) *boundBuilder {
+func NewBoundBuilder(runner Runner) BoundBuilder {
 	return &boundBuilder{runner}
 }
 
