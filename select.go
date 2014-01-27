@@ -107,14 +107,8 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 type selectBuilder builder.Builder
 
-var newSelectBuilder = builder.Register(selectBuilder{}, selectData{}).(selectBuilder)
-
-func Select(columns ...string) selectBuilder {
-	return newSelectBuilder.Columns(columns...)
-}
-
-func selectWith(runner Runner, columns ...string) selectBuilder {
-	return Select(columns...).RunWith(runner)
+func init() {
+	builder.Register(selectBuilder{}, selectData{})
 }
 
 // Runner methods

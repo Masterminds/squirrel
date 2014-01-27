@@ -47,7 +47,7 @@ func TestSelectBuilderToSqlErr(t *testing.T) {
 
 func TestSelectBuilderRunners(t *testing.T) {
 	db := &DBStub{}
-	b := selectWith(db, "test")
+	b := Select("test").RunWith(db)
 
 	expectedSql := "SELECT test"
 
