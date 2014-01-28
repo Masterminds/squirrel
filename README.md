@@ -39,3 +39,8 @@ dbCache := NewStmtCache(db)
 mydb := StatementBuilder.RunWith(dbCache)
 select_users := mydb.Select("*").From("users")
 ```
+
+## License
+
+Builder is released under the
+[MIT License](http://www.opensource.org/licenses/MIT).
