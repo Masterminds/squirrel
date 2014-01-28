@@ -29,6 +29,14 @@ rows, err := db.Query("SELECT * FROM users WHERE username IN (?,?,?,?) LIMIT 3",
                       "moe", "larry", "curly", "shemp")
 ```
 
+Squirrel makes conditional query building a breeze:
+
+```go
+if len(q) > 0 {
+    users = users.Where("name LIKE ?", fmt.Sprint("%", q, "%"))
+}
+```
+
 Squirrel wants to make your life easier:
 
 ```go
