@@ -2,16 +2,30 @@ package squirrel
 
 import "database/sql"
 
-type preparer interface {
+// Prepareer is the interface that wraps the Prepare method.
+//
+// Prepare executes the given query as implemented by database/sql.Prepare.
+type Preparer interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+// DBProxy groups the Execer, Queryer, QueryRower, and Preparer interfaces.
+type DBProxy interface {
+	Execer
+	Queryer
+	QueryRower
+	Preparer
+}
+
 type stmtCacher struct {
-	prep  preparer
+	prep  Preparer
 	cache map[string]*sql.Stmt
 }
 
-func NewStmtCacher(prep preparer) *stmtCacher {
+// NewStmtCacher returns a DBProxy wrapping prep that caches Prepared Stmts.
+//
+// Stmts are cached based on the string value of their queries.
+func NewStmtCacher(prep Preparer) DBProxy {
 	return &stmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
 }
 

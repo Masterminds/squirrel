@@ -21,6 +21,7 @@ type selectData struct {
 	Offset      string
 }
 
+// RunnerNotSet is returned by methods that use RunWith if it isn't set.
 var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
 
 func (d *selectData) Exec() (sql.Result, error) {
@@ -105,76 +106,113 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 // Builder
 
-type selectBuilder builder.Builder
+// SelectBuilder builds SQL SELECT statements.
+type SelectBuilder builder.Builder
 
 func init() {
-	builder.Register(selectBuilder{}, selectData{})
+	builder.Register(SelectBuilder{}, selectData{})
 }
 
 // Runner methods
 
-func (b selectBuilder) RunWith(runner Runner) selectBuilder {
-	return builder.Set(b, "RunWith", runner).(selectBuilder)
+// RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
+func (b SelectBuilder) RunWith(runner Runner) SelectBuilder {
+	return builder.Set(b, "RunWith", runner).(SelectBuilder)
 }
 
-func (b selectBuilder) Exec() (sql.Result, error) {
+// Exec builds and Execs the query with the Runner set by RunWith.
+func (b SelectBuilder) Exec() (sql.Result, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.Exec()
 }
 
-func (b selectBuilder) Query() (*sql.Rows, error) {
+// Query builds and Querys the query with the Runner set by RunWith.
+func (b SelectBuilder) Query() (*sql.Rows, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.Query()
 }
 
-func (b selectBuilder) QueryRow() RowScanner  {
+// QueryRow builds and QueryRows the query with the Runner set by RunWith.
+func (b SelectBuilder) QueryRow() RowScanner  {
 	data := builder.GetStruct(b).(selectData)
 	return data.QueryRow()
 }
 
-func (b selectBuilder) Scan(dest ...interface{}) error {
+// Scan is a shortcut for QueryRow().Scan.
+func (b SelectBuilder) Scan(dest ...interface{}) error {
 	return b.QueryRow().Scan(dest...)
 }
 
 // SQL methods
 
-func (b selectBuilder) ToSql() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args.
+func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
 }
 
-func (b selectBuilder) Distinct() selectBuilder {
-	return builder.Set(b, "Distinct", true).(selectBuilder)
+// Distinct adds a DISTINCT clause to the query.
+func (b SelectBuilder) Distinct() SelectBuilder {
+	return builder.Set(b, "Distinct", true).(SelectBuilder)
 }
 
-func (b selectBuilder) Columns(columns ...string) selectBuilder {
-	return builder.Extend(b, "Columns", columns).(selectBuilder)
+// Columns adds result columns to the query.
+func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
+	return builder.Extend(b, "Columns", columns).(SelectBuilder)
 }
 
-func (b selectBuilder) From(from string) selectBuilder {
-	return builder.Set(b, "From", from).(selectBuilder)
+// From sets the FROM clause of the query.
+func (b SelectBuilder) From(from string) SelectBuilder {
+	return builder.Set(b, "From", from).(SelectBuilder)
 }
 
-func (b selectBuilder) Where(pred interface{}, rest ...interface{}) selectBuilder {
-	return builder.Extend(b, "WhereParts", newWhereParts(pred, rest...)).(selectBuilder)
+// Where adds an expression to the WHERE clause of the query.
+//
+// Expressions are ANDed together in the generated SQL.
+//
+// Where accepts several types for its pred argument:
+//
+// nil OR "" - ignored.
+//
+// string - SQL expression.
+// If the expression has SQL placeholders then a set of arguments must be passed
+// as well, one for each placeholder.
+//
+// map[string]interface{} OR Eq - map of SQL expressions to values. Each key is
+// transformed into an expression like "<key> = ?", with the corresponding value
+// bound to the placeholder. If the value is nil, the expression will be "<key>
+// IS NULL". If the value is an array or slice, the expression will be "<key> IN
+// (?,?,...)", with one placeholder for each item in the value. These expressions
+// are ANDed together.
+//
+// Where will panic if pred isn't any of the above types.
+func (b SelectBuilder) Where(pred interface{}, args ...interface{}) SelectBuilder {
+	return builder.Extend(b, "WhereParts", newWhereParts(pred, args...)).(SelectBuilder)
 }
 
-func (b selectBuilder) GroupBy(groupBys ...string) selectBuilder {
-	return builder.Extend(b, "GroupBys", groupBys).(selectBuilder)
+// GroupBy adds GROUP BY expressions to the query.
+func (b SelectBuilder) GroupBy(groupBys ...string) SelectBuilder {
+	return builder.Extend(b, "GroupBys", groupBys).(SelectBuilder)
 }
 
-func (b selectBuilder) Having(pred interface{}, rest ...interface{}) selectBuilder {
-	return builder.Extend(b, "HavingParts", newWhereParts(pred, rest...)).(selectBuilder)
+// Having adds an expression to the HAVING clause of the query.
+//
+// See Where.
+func (b SelectBuilder) Having(pred interface{}, rest ...interface{}) SelectBuilder {
+	return builder.Extend(b, "HavingParts", newWhereParts(pred, rest...)).(SelectBuilder)
 }
 
-func (b selectBuilder) OrderBy(orderBys ...string) selectBuilder {
-	return builder.Extend(b, "OrderBys", orderBys).(selectBuilder)
+// OrderBy adds ORDER BY expressions to the query.
+func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
+	return builder.Extend(b, "OrderBys", orderBys).(SelectBuilder)
 }
 
-func (b selectBuilder) Limit(limit uint64) selectBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(selectBuilder)
+// Limit sets a LIMIT clause on the query.
+func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
+	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
 }
 
-func (b selectBuilder) Offset(offset uint64) selectBuilder {
-	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(selectBuilder)
+// Offset sets a OFFSET clause on the query.
+func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
+	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
 }

@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// Eq is syntactic sugar for use with the Where/Having methods.
+// Ex:
+//     .Where(Eq{"id": 1})
 type Eq map[string]interface{}
 
 type wherePart struct {
