@@ -11,7 +11,8 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Columns("c").
 		From("d").
 		Where("e = ?", 1).
-		Where(Eq{"f": 2, "g": 3}).
+		Where(Eq{"f": 2}).
+		Where(map[string]interface{}{"g": 3}).
 		Where(Eq{"h": []int{4,5,6}}).
 		GroupBy("i").
 		Having("j = k").

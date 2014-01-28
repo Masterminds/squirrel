@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -17,6 +18,11 @@ func TestNewWherePartsNil(t *testing.T) {
 	}
 }
 
+type bySql []wherePart
+func (a bySql) Len() int           { return len(a) }
+func (a bySql) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a bySql) Less(i, j int) bool { return a[i].sql < a[j].sql }
+
 func TestNewWherePartsEqMap(t *testing.T) {
 	m := map[string]interface{}{"a": 1, "b": nil, "c": []int{2, 3}}
 	eq := Eq(m)
@@ -28,6 +34,7 @@ func TestNewWherePartsEqMap(t *testing.T) {
 
 	check := func(pred interface{}) {
 		parts := newWhereParts(pred)
+		sort.Sort(bySql(parts))
 		if !reflect.DeepEqual(parts, expected) {
 			t.Errorf("expected %v, got %v", expected, parts)
 		}
