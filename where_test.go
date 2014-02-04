@@ -2,54 +2,85 @@ package squirrel
 
 import (
 	"reflect"
-	"sort"
 	"testing"
 )
 
-func TestNewWherePartsNil(t *testing.T) {
-	parts := newWhereParts(nil)
-	if parts != nil {
-		t.Errorf("expected nil, got %v", parts)
+func TestWherePartsToSql(t *testing.T) {
+	parts := []wherePart{
+		newWherePart("x = ?", 1),
+		newWherePart(nil),
+		newWherePart(Eq{"y": 2}),
 	}
-
-	parts = newWhereParts("")
-	if parts != nil {
-		t.Errorf("expected nil, got %v", parts)
+	sql, args, _ := wherePartsToSql(parts)
+	expect := "x = ? AND y = ?"
+	expectArgs := []interface{}{1, 2}
+	if sql != expect {
+		t.Errorf("expected %#v, got %#v", expect, sql)
+	}
+	if !reflect.DeepEqual(args, expectArgs) {
+		t.Errorf("expected %#v, got %#v", expectArgs, args)
 	}
 }
 
-type bySql []wherePart
-func (a bySql) Len() int           { return len(a) }
-func (a bySql) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a bySql) Less(i, j int) bool { return a[i].sql < a[j].sql }
-
-func TestNewWherePartsEqMap(t *testing.T) {
-	m := map[string]interface{}{"a": 1, "b": nil, "c": []int{2, 3}}
-	eq := Eq(m)
-	expected := []wherePart{
-		{sql: "a = ?", args: []interface{}{1}},
-		{sql: "b IS NULL"},
-		{sql: "c IN (?,?)", args: []interface{}{2, 3}},
+func TestWherePartsToSqlErr(t *testing.T) {
+	_, _, err := wherePartsToSql([]wherePart{newWherePart(1)})
+	if err == nil {
+		t.Errorf("expected error, got none")
 	}
+}
 
-	check := func(pred interface{}) {
-		parts := newWhereParts(pred)
-		sort.Sort(bySql(parts))
-		if !reflect.DeepEqual(parts, expected) {
-			t.Errorf("expected %v, got %v", expected, parts)
+func TestWherePartNil(t *testing.T) {
+	sql, _, _ := newWherePart(nil).ToSql()
+	expect := ""
+	if sql != expect {
+		t.Errorf("expected %#v, got %#v", expect, sql)
+	}
+}
+
+func TestWherePartErr(t *testing.T) {
+	_, _, err := newWherePart(1).ToSql()
+	if err == nil {
+		t.Errorf("expected error, got none")
+	}
+}
+
+func TestWherePartString(t *testing.T) {
+	sql, args, _ := newWherePart("x = ?", 1).ToSql()
+	expect := "x = ?"
+	expectArgs := []interface{}{1}
+	if sql != "x = ?" {
+		t.Errorf("expected %#v, got %#v", expect, sql)
+	}
+	if !reflect.DeepEqual(args, expectArgs) {
+		t.Errorf("expected %#v, got %#v", expectArgs, args)
+	}
+}
+
+func TestWherePartMap(t *testing.T) {
+	test := func(pred interface{}) {
+		sql, _, _ := newWherePart(pred).ToSql()
+		expect := []string{"x = ? AND y = ?", "y = ? AND x = ?"}
+		if sql != expect[0] && sql != expect[1] {
+			t.Errorf("expected one of %#v, got %#v", expect, sql)
 		}
 	}
-	check(m)
-	check(eq)
+	m := map[string]interface{}{"x": 1, "y": 2}
+	test(m)
+	test(Eq(m))
 }
 
-func TestNewWherePartsPanic(t *testing.T) {
-	var panicVal error
-	func() {
-		defer func() { panicVal = recover().(error) }()
-		newWhereParts(false)
-	}()
-	if panicVal == nil {
-		t.Errorf("expected panic, didn't")
+func TestWherePartMapNil(t *testing.T) {
+	sql, _, _ := newWherePart(Eq{"x": nil}).ToSql()
+	expect := "x IS NULL"
+	if sql != expect {
+		t.Errorf("expected %#v, got %#v", expect, sql)
+	}
+}
+
+func TestWherePartMapSlice(t *testing.T) {
+	sql, _, _ := newWherePart(Eq{"x": []int{1, 2}}).ToSql()
+	expect := "x IN (?,?)"
+	if sql != expect {
+		t.Errorf("expected %#v, got %#v", expect, sql)
 	}
 }

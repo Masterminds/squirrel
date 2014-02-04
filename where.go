@@ -12,60 +12,70 @@ import (
 type Eq map[string]interface{}
 
 type wherePart struct {
-	sql  string
+	pred interface{}
 	args []interface{}
 }
 
-func newWhereParts(pred interface{}, args ...interface{}) []wherePart {
-	switch p := pred.(type) {
-	case nil:
-		return nil
-	case Eq:
-		return whereEqMap(map[string]interface{}(p))
-	case map[string]interface{}:
-		return whereEqMap(p)
-	case string:
-		if len(p) > 0 {
-			return []wherePart{{sql: p, args: args}}
-		} else {
-			return nil
-		}
-	default:
-		panic(fmt.Errorf("expected string-keyed map or string, not %T", pred))
-	}
+func newWherePart(pred interface{}, args ...interface{}) wherePart {
+	return wherePart{pred: pred, args: args}
 }
 
-func whereEqMap(m map[string]interface{}) (parts []wherePart) {
+func wherePartsToSql(parts []wherePart) (string, []interface{}, error) {
+	sqls := make([]string, 0, len(parts))
+	var args []interface{}
+	for _, part := range parts {
+		partSql, partArgs, err := part.ToSql()
+		if err != nil {
+			return "", []interface{}{}, err
+		}
+		if len(partSql) > 0 {
+			sqls = append(sqls, partSql)
+			args = append(args, partArgs...)
+		}
+	}
+	return strings.Join(sqls, " AND "), args, nil
+}
+
+func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
+	switch pred := p.pred.(type) {
+	case nil:
+		// no-op
+	case Eq:
+		return whereEqMap(map[string]interface{}(pred))
+	case map[string]interface{}:
+		return whereEqMap(pred)
+	case string:
+		sql = pred
+		args = p.args
+	default:
+		err = fmt.Errorf("expected string-keyed map or string, not %T", pred)
+	}
+	return
+}
+
+func whereEqMap(m map[string]interface{}) (sql string, args []interface{}, err error) {
+	var exprs []string
 	for key, val := range m {
-		var part wherePart
+		expr := ""
 		if val == nil {
-			part.sql = fmt.Sprintf("%s IS NULL", key)
+			expr = fmt.Sprintf("%s IS NULL", key)
 		} else {
 			valVal := reflect.ValueOf(val)
 			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
 				placeholders := make([]string, valVal.Len())
 				for i := 0; i < valVal.Len(); i++ {
 					placeholders[i] = "?"
-					part.args = append(part.args, valVal.Index(i).Interface())
+					args = append(args, valVal.Index(i).Interface())
 				}
 				placeholdersStr := strings.Join(placeholders, ",")
-				part.sql = fmt.Sprintf("%s IN (%s)", key, placeholdersStr)
+				expr = fmt.Sprintf("%s IN (%s)", key, placeholdersStr)
 			} else {
-				part.sql = fmt.Sprintf("%s = ?", key)
-				part.args = []interface{}{val}
+				expr = fmt.Sprintf("%s = ?", key)
+				args = append(args, val)
 			}
 		}
-		parts = append(parts, part)
+		exprs = append(exprs, expr)
 	}
+	sql = strings.Join(exprs, " AND ")
 	return
-}
-
-func wherePartsToSql(parts []wherePart) (string, []interface{}) {
-	sqls := make([]string, 0, len(parts))
-	var args []interface{}
-	for _, part := range parts {
-		sqls = append(sqls, part.sql)
-		args = append(args, part.args...)
-	}
-	return strings.Join(sqls, " AND "), args
 }

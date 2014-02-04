@@ -68,7 +68,9 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		whereSql, whereArgs := wherePartsToSql(d.WhereParts)
+		var whereSql string
+		var whereArgs []interface{}
+		whereSql, whereArgs, err = wherePartsToSql(d.WhereParts)
 		sql.WriteString(whereSql)
 		args = append(args, whereArgs...)
 	}
@@ -80,7 +82,9 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		havingSql, havingArgs := wherePartsToSql(d.HavingParts)
+		var havingSql string
+		var havingArgs []interface{}
+		havingSql, havingArgs, err = wherePartsToSql(d.HavingParts)
 		sql.WriteString(havingSql)
 		args = append(args, havingArgs...)
 	}
@@ -187,7 +191,7 @@ func (b SelectBuilder) From(from string) SelectBuilder {
 //
 // Where will panic if pred isn't any of the above types.
 func (b SelectBuilder) Where(pred interface{}, args ...interface{}) SelectBuilder {
-	return builder.Extend(b, "WhereParts", newWhereParts(pred, args...)).(SelectBuilder)
+	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(SelectBuilder)
 }
 
 // GroupBy adds GROUP BY expressions to the query.
@@ -199,7 +203,7 @@ func (b SelectBuilder) GroupBy(groupBys ...string) SelectBuilder {
 //
 // See Where.
 func (b SelectBuilder) Having(pred interface{}, rest ...interface{}) SelectBuilder {
-	return builder.Extend(b, "HavingParts", newWhereParts(pred, rest...)).(SelectBuilder)
+	return builder.Append(b, "HavingParts", newWherePart(pred, rest...)).(SelectBuilder)
 }
 
 // OrderBy adds ORDER BY expressions to the query.
