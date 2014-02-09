@@ -10,13 +10,18 @@ func (b StatementBuilderType) Select(columns ...string) SelectBuilder {
 	return SelectBuilder(b).Columns(columns...)
 }
 
+// PlaceholderFormat sets the PlaceholderFormat field for any child builders.
+func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
+	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
+}
+
 // RunWith sets the RunWith field for any child builders.
 func (b StatementBuilderType) RunWith(runner Runner) StatementBuilderType {
 	return builder.Set(b, "RunWith", runner).(StatementBuilderType)
 }
 
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.
-var StatementBuilder = StatementBuilderType(builder.EmptyBuilder)
+var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFormat(Question)
 
 // Select returns a new SelectBuilder, optionally setting some result columns.
 //

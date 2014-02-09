@@ -46,6 +46,22 @@ func TestSelectBuilderToSqlErr(t *testing.T) {
 	}
 }
 
+func TestSelectBuilderPlaceholders(t *testing.T) {
+	b := Select("test").Where("x = ? AND y = ?")
+
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
+	expect := "SELECT test WHERE x = ? AND y = ?"
+	if sql != expect {
+		t.Errorf("expected %v, got %v", expect, sql)
+	}
+
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
+	expect = "SELECT test WHERE x = $1 AND y = $2"
+	if sql != expect {
+		t.Errorf("expected %v, got %v", expect, sql)
+	}
+}
+
 func TestSelectBuilderRunners(t *testing.T) {
 	db := &DBStub{}
 	b := Select("test").RunWith(db)
