@@ -9,16 +9,17 @@ import (
 )
 
 type selectData struct {
-	RunWith     Runner
-	Distinct    bool
-	Columns     []string
-	From        string
-	WhereParts  []wherePart
-	GroupBys    []string
-	HavingParts []wherePart
-	OrderBys    []string
-	Limit       string
-	Offset      string
+	PlaceholderFormat PlaceholderFormat
+	RunWith           Runner
+	Distinct          bool
+	Columns           []string
+	From              string
+	WhereParts        []wherePart
+	GroupBys          []string
+	HavingParts       []wherePart
+	OrderBys          []string
+	Limit             string
+	Offset            string
 }
 
 // RunnerNotSet is returned by methods that use RunWith if it isn't set.
@@ -103,8 +104,7 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" OFFSET ")
 		sql.WriteString(d.Offset)
 	}
-
-	sqlStr = sql.String()
+	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
 
@@ -115,6 +115,14 @@ type SelectBuilder builder.Builder
 
 func init() {
 	builder.Register(SelectBuilder{}, selectData{})
+}
+
+// Format methods
+
+// PlaceholderFormat sets PlaceholderFormat (e.g. Question or Dollar) for the
+// query.
+func (b SelectBuilder) PlaceholderFormat(f PlaceholderFormat) SelectBuilder {
+	return builder.Set(b, "PlaceholderFormat", f).(SelectBuilder)
 }
 
 // Runner methods
