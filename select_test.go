@@ -14,7 +14,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Where("e = ?", 1).
 		Where(Eq{"f": 2}).
 		Where(map[string]interface{}{"g": 3}).
-		Where(Eq{"h": []int{4,5,6}}).
+		Where(Eq{"h": []int{4, 5, 6}}).
 		GroupBy("i").
 		Having("j = k").
 		OrderBy("l").
@@ -26,8 +26,8 @@ func TestSelectBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"SELECT DISTINCT a, b, c FROM d " +
-		"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-		"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8"
+			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
+			"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3, 4, 5, 6}

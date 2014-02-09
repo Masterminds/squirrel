@@ -9,16 +9,16 @@ import (
 )
 
 type DBStub struct {
-	err              error
+	err error
 
-	LastPrepareSql   string
-	PrepareCount     int
+	LastPrepareSql string
+	PrepareCount   int
 
-	LastExecSql      string
-	LastExecArgs     []interface{}
+	LastExecSql  string
+	LastExecArgs []interface{}
 
-	LastQuerySql     string
-	LastQueryArgs    []interface{}
+	LastQuerySql  string
+	LastQueryArgs []interface{}
 
 	LastQueryRowSql  string
 	LastQueryRowArgs []interface{}

@@ -21,7 +21,7 @@ var (
 
 	// Dollar is a PlaceholderFormat instance that replaces placeholders with
 	// dollar-prefixed positional placeholders (e.g. $1, $2, $3).
-	Dollar   = dollarFormat{}
+	Dollar = dollarFormat{}
 )
 
 type questionFormat struct{}
@@ -34,7 +34,7 @@ type dollarFormat struct{}
 
 func (_ dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 	buf := &bytes.Buffer{}
-	for i := 1;; i++ {
+	for i := 1; ; i++ {
 		p := strings.Index(sql, "?")
 		if p == -1 {
 			break
@@ -42,7 +42,7 @@ func (_ dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 
 		buf.WriteString(sql[:p])
 		fmt.Fprintf(buf, "$%d", i)
-		sql = sql[p + 1:]
+		sql = sql[p+1:]
 	}
 
 	buf.WriteString(sql)

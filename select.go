@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
 	"github.com/lann/builder"
+	"strings"
 )
 
 type selectData struct {
@@ -39,7 +39,7 @@ func (d *selectData) Query() (*sql.Rows, error) {
 	return QueryWith(d.RunWith, d)
 }
 
-func (d *selectData) QueryRow() RowScanner  {
+func (d *selectData) QueryRow() RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
@@ -145,7 +145,7 @@ func (b SelectBuilder) Query() (*sql.Rows, error) {
 }
 
 // QueryRow builds and QueryRows the query with the Runner set by RunWith.
-func (b SelectBuilder) QueryRow() RowScanner  {
+func (b SelectBuilder) QueryRow() RowScanner {
 	data := builder.GetStruct(b).(selectData)
 	return data.QueryRow()
 }
