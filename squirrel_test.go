@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type DBStub struct {
@@ -54,43 +56,31 @@ var sqlStr = "SELECT test"
 func TestExecWith(t *testing.T) {
 	db := &DBStub{}
 	ExecWith(db, sqlizer)
-	if db.LastExecSql != sqlStr {
-		t.Errorf("expected %v, got %v", sqlStr, db.LastExecSql)
-	}
+	assert.Equal(t, sqlStr, db.LastExecSql)
 }
 
 func TestQueryWith(t *testing.T) {
 	db := &DBStub{}
 	QueryWith(db, sqlizer)
-	if db.LastQuerySql != sqlStr {
-		t.Errorf("expected %v, got %v", sqlStr, db.LastQuerySql)
-	}
+	assert.Equal(t, sqlStr, db.LastQuerySql)
 }
 
 func TestQueryRowWith(t *testing.T) {
 	db := &DBStub{}
 	QueryRowWith(db, sqlizer)
-	if db.LastQueryRowSql != sqlStr {
-		t.Errorf("expected %v, got %v", sqlStr, db.LastQueryRowSql)
-	}
+	assert.Equal(t, sqlStr, db.LastQueryRowSql)
 }
 
 func TestWithToSqlErr(t *testing.T) {
 	db := &DBStub{}
-	sqlizer := Select()
+	sqlizer := Select("test")
 
 	_, err := ExecWith(db, sqlizer)
-	if err == nil {
-		t.Error("expected error, got none")
-	}
+	assert.NoError(t, err)
 
 	_, err = QueryWith(db, sqlizer)
-	if err == nil {
-		t.Error("expected error, got none")
-	}
+	assert.NoError(t, err)
 
 	err = QueryRowWith(db, sqlizer).Scan()
-	if err == nil {
-		t.Error("expected error, got none")
-	}
+	assert.NoError(t, err)
 }

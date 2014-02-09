@@ -3,6 +3,8 @@ package squirrel
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type RowStub struct {
@@ -18,12 +20,8 @@ func TestRowScan(t *testing.T) {
 	stub := &RowStub{}
 	row := &Row{RowScanner: stub}
 	err := row.Scan()
-	if !stub.Scanned {
-		t.Error("row was not scanned")
-	}
-	if err != nil {
-		t.Errorf("expected no error, got %s", err)
-	}
+	assert.True(t, stub.Scanned, "row was not scanned")
+	assert.NoError(t, err)
 }
 
 func TestRowScanErr(t *testing.T) {
@@ -31,10 +29,6 @@ func TestRowScanErr(t *testing.T) {
 	rowErr := fmt.Errorf("scan err")
 	row := &Row{RowScanner: stub, err: rowErr}
 	err := row.Scan()
-	if stub.Scanned {
-		t.Error("row was scanned")
-	}
-	if err != rowErr {
-		t.Errorf("expected %v, got %v", rowErr, err)
-	}
+	assert.False(t, stub.Scanned, "row was scanned")
+	assert.Equal(t, rowErr, err)
 }

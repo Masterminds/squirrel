@@ -1,8 +1,9 @@
 package squirrel
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWherePartsToSql(t *testing.T) {
@@ -12,48 +13,29 @@ func TestWherePartsToSql(t *testing.T) {
 		newWherePart(Eq{"y": 2}),
 	}
 	sql, args, _ := wherePartsToSql(parts)
-	expect := "x = ? AND y = ?"
-	expectArgs := []interface{}{1, 2}
-	if sql != expect {
-		t.Errorf("expected %#v, got %#v", expect, sql)
-	}
-	if !reflect.DeepEqual(args, expectArgs) {
-		t.Errorf("expected %#v, got %#v", expectArgs, args)
-	}
+	assert.Equal(t, "x = ? AND y = ?", sql)
+	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
 func TestWherePartsToSqlErr(t *testing.T) {
 	_, _, err := wherePartsToSql([]wherePart{newWherePart(1)})
-	if err == nil {
-		t.Errorf("expected error, got none")
-	}
+	assert.Error(t, err)
 }
 
 func TestWherePartNil(t *testing.T) {
 	sql, _, _ := newWherePart(nil).ToSql()
-	expect := ""
-	if sql != expect {
-		t.Errorf("expected %#v, got %#v", expect, sql)
-	}
+	assert.Equal(t, "", sql)
 }
 
 func TestWherePartErr(t *testing.T) {
 	_, _, err := newWherePart(1).ToSql()
-	if err == nil {
-		t.Errorf("expected error, got none")
-	}
+	assert.Error(t, err)
 }
 
 func TestWherePartString(t *testing.T) {
 	sql, args, _ := newWherePart("x = ?", 1).ToSql()
-	expect := "x = ?"
-	expectArgs := []interface{}{1}
-	if sql != "x = ?" {
-		t.Errorf("expected %#v, got %#v", expect, sql)
-	}
-	if !reflect.DeepEqual(args, expectArgs) {
-		t.Errorf("expected %#v, got %#v", expectArgs, args)
-	}
+	assert.Equal(t, "x = ?", sql)
+	assert.Equal(t, []interface{}{1}, args)
 }
 
 func TestWherePartMap(t *testing.T) {
@@ -71,16 +53,10 @@ func TestWherePartMap(t *testing.T) {
 
 func TestWherePartMapNil(t *testing.T) {
 	sql, _, _ := newWherePart(Eq{"x": nil}).ToSql()
-	expect := "x IS NULL"
-	if sql != expect {
-		t.Errorf("expected %#v, got %#v", expect, sql)
-	}
+	assert.Equal(t, "x IS NULL", sql)
 }
 
 func TestWherePartMapSlice(t *testing.T) {
 	sql, _, _ := newWherePart(Eq{"x": []int{1, 2}}).ToSql()
-	expect := "x IN (?,?)"
-	if sql != expect {
-		t.Errorf("expected %#v, got %#v", expect, sql)
-	}
+	assert.Equal(t, "x IN (?,?)", sql)
 }

@@ -1,6 +1,10 @@
 package squirrel
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestStmtCacherPrepare(t *testing.T) {
 	db := &DBStub{}
@@ -8,13 +12,8 @@ func TestStmtCacherPrepare(t *testing.T) {
 	query := "SELECT 1"
 
 	sc.Prepare(query)
-	lastSql := db.LastPrepareSql
-	if lastSql != query {
-		t.Errorf("expected %v, got %v", query, lastSql)
-	}
+	assert.Equal(t, query, db.LastPrepareSql)
 
 	sc.Prepare(query)
-	if db.PrepareCount != 1 {
-		t.Errorf("expected 1 Prepare, got %d", db.PrepareCount)
-	}
+	assert.Equal(t, 1, db.PrepareCount, "expected 1 Prepare, got %d", db.PrepareCount)
 }

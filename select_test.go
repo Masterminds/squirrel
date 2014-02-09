@@ -1,8 +1,9 @@
 package squirrel
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSelectBuilderToSql(t *testing.T) {
@@ -21,45 +22,31 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Offset(8)
 
 	sql, args, err := b.ToSql()
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
+	assert.NoError(t, err)
 
 	expectedSql :=
 		"SELECT DISTINCT a, b, c FROM d " +
 		"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
 		"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8"
-	if sql != expectedSql {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3, 4, 5, 6}
-	if !reflect.DeepEqual(args, expectedArgs) {
-		t.Errorf("expected %v, got %v", expectedArgs, args)
-	}
+	assert.Equal(t, expectedArgs, args)
 }
 
 func TestSelectBuilderToSqlErr(t *testing.T) {
 	_, _, err := Select().From("x").ToSql()
-	if err == nil {
-		t.Error("expected error, got none")
-	}
+	assert.Error(t, err)
 }
 
 func TestSelectBuilderPlaceholders(t *testing.T) {
 	b := Select("test").Where("x = ? AND y = ?")
 
 	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
-	expect := "SELECT test WHERE x = ? AND y = ?"
-	if sql != expect {
-		t.Errorf("expected %v, got %v", expect, sql)
-	}
+	assert.Equal(t, "SELECT test WHERE x = ? AND y = ?", sql)
 
 	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
-	expect = "SELECT test WHERE x = $1 AND y = $2"
-	if sql != expect {
-		t.Errorf("expected %v, got %v", expect, sql)
-	}
+	assert.Equal(t, "SELECT test WHERE x = $1 AND y = $2", sql)
 }
 
 func TestSelectBuilderRunners(t *testing.T) {
@@ -69,44 +56,27 @@ func TestSelectBuilderRunners(t *testing.T) {
 	expectedSql := "SELECT test"
 
 	b.Exec()
-	sql := db.LastExecSql
-	if sql != sqlStr {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, expectedSql, db.LastExecSql)
 
 	b.Query()
-	sql = db.LastQuerySql
-	if sql != sqlStr {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, expectedSql, db.LastQuerySql)
 
 	b.QueryRow()
-	sql = db.LastQueryRowSql
-	if sql != sqlStr {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, expectedSql, db.LastQueryRowSql)
 
 	err := b.Scan()
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestSelectBuilderNoRunner(t *testing.T) {
 	b := Select("test")
 
 	_, err := b.Exec()
-	if err != RunnerNotSet {
-		t.Errorf("expected error %v, got %v", RunnerNotSet, err)
-	}
+	assert.Equal(t, RunnerNotSet, err)
 
 	_, err = b.Query()
-	if err != RunnerNotSet {
-		t.Errorf("expected error %v, got %v", RunnerNotSet, err)
-	}
+	assert.Equal(t, RunnerNotSet, err)
 
 	err = b.Scan()
-	if err != RunnerNotSet {
-		t.Errorf("expected error %v, got %v", RunnerNotSet, err)
-	}
+	assert.Equal(t, RunnerNotSet, err)
 }

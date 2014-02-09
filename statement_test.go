@@ -1,24 +1,28 @@
 package squirrel
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestSelect(t *testing.T) {
 	sql, _, _ := Select("test").ToSql()
-	expectedSql := "SELECT test"
-	if sql != sqlStr {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, "SELECT test", sql)
 }
 
 func TestStatementBuilder(t *testing.T) {
 	db := &DBStub{}
 	sb := StatementBuilder.RunWith(db)
 
-	expectedSql := "SELECT test"
-
 	sb.Select("test").Exec()
-	sql := db.LastExecSql
-	if sql != sqlStr {
-		t.Errorf("expected %v, got %v", expectedSql, sql)
-	}
+	assert.Equal(t, "SELECT test", db.LastExecSql)
+}
+
+func TestStatementBuilderPlaceholderFormat(t *testing.T) {
+	db := &DBStub{}
+	sb := StatementBuilder.RunWith(db).PlaceholderFormat(Dollar)
+
+	sb.Select("test").Where("x = ?").Exec()
+	assert.Equal(t, "SELECT test WHERE x = $1", db.LastExecSql)
 }
