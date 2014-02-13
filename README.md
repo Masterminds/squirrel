@@ -14,7 +14,7 @@ Squirrel helps you build SQL queries from composable parts:
 ```go
 users := squirrel.Select("*").From("users")
 
-active := users.Where(Eq{"deleted_at": nil})
+active := users.Where(squirrel.Eq{"deleted_at": nil})
 
 sql, args, err := active.ToSql()
 
