@@ -21,6 +21,14 @@ sql, args, err := active.ToSql()
 sql == "SELECT * FROM users WHERE deleted_at IS NULL"
 ```
 
+```go
+sql, args, err := squirrel.
+    Insert("users").Columns("name", "age").
+    Values("moe", 13).Values("larry", 15)
+
+sql == "INSERT INTO users (name,age) VALUES (?,?),(?,?)"
+```
+
 Squirrel can also execute queries directly:
 
 ```go

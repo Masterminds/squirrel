@@ -6,11 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSelect(t *testing.T) {
-	sql, _, _ := Select("test").ToSql()
-	assert.Equal(t, "SELECT test", sql)
-}
-
 func TestStatementBuilder(t *testing.T) {
 	db := &DBStub{}
 	sb := StatementBuilder.RunWith(db)
