@@ -73,14 +73,14 @@ func TestQueryRowWith(t *testing.T) {
 
 func TestWithToSqlErr(t *testing.T) {
 	db := &DBStub{}
-	sqlizer := Select("test")
+	sqlizer := Select()
 
 	_, err := ExecWith(db, sqlizer)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	_, err = QueryWith(db, sqlizer)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	err = QueryRowWith(db, sqlizer).Scan()
-	assert.NoError(t, err)
+	assert.Error(t, err)
 }
