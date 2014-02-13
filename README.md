@@ -24,9 +24,9 @@ sql == "SELECT * FROM users WHERE deleted_at IS NULL"
 ```go
 sql, args, err := squirrel.
     Insert("users").Columns("name", "age").
-    Values("moe", 13).Values("larry", 15)
+    Values("moe", 13).Values("larry", Expr("? + 5", 12))
 
-sql == "INSERT INTO users (name,age) VALUES (?,?),(?,?)"
+sql == "INSERT INTO users (name,age) VALUES (?,?),(?,? + 5)"
 ```
 
 Squirrel can also execute queries directly:

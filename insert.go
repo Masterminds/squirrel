@@ -49,17 +49,36 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	valuesStrings := make([]string, len(d.Values))
 	for r, row := range d.Values {
-		placeholders := make([]string, len(row))
+		valueStrings := make([]string, len(row))
 		for v, val := range row {
-			placeholders[v] = "?"
-			args = append(args, val)
+			e, isExpr := val.(expr)
+			if isExpr {
+				valueStrings[v] = e.sql
+				args = append(args, e.args...)
+			} else {
+				valueStrings[v] = "?"
+				args = append(args, val)
+			}
 		}
-		valuesStrings[r] = fmt.Sprintf("(%s)", strings.Join(placeholders, ","))
+		valuesStrings[r] = fmt.Sprintf("(%s)", strings.Join(valueStrings, ","))
 	}
 	sql.WriteString(strings.Join(valuesStrings, ","))
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
+}
+
+type expr struct {
+	sql string
+	args []interface{}
+}
+
+// Expr builds value expressions for InsertBuilder.Values.
+//
+// Ex:
+//     .Values(Expr("FROM_UNIXTIME(?)", t))
+func Expr(sql string, args ...interface{}) expr {
+	return expr{sql: sql, args: args}
 }
 
 // Builder

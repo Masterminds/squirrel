@@ -11,13 +11,13 @@ func TestInsertBuilderToSql(t *testing.T) {
 		Into("a").
 		Columns("b", "c").
 		Values(1, 2).
-		Values(3, 4)
+		Values(3, Expr("? + 1", 4))
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
-		"INSERT INTO a (b,c) VALUES (?,?),(?,?)"
+		"INSERT INTO a (b,c) VALUES (?,?),(?,? + 1)"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3, 4}
