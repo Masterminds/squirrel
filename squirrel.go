@@ -3,7 +3,10 @@
 // See https://github.com/lann/squirrel for examples.
 package squirrel
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 // Sqlizer is the interface that wraps the ToSql method.
 //
@@ -40,6 +43,9 @@ type Runner interface {
 	Queryer
 	QueryRower
 }
+
+// RunnerNotSet is returned by methods that need a Runner if it isn't set.
+var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
 
 // ExecWith Execs the SQL returned by s with db.
 func ExecWith(db Execer, s Sqlizer) (res sql.Result, err error) {

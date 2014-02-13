@@ -10,6 +10,11 @@ func (b StatementBuilderType) Select(columns ...string) SelectBuilder {
 	return SelectBuilder(b).Columns(columns...)
 }
 
+// Insert returns a InsertBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Insert(into string) InsertBuilder {
+	return InsertBuilder(b).Into(into)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -28,4 +33,11 @@ var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFor
 // See SelectBuilder.Columns.
 func Select(columns ...string) SelectBuilder {
 	return StatementBuilder.Select(columns...)
+}
+
+// Insert returns a new InsertBuilder with the given table name.
+//
+// See SelectBuilder.Columns.
+func Insert(into string) InsertBuilder {
+	return StatementBuilder.Insert(into)
 }

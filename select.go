@@ -22,9 +22,6 @@ type selectData struct {
 	Offset            string
 }
 
-// RunnerNotSet is returned by methods that use RunWith if it isn't set.
-var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
-
 func (d *selectData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
