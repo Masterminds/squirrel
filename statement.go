@@ -20,6 +20,11 @@ func (b StatementBuilderType) Update(table string) UpdateBuilder {
 	return UpdateBuilder(b).Table(table)
 }
 
+// Delete returns a DeleteBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Delete(from string) DeleteBuilder {
+	return DeleteBuilder(b).From(from)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -52,4 +57,11 @@ func Insert(into string) InsertBuilder {
 // See UpdateBuilder.Table.
 func Update(table string) UpdateBuilder {
 	return StatementBuilder.Update(table)
+}
+
+// Delete returns a new DeleteBuilder with the given table name.
+//
+// See DeleteBuilder.Table.
+func Delete(from string) DeleteBuilder {
+	return StatementBuilder.Delete(from)
 }
