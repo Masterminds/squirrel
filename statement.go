@@ -15,6 +15,11 @@ func (b StatementBuilderType) Insert(into string) InsertBuilder {
 	return InsertBuilder(b).Into(into)
 }
 
+// Update returns a UpdateBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Update(table string) UpdateBuilder {
+	return UpdateBuilder(b).Table(table)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -37,7 +42,14 @@ func Select(columns ...string) SelectBuilder {
 
 // Insert returns a new InsertBuilder with the given table name.
 //
-// See SelectBuilder.Columns.
+// See InsertBuilder.Into.
 func Insert(into string) InsertBuilder {
 	return StatementBuilder.Insert(into)
+}
+
+// Update returns a new UpdateBuilder with the given table name.
+//
+// See UpdateBuilder.Table.
+func Update(table string) UpdateBuilder {
+	return StatementBuilder.Update(table)
 }

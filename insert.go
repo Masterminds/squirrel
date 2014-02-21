@@ -68,19 +68,6 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	return
 }
 
-type expr struct {
-	sql string
-	args []interface{}
-}
-
-// Expr builds value expressions for InsertBuilder.Values.
-//
-// Ex:
-//     .Values(Expr("FROM_UNIXTIME(?)", t))
-func Expr(sql string, args ...interface{}) expr {
-	return expr{sql: sql, args: args}
-}
-
 // Builder
 
 // InsertBuilder builds SQL INSERT statements.
