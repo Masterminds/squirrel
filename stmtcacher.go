@@ -64,3 +64,21 @@ func (sc *stmtCacher) QueryRow(query string, args ...interface{}) RowScanner {
 	}
 	return stmt.QueryRow(args...)
 }
+
+type DBProxyBeginner interface {
+	DBProxy
+	Begin() (*sql.Tx, error)
+}
+
+type stmtCacheProxy struct {
+	DBProxy
+	db *sql.DB
+}
+
+func NewStmtCacheProxy(db *sql.DB) DBProxyBeginner {
+	return &stmtCacheProxy{DBProxy: NewStmtCacher(db), db: db}
+}
+
+func (sp *stmtCacheProxy) Begin() (*sql.Tx, error) {
+	return sp.db.Begin()
+}
