@@ -1,6 +1,9 @@
 package squirrel
 
-import "database/sql"
+import (
+	"database/sql"
+	"sync"
+)
 
 // Prepareer is the interface that wraps the Prepare method.
 //
@@ -20,6 +23,7 @@ type DBProxy interface {
 type stmtCacher struct {
 	prep  Preparer
 	cache map[string]*sql.Stmt
+	mu    sync.Mutex
 }
 
 // NewStmtCacher returns a DBProxy wrapping prep that caches Prepared Stmts.
@@ -30,6 +34,8 @@ func NewStmtCacher(prep Preparer) DBProxy {
 }
 
 func (sc *stmtCacher) Prepare(query string) (*sql.Stmt, error) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	stmt, ok := sc.cache[query]
 	if ok {
 		return stmt, nil
