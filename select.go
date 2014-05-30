@@ -125,8 +125,8 @@ func (b SelectBuilder) PlaceholderFormat(f PlaceholderFormat) SelectBuilder {
 // Runner methods
 
 // RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
-func (b SelectBuilder) RunWith(runner Runner) SelectBuilder {
-	return builder.Set(b, "RunWith", runner).(SelectBuilder)
+func (b SelectBuilder) RunWith(runner BaseRunner) SelectBuilder {
+	return setRunWith(b, runner).(SelectBuilder)
 }
 
 // Exec builds and Execs the query with the Runner set by RunWith.

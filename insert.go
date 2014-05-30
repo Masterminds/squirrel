@@ -88,8 +88,8 @@ func (b InsertBuilder) PlaceholderFormat(f PlaceholderFormat) InsertBuilder {
 // Runner methods
 
 // RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
-func (b InsertBuilder) RunWith(runner Runner) InsertBuilder {
-	return builder.Set(b, "RunWith", runner).(InsertBuilder)
+func (b InsertBuilder) RunWith(runner BaseRunner) InsertBuilder {
+	return setRunWith(b, runner).(InsertBuilder)
 }
 
 // Exec builds and Execs the query with the Runner set by RunWith.

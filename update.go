@@ -61,7 +61,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSql)
 	}
 	sql.WriteString(strings.Join(setSqls, ", "))
-	
+
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
 		var whereSql string
@@ -111,8 +111,8 @@ func (b UpdateBuilder) PlaceholderFormat(f PlaceholderFormat) UpdateBuilder {
 // Runner methods
 
 // RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
-func (b UpdateBuilder) RunWith(runner Runner) UpdateBuilder {
-	return builder.Set(b, "RunWith", runner).(UpdateBuilder)
+func (b UpdateBuilder) RunWith(runner BaseRunner) UpdateBuilder {
+	return setRunWith(b, runner).(UpdateBuilder)
 }
 
 // Exec builds and Execs the query with the Runner set by RunWith.

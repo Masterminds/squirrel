@@ -31,8 +31,8 @@ func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBu
 }
 
 // RunWith sets the RunWith field for any child builders.
-func (b StatementBuilderType) RunWith(runner Runner) StatementBuilderType {
-	return builder.Set(b, "RunWith", runner).(StatementBuilderType)
+func (b StatementBuilderType) RunWith(runner BaseRunner) StatementBuilderType {
+	return setRunWith(b, runner).(StatementBuilderType)
 }
 
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.

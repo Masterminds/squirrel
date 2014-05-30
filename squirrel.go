@@ -6,6 +6,8 @@ package squirrel
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/lann/builder"
 )
 
 // Sqlizer is the interface that wraps the ToSql method.
@@ -37,11 +39,37 @@ type QueryRower interface {
 	QueryRow(query string, args ...interface{}) RowScanner
 }
 
+// BaseRunner groups the Execer and Queryer interfaces.
+type BaseRunner interface {
+	Execer
+	Queryer
+}
+
 // Runner groups the Execer, Queryer, and QueryRower interfaces.
 type Runner interface {
 	Execer
 	Queryer
 	QueryRower
+}
+
+// DBRunner wraps sql.DB to implement Runner.
+type dbRunner struct {
+	*sql.DB
+}
+
+func (r *dbRunner) QueryRow(query string, args ...interface{}) RowScanner {
+	return r.DB.QueryRow(query, args...)
+}
+
+func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
+	var runner Runner
+	switch r := baseRunner.(type) {
+	case Runner:
+		runner = r
+	case *sql.DB:
+		runner = &dbRunner{r}
+	}
+	return builder.Set(b, "RunWith", runner)
 }
 
 // RunnerNotSet is returned by methods that need a Runner if it isn't set.

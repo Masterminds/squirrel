@@ -85,8 +85,8 @@ func (b DeleteBuilder) PlaceholderFormat(f PlaceholderFormat) DeleteBuilder {
 // Runner methods
 
 // RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
-func (b DeleteBuilder) RunWith(runner Runner) DeleteBuilder {
-	return builder.Set(b, "RunWith", runner).(DeleteBuilder)
+func (b DeleteBuilder) RunWith(runner BaseRunner) DeleteBuilder {
+	return setRunWith(b, runner).(DeleteBuilder)
 }
 
 // Exec builds and Execs the query with the Runner set by RunWith.

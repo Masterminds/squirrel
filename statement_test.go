@@ -1,8 +1,10 @@
 package squirrel
 
 import (
+	"database/sql"
 	"testing"
 
+	"github.com/lann/builder"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,4 +22,14 @@ func TestStatementBuilderPlaceholderFormat(t *testing.T) {
 
 	sb.Select("test").Where("x = ?").Exec()
 	assert.Equal(t, "SELECT test WHERE x = $1", db.LastExecSql)
+}
+
+func TestRunWithDB(t *testing.T) {
+	db := &sql.DB{}
+	assert.NotPanics(t, func() {
+		builder.GetStruct(Select().RunWith(db))
+		builder.GetStruct(Insert("t").RunWith(db))
+		builder.GetStruct(Update("t").RunWith(db))
+		builder.GetStruct(Delete("t").RunWith(db))
+	}, "RunWith(*sql.DB) should not panic")
 }
