@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/lann/builder"
+	"sort"
 	"strings"
+
+	"github.com/lann/builder"
 )
 
 type updateData struct {
@@ -141,8 +143,16 @@ func (b UpdateBuilder) Set(column string, value interface{}) UpdateBuilder {
 
 // SetMap is a convenience method which calls .Set for each key/value pair in clauses.
 func (b UpdateBuilder) SetMap(clauses map[string]interface{}) UpdateBuilder {
-	for col, val := range clauses {
-		b = b.Set(col, val)
+	keys := make([]string, len(clauses))
+	i := 0
+	for key := range clauses {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		val, _ := clauses[key]
+		b = b.Set(key, val)
 	}
 	return b
 }
