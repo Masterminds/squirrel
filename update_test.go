@@ -8,22 +8,27 @@ import (
 
 func TestUpdateBuilderToSql(t *testing.T) {
 	b := Update("").
+		Prefix("WITH prefix AS ?", 0).
 		Table("a").
 		Set("b", Expr("? + 1", 1)).
 		SetMap(Eq{"c": 2}).
 		Where("d = ?", 3).
 		OrderBy("e").
 		Limit(4).
-		Offset(5)
+		Offset(5).
+		Suffix("RETURNING ?", 6)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
-		"UPDATE a SET b = ? + 1, c = ? WHERE d = ? ORDER BY e LIMIT 4 OFFSET 5"
+		"WITH prefix AS ? " +
+			"UPDATE a SET b = ? + 1, c = ? WHERE d = ? " +
+			"ORDER BY e LIMIT 4 OFFSET 5 " +
+			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1, 2, 3}
+	expectedArgs := []interface{}{0, 1, 2, 3, 6}
 	assert.Equal(t, expectedArgs, args)
 }
 

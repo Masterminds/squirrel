@@ -11,6 +11,7 @@ import (
 type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           Runner
+	Prefixes          exprs
 	Distinct          bool
 	Columns           []string
 	From              string
@@ -20,6 +21,7 @@ type selectData struct {
 	OrderBys          []string
 	Limit             string
 	Offset            string
+	Suffixes          exprs
 }
 
 func (d *selectData) Exec() (sql.Result, error) {
@@ -49,7 +51,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	var sql bytes.Buffer
+	sql := &bytes.Buffer{}
+
+	if len(d.Prefixes) > 0 {
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		sql.WriteString(" ")
+	}
 
 	sql.WriteString("SELECT ")
 
@@ -101,6 +108,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" OFFSET ")
 		sql.WriteString(d.Offset)
 	}
+
+	if len(d.Suffixes) > 0 {
+		sql.WriteString(" ")
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+	}
+
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
@@ -158,6 +171,11 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
+}
+
+// Prefix adds an expression to the beginning of the query
+func (b SelectBuilder) Prefix(sql string, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Prefixes", Expr(sql, args...)).(SelectBuilder)
 }
 
 // Distinct adds a DISTINCT clause to the query.
@@ -224,4 +242,9 @@ func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
 // Offset sets a OFFSET clause on the query.
 func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
 	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
+}
+
+// Suffix adds an expression to the end of the query
+func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Suffixes", Expr(sql, args...)).(SelectBuilder)
 }

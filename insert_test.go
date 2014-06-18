@@ -8,19 +8,23 @@ import (
 
 func TestInsertBuilderToSql(t *testing.T) {
 	b := Insert("").
+		Prefix("WITH prefix AS ?", 0).
 		Into("a").
 		Columns("b", "c").
 		Values(1, 2).
-		Values(3, Expr("? + 1", 4))
+		Values(3, Expr("? + 1", 4)).
+		Suffix("RETURNING ?", 5)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
-		"INSERT INTO a (b,c) VALUES (?,?),(?,? + 1)"
+		"WITH prefix AS ? " +
+			"INSERT INTO a (b,c) VALUES (?,?),(?,? + 1) " +
+			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1, 2, 3, 4}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5}
 	assert.Equal(t, expectedArgs, args)
 }
 

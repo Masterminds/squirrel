@@ -8,6 +8,7 @@ import (
 
 func TestSelectBuilderToSql(t *testing.T) {
 	b := Select("a", "b").
+		Prefix("WITH prefix AS ?", 0).
 		Distinct().
 		Columns("c").
 		From("d").
@@ -19,18 +20,21 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Having("j = k").
 		OrderBy("l").
 		Limit(7).
-		Offset(8)
+		Offset(8).
+		Suffix("FETCH FIRST ? ROWS ONLY", 7)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
-		"SELECT DISTINCT a, b, c FROM d " +
+		"WITH prefix AS ? " +
+			"SELECT DISTINCT a, b, c FROM d " +
 			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-			"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8"
+			"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8 " +
+			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1, 2, 3, 4, 5, 6}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7}
 	assert.Equal(t, expectedArgs, args)
 }
 

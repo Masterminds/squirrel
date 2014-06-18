@@ -11,9 +11,11 @@ import (
 type insertData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           Runner
+	Prefixes          exprs
 	Into              string
 	Columns           []string
 	Values            [][]interface{}
+	Suffixes          exprs
 }
 
 func (d *insertData) Exec() (sql.Result, error) {
@@ -33,7 +35,12 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	var sql bytes.Buffer
+	sql := &bytes.Buffer{}
+
+	if len(d.Prefixes) > 0 {
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		sql.WriteString(" ")
+	}
 
 	sql.WriteString("INSERT INTO ")
 	sql.WriteString(d.Into)
@@ -63,6 +70,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		valuesStrings[r] = fmt.Sprintf("(%s)", strings.Join(valueStrings, ","))
 	}
 	sql.WriteString(strings.Join(valuesStrings, ","))
+
+	if len(d.Suffixes) > 0 {
+		sql.WriteString(" ")
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
@@ -106,6 +118,11 @@ func (b InsertBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
+// Prefix adds an expression to the beginning of the query
+func (b InsertBuilder) Prefix(sql string, args ...interface{}) InsertBuilder {
+	return builder.Append(b, "Prefixes", Expr(sql, args...)).(InsertBuilder)
+}
+
 // Into sets the INTO clause of the query.
 func (b InsertBuilder) Into(from string) InsertBuilder {
 	return builder.Set(b, "Into", from).(InsertBuilder)
@@ -119,4 +136,9 @@ func (b InsertBuilder) Columns(columns ...string) InsertBuilder {
 // Values adds a single row's values to the query.
 func (b InsertBuilder) Values(values ...interface{}) InsertBuilder {
 	return builder.Append(b, "Values", values).(InsertBuilder)
+}
+
+// Suffix adds an expression to the end of the query
+func (b InsertBuilder) Suffix(sql string, args ...interface{}) InsertBuilder {
+	return builder.Append(b, "Suffixes", Expr(sql, args...)).(InsertBuilder)
 }

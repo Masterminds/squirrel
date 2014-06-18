@@ -11,11 +11,13 @@ import (
 type deleteData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           Runner
+	Prefixes          exprs
 	From              string
 	WhereParts        []wherePart
 	OrderBys          []string
 	Limit             string
 	Offset            string
+	Suffixes          exprs
 }
 
 func (d *deleteData) Exec() (sql.Result, error) {
@@ -31,7 +33,12 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	var sql bytes.Buffer
+	sql := &bytes.Buffer{}
+
+	if len(d.Prefixes) > 0 {
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		sql.WriteString(" ")
+	}
 
 	sql.WriteString("DELETE FROM ")
 	sql.WriteString(d.From)
@@ -58,6 +65,11 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Offset) > 0 {
 		sql.WriteString(" OFFSET ")
 		sql.WriteString(d.Offset)
+	}
+
+	if len(d.Suffixes) > 0 {
+		sql.WriteString(" ")
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -103,6 +115,11 @@ func (b DeleteBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
+// Prefix adds an expression to the beginning of the query
+func (b DeleteBuilder) Prefix(sql string, args ...interface{}) DeleteBuilder {
+	return builder.Append(b, "Prefixes", Expr(sql, args...)).(DeleteBuilder)
+}
+
 // From sets the table to be deleted from.
 func (b DeleteBuilder) From(from string) DeleteBuilder {
 	return builder.Set(b, "From", from).(DeleteBuilder)
@@ -128,4 +145,9 @@ func (b DeleteBuilder) Limit(limit uint64) DeleteBuilder {
 // Offset sets a OFFSET clause on the query.
 func (b DeleteBuilder) Offset(offset uint64) DeleteBuilder {
 	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(DeleteBuilder)
+}
+
+// Suffix adds an expression to the end of the query
+func (b DeleteBuilder) Suffix(sql string, args ...interface{}) DeleteBuilder {
+	return builder.Append(b, "Suffixes", Expr(sql, args...)).(DeleteBuilder)
 }

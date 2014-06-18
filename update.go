@@ -13,12 +13,14 @@ import (
 type updateData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           Runner
+	Prefixes          exprs
 	Table             string
 	SetClauses        []setClause
 	WhereParts        []wherePart
 	OrderBys          []string
 	Limit             string
 	Offset            string
+	Suffixes          exprs
 }
 
 type setClause struct {
@@ -43,7 +45,12 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	var sql bytes.Buffer
+	sql := &bytes.Buffer{}
+
+	if len(d.Prefixes) > 0 {
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		sql.WriteString(" ")
+	}
 
 	sql.WriteString("UPDATE ")
 	sql.WriteString(d.Table)
@@ -88,6 +95,11 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(d.Offset)
 	}
 
+	if len(d.Suffixes) > 0 {
+		sql.WriteString(" ")
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+	}
+
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
@@ -129,6 +141,11 @@ func (b UpdateBuilder) Exec() (sql.Result, error) {
 func (b UpdateBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(updateData)
 	return data.ToSql()
+}
+
+// Prefix adds an expression to the beginning of the query
+func (b UpdateBuilder) Prefix(sql string, args ...interface{}) UpdateBuilder {
+	return builder.Append(b, "Prefixes", Expr(sql, args...)).(UpdateBuilder)
 }
 
 // Table sets the table to be updated.
@@ -177,4 +194,9 @@ func (b UpdateBuilder) Limit(limit uint64) UpdateBuilder {
 // Offset sets a OFFSET clause on the query.
 func (b UpdateBuilder) Offset(offset uint64) UpdateBuilder {
 	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(UpdateBuilder)
+}
+
+// Suffix adds an expression to the end of the query
+func (b UpdateBuilder) Suffix(sql string, args ...interface{}) UpdateBuilder {
+	return builder.Append(b, "Suffixes", Expr(sql, args...)).(UpdateBuilder)
 }
