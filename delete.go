@@ -13,7 +13,7 @@ type deleteData struct {
 	RunWith           Runner
 	Prefixes          exprs
 	From              string
-	WhereParts        []wherePart
+	WhereParts        whereParts
 	OrderBys          []string
 	Limit             string
 	Offset            string
@@ -45,11 +45,10 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		var whereSql string
-		var whereArgs []interface{}
-		whereSql, whereArgs, err = wherePartsToSql(d.WhereParts)
-		sql.WriteString(whereSql)
-		args = append(args, whereArgs...)
+		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.OrderBys) > 0 {

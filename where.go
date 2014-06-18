@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 )
@@ -13,22 +14,6 @@ type wherePart struct {
 
 func newWherePart(pred interface{}, args ...interface{}) wherePart {
 	return wherePart{pred: pred, args: args}
-}
-
-func wherePartsToSql(parts []wherePart) (string, []interface{}, error) {
-	sqls := make([]string, 0, len(parts))
-	var args []interface{}
-	for _, part := range parts {
-		partSql, partArgs, err := part.ToSql()
-		if err != nil {
-			return "", []interface{}{}, err
-		}
-		if len(partSql) > 0 {
-			sqls = append(sqls, partSql)
-			args = append(args, partArgs...)
-		}
-	}
-	return strings.Join(sqls, " AND "), args, nil
 }
 
 func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
@@ -46,6 +31,33 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 		err = fmt.Errorf("expected string-keyed map or string, not %T", pred)
 	}
 	return
+}
+
+type whereParts []wherePart
+
+func (wps whereParts) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+	for i, p := range wps {
+		partSql, partArgs, err := p.ToSql()
+		if err != nil {
+			return nil, err
+		} else if len(partSql) == 0 {
+			continue
+		}
+
+		if i > 0 {
+			_, err := io.WriteString(w, sep)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		_, err = io.WriteString(w, partSql)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, partArgs...)
+	}
+	return args, nil
 }
 
 func whereEqMap(m map[string]interface{}) (sql string, args []interface{}, err error) {

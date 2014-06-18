@@ -3,22 +3,25 @@ package squirrel
 import (
 	"testing"
 
+	"bytes"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWherePartsToSql(t *testing.T) {
-	parts := []wherePart{
+func TestWherePartsAppendToSql(t *testing.T) {
+	parts := whereParts{
 		newWherePart("x = ?", 1),
 		newWherePart(nil),
 		newWherePart(Eq{"y": 2}),
 	}
-	sql, args, _ := wherePartsToSql(parts)
-	assert.Equal(t, "x = ? AND y = ?", sql)
+	sql := &bytes.Buffer{}
+	args, _ := parts.AppendToSql(sql, " AND ", []interface{}{})
+	assert.Equal(t, "x = ? AND y = ?", sql.String())
 	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
-func TestWherePartsToSqlErr(t *testing.T) {
-	_, _, err := wherePartsToSql([]wherePart{newWherePart(1)})
+func TestWherePartsAppendToSqlErr(t *testing.T) {
+	_, err := whereParts{newWherePart(1)}.AppendToSql(&bytes.Buffer{}, "", []interface{}{})
 	assert.Error(t, err)
 }
 

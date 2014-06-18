@@ -15,9 +15,9 @@ type selectData struct {
 	Distinct          bool
 	Columns           []string
 	From              string
-	WhereParts        []wherePart
+	WhereParts        whereParts
 	GroupBys          []string
-	HavingParts       []wherePart
+	HavingParts       whereParts
 	OrderBys          []string
 	Limit             string
 	Offset            string
@@ -73,11 +73,10 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		var whereSql string
-		var whereArgs []interface{}
-		whereSql, whereArgs, err = wherePartsToSql(d.WhereParts)
-		sql.WriteString(whereSql)
-		args = append(args, whereArgs...)
+		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.GroupBys) > 0 {
@@ -87,11 +86,10 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		var havingSql string
-		var havingArgs []interface{}
-		havingSql, havingArgs, err = wherePartsToSql(d.HavingParts)
-		sql.WriteString(havingSql)
-		args = append(args, havingArgs...)
+		args, err = d.HavingParts.AppendToSql(sql, " AND ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.OrderBys) > 0 {
