@@ -5,7 +5,7 @@ import (
 )
 
 type expr struct {
-	sql string
+	sql  string
 	args []interface{}
 }
 
