@@ -19,6 +19,7 @@ type selectData struct {
 	GroupBys          []string
 	HavingParts       whereParts
 	OrderBys          []string
+	Order             string
 	Limit             string
 	Offset            string
 	Suffixes          exprs
@@ -95,6 +96,10 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
 		sql.WriteString(strings.Join(d.OrderBys, ", "))
+
+		if len(d.Order) > 0 {
+			sql.WriteString(" " + d.Order)
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -230,6 +235,16 @@ func (b SelectBuilder) Having(pred interface{}, rest ...interface{}) SelectBuild
 // OrderBy adds ORDER BY expressions to the query.
 func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
 	return builder.Extend(b, "OrderBys", orderBys).(SelectBuilder)
+}
+
+// Defines ascending order for ORDER BY statement.
+func (b SelectBuilder) OrderAsc() SelectBuilder {
+	return builder.Set(b, "Order", "ASC").(SelectBuilder)
+}
+
+// Defines descending order for ORDER BY statement.
+func (b SelectBuilder) OrderDesc() SelectBuilder {
+	return builder.Set(b, "Order", "DESC").(SelectBuilder)
 }
 
 // Limit sets a LIMIT clause on the query.

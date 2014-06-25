@@ -14,6 +14,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		SetMap(Eq{"c": 2}).
 		Where("d = ?", 3).
 		OrderBy("e").
+		OrderAsc().
 		Limit(4).
 		Offset(5).
 		Suffix("RETURNING ?", 6)
@@ -24,7 +25,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 	expectedSql :=
 		"WITH prefix AS ? " +
 			"UPDATE a SET b = ? + 1, c = ? WHERE d = ? " +
-			"ORDER BY e LIMIT 4 OFFSET 5 " +
+			"ORDER BY e ASC LIMIT 4 OFFSET 5 " +
 			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 

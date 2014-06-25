@@ -15,6 +15,7 @@ type deleteData struct {
 	From              string
 	WhereParts        whereParts
 	OrderBys          []string
+	Order             string
 	Limit             string
 	Offset            string
 	Suffixes          exprs
@@ -54,6 +55,10 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
 		sql.WriteString(strings.Join(d.OrderBys, ", "))
+
+		if len(d.Order) > 0 {
+			sql.WriteString(" " + d.Order)
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -74,7 +79,6 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
-
 
 // Builder
 
@@ -134,6 +138,16 @@ func (b DeleteBuilder) Where(pred interface{}, args ...interface{}) DeleteBuilde
 // OrderBy adds ORDER BY expressions to the query.
 func (b DeleteBuilder) OrderBy(orderBys ...string) DeleteBuilder {
 	return builder.Extend(b, "OrderBys", orderBys).(DeleteBuilder)
+}
+
+// Defines ascending order for ORDER BY statement.
+func (b DeleteBuilder) OrderAsc() DeleteBuilder {
+	return builder.Set(b, "Order", "ASC").(DeleteBuilder)
+}
+
+// Defines descending order for ORDER BY statement.
+func (b DeleteBuilder) OrderDesc() DeleteBuilder {
+	return builder.Set(b, "Order", "DESC").(DeleteBuilder)
 }
 
 // Limit sets a LIMIT clause on the query.

@@ -18,6 +18,7 @@ type updateData struct {
 	SetClauses        []setClause
 	WhereParts        whereParts
 	OrderBys          []string
+	Order             string
 	Limit             string
 	Offset            string
 	Suffixes          exprs
@@ -82,6 +83,10 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
 		sql.WriteString(strings.Join(d.OrderBys, ", "))
+
+		if len(d.Order) > 0 {
+			sql.WriteString(" " + d.Order)
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -102,7 +107,6 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
-
 
 // Builder
 
@@ -183,6 +187,16 @@ func (b UpdateBuilder) Where(pred interface{}, args ...interface{}) UpdateBuilde
 // OrderBy adds ORDER BY expressions to the query.
 func (b UpdateBuilder) OrderBy(orderBys ...string) UpdateBuilder {
 	return builder.Extend(b, "OrderBys", orderBys).(UpdateBuilder)
+}
+
+// Defines ascending order for ORDER BY statement.
+func (b UpdateBuilder) OrderAsc() UpdateBuilder {
+	return builder.Set(b, "Order", "ASC").(UpdateBuilder)
+}
+
+// Defines descending order for ORDER BY statement.
+func (b UpdateBuilder) OrderDesc() UpdateBuilder {
+	return builder.Set(b, "Order", "DESC").(UpdateBuilder)
 }
 
 // Limit sets a LIMIT clause on the query.
