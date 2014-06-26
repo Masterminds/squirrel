@@ -35,7 +35,7 @@ func TestDeleteBuilderToSqlErr(t *testing.T) {
 }
 
 func TestDeleteBuilderPlaceholders(t *testing.T) {
-	b := Delete("test").Where(Eq{"x": 1, "y": 2})
+	b := Delete("test").Where("x = ? AND y = ?", 1, 2)
 
 	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "DELETE FROM test WHERE x = ? AND y = ?", sql)
