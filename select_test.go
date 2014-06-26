@@ -18,7 +18,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Where(Eq{"h": []int{4, 5, 6}}).
 		GroupBy("i").
 		Having("j = k").
-		OrderBy("l").
+		OrderBy("l ASC", "m DESC").
 		Limit(7).
 		Offset(8).
 		Suffix("FETCH FIRST ? ROWS ONLY", 7)
@@ -30,7 +30,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		"WITH prefix AS ? " +
 			"SELECT DISTINCT a, b, c FROM d " +
 			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-			"GROUP BY i HAVING j = k ORDER BY l LIMIT 7 OFFSET 8 " +
+			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 7 OFFSET 8 " +
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
