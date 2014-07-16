@@ -12,13 +12,13 @@ import "github.com/lann/squirrel"
 Squirrel helps you build SQL queries from composable parts:
 
 ```go
-users := squirrel.Select("*").From("users")
+users := squirrel.Select("*").From("users JOIN emails USING (email_id)")
 
 active := users.Where(squirrel.Eq{"deleted_at": nil})
 
 sql, args, err := active.ToSql()
 
-sql == "SELECT * FROM users WHERE deleted_at IS NULL"
+sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NULL"
 ```
 
 ```go
