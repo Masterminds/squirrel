@@ -13,6 +13,7 @@ type insertData struct {
 	RunWith           Runner
 	Prefixes          exprs
 	Into              string
+	Options           string
 	Columns           []string
 	Values            [][]interface{}
 	Suffixes          exprs
@@ -42,7 +43,12 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" ")
 	}
 
-	sql.WriteString("INSERT INTO ")
+	sql.WriteString("INSERT ")
+	if len(d.Options) > 0 {
+	sql.WriteString(d.Options)
+		sql.WriteString(" ")
+	}
+	sql.WriteString("INTO ")
 	sql.WriteString(d.Into)
 	sql.WriteString(" ")
 
@@ -126,6 +132,11 @@ func (b InsertBuilder) Prefix(sql string, args ...interface{}) InsertBuilder {
 // Into sets the INTO clause of the query.
 func (b InsertBuilder) Into(from string) InsertBuilder {
 	return builder.Set(b, "Into", from).(InsertBuilder)
+}
+
+// Options sets INSERT options suffix.
+func (b InsertBuilder) Options(options string) InsertBuilder {
+	return builder.Set(b, "Options", options).(InsertBuilder)
 }
 
 // Columns adds insert columns to the query.

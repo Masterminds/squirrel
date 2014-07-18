@@ -10,6 +10,7 @@ func TestInsertBuilderToSql(t *testing.T) {
 	b := Insert("").
 		Prefix("WITH prefix AS ?", 0).
 		Into("a").
+		Options("OR REPLACE").
 		Columns("b", "c").
 		Values(1, 2).
 		Values(3, Expr("? + 1", 4)).
@@ -20,7 +21,7 @@ func TestInsertBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"INSERT INTO a (b,c) VALUES (?,?),(?,? + 1) " +
+			"INSERT OR REPLACE INTO a (b,c) VALUES (?,?),(?,? + 1) " +
 			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 
