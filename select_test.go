@@ -12,6 +12,10 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Distinct().
 		Columns("c").
 		From("d").
+		JoinClause("CROSS JOIN j1").
+		Join("j2").
+		LeftJoin("j3").
+		RightJoin("j4").
 		Where("e = ?", 1).
 		Where(Eq{"f": 2}).
 		Where(map[string]interface{}{"g": 3}).
@@ -29,6 +33,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 	expectedSql :=
 		"WITH prefix AS ? " +
 			"SELECT DISTINCT a, b, c FROM d " +
+			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
 			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
 			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 7 OFFSET 8 " +
 			"FETCH FIRST ? ROWS ONLY"
