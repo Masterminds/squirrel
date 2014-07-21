@@ -48,3 +48,12 @@ func (_ dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 	buf.WriteString(sql)
 	return buf.String(), nil
 }
+
+// Placeholders returns a string with count ? placeholders joined with commas.
+func Placeholders(count int) string {
+	placeholders := make([]string, count)
+	for i := 0; i < count; i++ {
+		placeholders[i] = "?"
+	}
+	return strings.Join(placeholders, ",")
+}

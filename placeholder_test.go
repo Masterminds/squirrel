@@ -17,3 +17,7 @@ func TestDollar(t *testing.T) {
 	s, _ := Dollar.ReplacePlaceholders(sql)
 	assert.Equal(t, "x = $1 AND y = $2", s)
 }
+
+func TestPlaceholders(t *testing.T) {
+	assert.Equal(t, Placeholders(2), "?,?")
+}
