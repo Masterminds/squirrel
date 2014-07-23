@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lann/builder"
 	"strings"
+	"io"
 )
 
 type selectData struct {
@@ -13,7 +14,7 @@ type selectData struct {
 	RunWith           Runner
 	Prefixes          exprs
 	Distinct          bool
-	Columns           []string
+	Columns           selectParts
 	From              string
 	WhereParts        whereParts
 	GroupBys          []string
@@ -22,6 +23,20 @@ type selectData struct {
 	Limit             string
 	Offset            string
 	Suffixes          exprs
+}
+
+type selectPart struct {
+	part
+}
+
+type selectParts []sqlPart
+
+func newSelectPart(pred interface{}, args ...interface{}) selectPart {
+	return selectPart{part:part{pred: pred, args: args}}
+}
+
+func (parts selectParts) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+	return appendToSql(parts, w, sep, args)
 }
 
 func (d *selectData) Exec() (sql.Result, error) {
@@ -64,13 +79,17 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString("DISTINCT ")
 	}
 
-	sql.WriteString(strings.Join(d.Columns, ", "))
+	if len(d.Columns) > 0 {
+		args, err = d.Columns.AppendToSql(sql, ", ", args)
+		if err != nil {
+			return
+		}
+	}
 
 	if len(d.From) > 0 {
 		sql.WriteString(" FROM ")
 		sql.WriteString(d.From)
 	}
-
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
 		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
@@ -183,7 +202,19 @@ func (b SelectBuilder) Distinct() SelectBuilder {
 
 // Columns adds result columns to the query.
 func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
-	return builder.Extend(b, "Columns", columns).(SelectBuilder)
+	var parts []interface{}
+	for _, str := range columns {
+		parts = append(parts, newSelectPart(str))
+	}
+	return builder.Extend(b, "Columns", parts).(SelectBuilder)
+}
+
+// Column add result column to query with arguments
+// use it like Column("IF(col IN ("+squirel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
+// or like interface slice, see https://code.google.com/p/go-wiki/wiki/InterfaceSlice
+// Column("IF(col IN ("+squirel.Placeholders(len(interfaceSlice))+"), 1, 0) as col", interfaceSlice...)
+func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Columns", newSelectPart(column, args...)).(SelectBuilder)
 }
 
 // From sets the FROM clause of the query.

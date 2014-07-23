@@ -7,34 +7,44 @@ import (
 )
 
 func TestSelectBuilderToSql(t *testing.T) {
+	//see https://code.google.com/p/go-wiki/wiki/InterfaceSlice
+	var dataSlice []int = []int{4, 5, 6}
+	var interfaceSlice []interface{} = make([]interface{}, len(dataSlice))
+	for i, d := range dataSlice {
+		interfaceSlice[i] = d
+	}
+
 	b := Select("a", "b").
 		Prefix("WITH prefix AS ?", 0).
 		Distinct().
 		Columns("c").
-		From("d").
-		Where("e = ?", 1).
-		Where(Eq{"f": 2}).
-		Where(map[string]interface{}{"g": 3}).
-		Where(Eq{"h": []int{4, 5, 6}}).
-		GroupBy("i").
-		Having("j = k").
-		OrderBy("l ASC", "m DESC").
-		Limit(7).
-		Offset(8).
-		Suffix("FETCH FIRST ? ROWS ONLY", 7)
+		Column("IF(d IN ("+Placeholders(3)+"), 1, 0) as stat_column", 1, 2, 3).
+		Column("IF(e IN ("+Placeholders(3)+"), 1, 0) as stat_column2", interfaceSlice...).
+		From("f").
+		Where("g = ?", 7).
+		Where(Eq{"h": 8}).
+		Where(map[string]interface{}{"i": 9}).
+		Where(Eq{"j": []int{10, 11, 12}}).
+		GroupBy("k").
+		Having("l = m").
+		OrderBy("n ASC", "o DESC").
+		Limit(13).
+		Offset(14).
+		Suffix("FETCH FIRST ? ROWS ONLY", 15)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"SELECT DISTINCT a, b, c FROM d " +
-			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 7 OFFSET 8 " +
+			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, IF(e IN (?,?,?), 1, 0) as stat_column2 " +
+			"FROM f " +
+			"WHERE g = ? AND h = ? AND i = ? AND j IN (?,?,?) " +
+			"GROUP BY k HAVING l = m ORDER BY n ASC, o DESC LIMIT 13 OFFSET 14 " +
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15}
 	assert.Equal(t, expectedArgs, args)
 }
 
