@@ -16,7 +16,7 @@ type updateData struct {
 	Prefixes          exprs
 	Table             string
 	SetClauses        []setClause
-	WhereParts        whereParts
+	WhereParts        []Sqlizer
 	OrderBys          []string
 	Limit             string
 	Offset            string
@@ -73,7 +73,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
+		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}

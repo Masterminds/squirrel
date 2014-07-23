@@ -13,12 +13,12 @@ type selectData struct {
 	RunWith           Runner
 	Prefixes          exprs
 	Distinct          bool
-	Columns           []string
+	Columns           []Sqlizer
 	From              string
 	Joins             []string
-	WhereParts        whereParts
+	WhereParts        []Sqlizer
 	GroupBys          []string
-	HavingParts       whereParts
+	HavingParts       []Sqlizer
 	OrderBys          []string
 	Limit             string
 	Offset            string
@@ -65,7 +65,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString("DISTINCT ")
 	}
 
-	sql.WriteString(strings.Join(d.Columns, ", "))
+	if len(d.Columns) > 0 {
+		args, err = appendToSql(d.Columns, sql, ", ", args)
+		if err != nil {
+			return
+		}
+	}
 
 	if len(d.From) > 0 {
 		sql.WriteString(" FROM ")
@@ -79,7 +84,7 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
+		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -92,7 +97,7 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		args, err = d.HavingParts.AppendToSql(sql, " AND ", args)
+		args, err = appendToSql(d.HavingParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -189,7 +194,19 @@ func (b SelectBuilder) Distinct() SelectBuilder {
 
 // Columns adds result columns to the query.
 func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
-	return builder.Extend(b, "Columns", columns).(SelectBuilder)
+	var parts []interface{}
+	for _, str := range columns {
+		parts = append(parts, newPart(str))
+	}
+	return builder.Extend(b, "Columns", parts).(SelectBuilder)
+}
+
+// Column adds a result column to the query.
+// Unlike Columns, Column accepts args which will be bound to placeholders in
+// the columns string, for example:
+//   Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
+func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Columns", newPart(column, args...)).(SelectBuilder)
 }
 
 // From sets the FROM clause of the query.

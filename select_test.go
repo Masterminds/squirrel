@@ -11,35 +11,37 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Prefix("WITH prefix AS ?", 0).
 		Distinct().
 		Columns("c").
-		From("d").
+		Column("IF(d IN ("+Placeholders(3)+"), 1, 0) as stat_column", 1, 2, 3).
+		From("e").
 		JoinClause("CROSS JOIN j1").
 		Join("j2").
 		LeftJoin("j3").
 		RightJoin("j4").
-		Where("e = ?", 1).
-		Where(Eq{"f": 2}).
-		Where(map[string]interface{}{"g": 3}).
-		Where(Eq{"h": []int{4, 5, 6}}).
-		GroupBy("i").
-		Having("j = k").
-		OrderBy("l ASC", "m DESC").
-		Limit(7).
-		Offset(8).
-		Suffix("FETCH FIRST ? ROWS ONLY", 7)
+		Where("f = ?", 4).
+		Where(Eq{"g": 5}).
+		Where(map[string]interface{}{"h": 6}).
+		Where(Eq{"i": []int{7, 8, 9}}).
+		GroupBy("j").
+		Having("k = l").
+		OrderBy("m ASC", "n DESC").
+		Limit(10).
+		Offset(11).
+		Suffix("FETCH FIRST ? ROWS ONLY", 12)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"SELECT DISTINCT a, b, c FROM d " +
+			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column " +
+			"FROM e " +
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
-			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 7 OFFSET 8 " +
+			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) " +
+			"GROUP BY j HAVING k = l ORDER BY m ASC, n DESC LIMIT 10 OFFSET 11 " +
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12}
 	assert.Equal(t, expectedArgs, args)
 }
 

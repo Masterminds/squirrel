@@ -9,19 +9,20 @@ import (
 )
 
 func TestWherePartsAppendToSql(t *testing.T) {
-	parts := whereParts{
+	parts := []Sqlizer{
 		newWherePart("x = ?", 1),
 		newWherePart(nil),
 		newWherePart(Eq{"y": 2}),
 	}
 	sql := &bytes.Buffer{}
-	args, _ := parts.AppendToSql(sql, " AND ", []interface{}{})
+	args, _ := appendToSql(parts, sql, " AND ", []interface{}{})
 	assert.Equal(t, "x = ? AND y = ?", sql.String())
 	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
 func TestWherePartsAppendToSqlErr(t *testing.T) {
-	_, err := whereParts{newWherePart(1)}.AppendToSql(&bytes.Buffer{}, "", []interface{}{})
+	parts := []Sqlizer{newWherePart(1)}
+	_, err := appendToSql(parts, &bytes.Buffer{}, "", []interface{}{})
 	assert.Error(t, err)
 }
 
