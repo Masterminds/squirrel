@@ -211,7 +211,7 @@ func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
 
 // Column add result column to query with arguments
 // use it like Column("IF(col IN ("+squirel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
-// or like interface slice, see https://code.google.com/p/go-wiki/wiki/InterfaceSlice
+// or with interface slice, see https://code.google.com/p/go-wiki/wiki/InterfaceSlice
 // Column("IF(col IN ("+squirel.Placeholders(len(interfaceSlice))+"), 1, 0) as col", interfaceSlice...)
 func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Columns", newSelectPart(column, args...)).(SelectBuilder)
