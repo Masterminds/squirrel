@@ -7,39 +7,50 @@ import (
 )
 
 func TestSelectBuilderToSql(t *testing.T) {
+	//see https://code.google.com/p/go-wiki/wiki/InterfaceSlice
+	var dataSlice []int = []int{4, 5, 6}
+	var interfaceSlice []interface{} = make([]interface{}, len(dataSlice))
+	for i, d := range dataSlice {
+		interfaceSlice[i] = d
+	}
+
 	b := Select("a", "b").
 		Prefix("WITH prefix AS ?", 0).
 		Distinct().
-		Columns("c").
-		From("d").
+		Columns("c1").
+    	Columns("c2", "c3", "c4").
+        Column("IF(c5 IN ("+Placeholders(3)+"), 1, 0) as stat_column", 1, 2, 3).
+        Column("IF(c6 IN ("+Placeholders(3)+"), 1, 0) as stat_column2", interfaceSlice...).
+        From("d").
 		JoinClause("CROSS JOIN j1").
 		Join("j2").
 		LeftJoin("j3").
 		RightJoin("j4").
-		Where("e = ?", 1).
-		Where(Eq{"f": 2}).
-		Where(map[string]interface{}{"g": 3}).
-		Where(Eq{"h": []int{4, 5, 6}}).
+		Where("e = ?", 7).
+		Where(Eq{"f": 8}).
+		Where(map[string]interface{}{"g": 9}).
+		Where(Eq{"h": []int{10, 11, 12}}).
 		GroupBy("i").
 		Having("j = k").
 		OrderBy("l ASC", "m DESC").
-		Limit(7).
-		Offset(8).
-		Suffix("FETCH FIRST ? ROWS ONLY", 7)
+		Limit(13).
+		Offset(14).
+		Suffix("FETCH FIRST ? ROWS ONLY", 15)
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"SELECT DISTINCT a, b, c FROM d " +
+			"SELECT DISTINCT a, b, c1, c2, c3, c4, IF(c5 IN (?,?,?), 1, 0) as stat_column, IF(c6 IN (?,?,?), 1, 0) as stat_column2 " +
+            "FROM d " +
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
 			"WHERE e = ? AND f = ? AND g = ? AND h IN (?,?,?) " +
-			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 7 OFFSET 8 " +
+			"GROUP BY i HAVING j = k ORDER BY l ASC, m DESC LIMIT 13 OFFSET 14 " +
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15}
 	assert.Equal(t, expectedArgs, args)
 }
 
