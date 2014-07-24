@@ -10,7 +10,7 @@ type part struct {
 	args []interface{}
 }
 
-type sqlPart interface {
+type sqlSerializable interface {
 	ToSql() (sql string, args []interface{}, err error)
 }
 
@@ -27,7 +27,7 @@ func (p part) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
-func appendToSql(parts []sqlPart, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+func appendToSql(parts []sqlSerializable, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, p := range parts {
 		partSql, partArgs, err := p.ToSql()
 		if err != nil {

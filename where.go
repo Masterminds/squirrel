@@ -32,7 +32,7 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
-type whereParts []sqlPart
+type whereParts []sqlSerializable
 
 func (wps whereParts) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	return appendToSql(wps, w, sep, args)

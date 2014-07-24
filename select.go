@@ -29,7 +29,7 @@ type selectPart struct {
 	part
 }
 
-type selectParts []sqlPart
+type selectParts []sqlSerializable
 
 func newSelectPart(pred interface{}, args ...interface{}) selectPart {
 	return selectPart{part:part{pred: pred, args: args}}
