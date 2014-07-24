@@ -16,6 +16,7 @@ type selectData struct {
 	Distinct          bool
 	Columns           selectParts
 	From              string
+	Joins             []string
 	WhereParts        whereParts
 	GroupBys          []string
 	HavingParts       whereParts
@@ -90,6 +91,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" FROM ")
 		sql.WriteString(d.From)
 	}
+
+	if len(d.Joins) > 0 {
+		sql.WriteString(" ")
+		sql.WriteString(strings.Join(d.Joins, " "))
+	}
+
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
 		args, err = d.WhereParts.AppendToSql(sql, " AND ", args)
@@ -220,6 +227,26 @@ func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBui
 // From sets the FROM clause of the query.
 func (b SelectBuilder) From(from string) SelectBuilder {
 	return builder.Set(b, "From", from).(SelectBuilder)
+}
+
+// JoinClause adds a join clause to the query.
+func (b SelectBuilder) JoinClause(join string) SelectBuilder {
+	return builder.Append(b, "Joins", join).(SelectBuilder)
+}
+
+// Join adds a JOIN clause to the query.
+func (b SelectBuilder) Join(join string) SelectBuilder {
+	return b.JoinClause("JOIN " + join)
+}
+
+// LeftJoin adds a LEFT JOIN clause to the query.
+func (b SelectBuilder) LeftJoin(join string) SelectBuilder {
+	return b.JoinClause("LEFT JOIN " + join)
+}
+
+// RightJoin adds a RIGHT JOIN clause to the query.
+func (b SelectBuilder) RightJoin(join string) SelectBuilder {
+	return b.JoinClause("RIGHT JOIN " + join)
 }
 
 // Where adds an expression to the WHERE clause of the query.
