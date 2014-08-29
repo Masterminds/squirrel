@@ -10,7 +10,7 @@ import (
 
 type insertData struct {
 	PlaceholderFormat PlaceholderFormat
-	RunWith           Runner
+	RunWith           BaseRunner
 	Prefixes          exprs
 	Options           []string
 	Into              string

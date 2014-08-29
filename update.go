@@ -12,7 +12,7 @@ import (
 
 type updateData struct {
 	PlaceholderFormat PlaceholderFormat
-	RunWith           Runner
+	RunWith           BaseRunner
 	Prefixes          exprs
 	Table             string
 	SetClauses        []setClause

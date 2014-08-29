@@ -10,7 +10,7 @@ import (
 
 type selectData struct {
 	PlaceholderFormat PlaceholderFormat
-	RunWith           Runner
+	RunWith           BaseRunner
 	Prefixes          exprs
 	Distinct          bool
 	Columns           []Sqlizer
@@ -43,7 +43,11 @@ func (d *selectData) QueryRow() RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
-	return QueryRowWith(d.RunWith, d)
+	queryRower, ok := d.RunWith.(QueryRower)
+	if !ok {
+		return &Row{err: RunnerNotQueryRunner}
+	}
+	return QueryRowWith(queryRower, d)
 }
 
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
