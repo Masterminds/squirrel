@@ -61,6 +61,14 @@ func (r *dbRunner) QueryRow(query string, args ...interface{}) RowScanner {
 	return r.DB.QueryRow(query, args...)
 }
 
+type txRunner struct {
+	*sql.Tx
+}
+
+func (r *txRunner) QueryRow(query string, args ...interface{}) RowScanner {
+	return r.Tx.QueryRow(query, args...)
+}
+
 func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 	var runner Runner
 	switch r := baseRunner.(type) {
@@ -68,6 +76,8 @@ func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 		runner = r
 	case *sql.DB:
 		runner = &dbRunner{r}
+	case *sql.Tx:
+		runner = &txRunner{r}
 	}
 	return builder.Set(b, "RunWith", runner)
 }
