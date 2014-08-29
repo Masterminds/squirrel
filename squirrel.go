@@ -61,6 +61,14 @@ func (r *dbRunner) QueryRow(query string, args ...interface{}) RowScanner {
 	return r.DB.QueryRow(query, args...)
 }
 
+type txRunner struct {
+	*sql.Tx
+}
+
+func (r *txRunner) QueryRow(query string, args ...interface{}) RowScanner {
+	return r.Tx.QueryRow(query, args...)
+}
+
 func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 	var runner Runner
 	switch r := baseRunner.(type) {
@@ -68,9 +76,16 @@ func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 		runner = r
 	case *sql.DB:
 		runner = &dbRunner{r}
+	case *sql.Tx:
+		runner = &txRunner{r}
+	default:
+		panic(InvalidRunnerType)
 	}
 	return builder.Set(b, "RunWith", runner)
 }
+
+// InvalidRunnerType is returner when setRunWith is invoked with an unsupported runner type
+var InvalidRunnerType = fmt.Errorf("invalid runner type (setRunWith)")
 
 // RunnerNotSet is returned by methods that need a Runner if it isn't set.
 var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
