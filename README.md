@@ -12,9 +12,11 @@ import "github.com/lann/squirrel"
 Squirrel helps you build SQL queries from composable parts:
 
 ```go
-users := squirrel.Select("*").From("users").Join("emails USING (email_id)")
+import sq "github.com/lann/squirrel"
 
-active := users.Where(squirrel.Eq{"deleted_at": nil})
+users := sq.Select("*").From("users").Join("emails USING (email_id)")
+
+active := users.Where(sq.Eq{"deleted_at": nil})
 
 sql, args, err := active.ToSql()
 
@@ -22,7 +24,7 @@ sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NUL
 ```
 
 ```go
-sql, args, err := squirrel.
+sql, args, err := sq.
     Insert("users").Columns("name", "age").
     Values("moe", 13).Values("larry", Expr("? + 5", 12)).
     ToSql()
@@ -33,7 +35,7 @@ sql == "INSERT INTO users (name,age) VALUES (?,?),(?,? + 5)"
 Squirrel can also execute queries directly:
 
 ```go
-stooges := users.Where(squirrel.Eq{"username": []string{"moe", "larry", "curly", "shemp"}})
+stooges := users.Where(sq.Eq{"username": []string{"moe", "larry", "curly", "shemp"}})
 three_stooges := stooges.Limit(3)
 rows, err := three_stooges.RunWith(db).Query()
 
@@ -54,17 +56,17 @@ Squirrel wants to make your life easier:
 
 ```go
 // StmtCache caches Prepared Stmts for you
-dbCache := squirrel.NewStmtCacher(db)
+dbCache := sq.NewStmtCacher(db)
 
 // StatementBuilder keeps your syntax neat
-mydb := squirrel.StatementBuilder.RunWith(dbCache)
+mydb := sq.StatementBuilder.RunWith(dbCache)
 select_users := mydb.Select("*").From("users")
 ```
 
 Squirrel loves PostgreSQL:
 
 ```go
-psql := squirrel.StatementBuilder.PlaceholderFormat(Dollar)
+psql := sq.StatementBuilder.PlaceholderFormat(Dollar)
 
 // You use question marks for placeholders...
 sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna")
