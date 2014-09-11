@@ -78,16 +78,20 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 type conj []Sqlizer
 
 func (c conj) join(sep string) (sql string, args []interface{}, err error) {
-	sqlParts := make([]string, len(c))
-	for i, sqlizer := range c {
+	var sqlParts []string
+	for _, sqlizer := range c {
 		partSql, partArgs, err := sqlizer.ToSql()
 		if err != nil {
 			return "", nil, err
 		}
-		sqlParts[i] = partSql
-		args = append(args, partArgs...)
+		if partSql != "" {
+			sqlParts = append(sqlParts, partSql)
+			args = append(args, partArgs...)
+		}
 	}
-	sql = fmt.Sprintf("(%s)", strings.Join(sqlParts, sep))
+	if len(sqlParts) > 0 {
+		sql = fmt.Sprintf("(%s)", strings.Join(sqlParts, sep))
+	}
 	return
 }
 
