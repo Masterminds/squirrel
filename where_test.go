@@ -54,13 +54,3 @@ func TestWherePartMap(t *testing.T) {
 	test(m)
 	test(Eq(m))
 }
-
-func TestWherePartMapNil(t *testing.T) {
-	sql, _, _ := newWherePart(Eq{"x": nil}).ToSql()
-	assert.Equal(t, "x IS NULL", sql)
-}
-
-func TestWherePartMapSlice(t *testing.T) {
-	sql, _, _ := newWherePart(Eq{"x": []int{1, 2}}).ToSql()
-	assert.Equal(t, "x IN (?,?)", sql)
-}
