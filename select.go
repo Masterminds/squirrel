@@ -22,6 +22,8 @@ type selectData struct {
 	OrderBys          []string
 	Limit             string
 	Offset            string
+	Union             []Sqlizer
+	UnionAll          []Sqlizer
 	Suffixes          exprs
 }
 
@@ -51,7 +53,13 @@ func (d *selectData) QueryRow() RowScanner {
 }
 
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
-	return d.toSql(false)
+	sqlStr, args, err = d.toSql(false)
+	if err != nil {
+		return
+	}
+
+	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sqlStr)
+	return
 }
 
 func (d *selectData) toSql(subquery bool) (sqlStr string, args []interface{}, err error) {
@@ -138,16 +146,27 @@ func (d *selectData) toSql(subquery bool) (sqlStr string, args []interface{}, er
 		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
+	if len(d.Union) > 0 {
+		sql.WriteString(" UNION ")
+		args, err = appendToSql(d.Union, sql, " UNION ", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if len(d.UnionAll) > 0 {
+		sql.WriteString(" UNION ALL ")
+		args, err = appendToSql(d.UnionAll, sql, " UNION ALL ", args)
+		if err != nil {
+			return
+		}
+	}
+
 	if subquery {
 		sql.WriteString(" )")
 	}
 
-	if subquery {
-		sqlStr = sql.String()
-	} else {
-		sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
-	}
-
+	sqlStr = sql.String()
 	return
 }
 
@@ -312,4 +331,14 @@ func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
 // Suffix adds an expression to the end of the query
 func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(SelectBuilder)
+}
+
+// Union adds a UNION clause to the query
+func (b SelectBuilder) Union(query interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Union", newUnionPart(query, args...)).(SelectBuilder)
+}
+
+// UnionAll adds a UNION ALL clause to the query
+func (b SelectBuilder) UnionAll(query interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "UnionAll", newUnionPart(query, args...)).(SelectBuilder)
 }

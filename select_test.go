@@ -27,6 +27,8 @@ func TestSelectBuilderToSql(t *testing.T) {
 		OrderBy("o ASC", "p DESC").
 		Limit(12).
 		Offset(13).
+		Union("SELECT * FROM q TABLE WHERE r=?", 15).
+		UnionAll(Select("*").From("s").Where("t=?", 16)).
 		Suffix("FETCH FIRST ? ROWS ONLY", 14)
 
 	sql, args, err := b.ToSql()
@@ -39,10 +41,12 @@ func TestSelectBuilderToSql(t *testing.T) {
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +
 			"GROUP BY l HAVING m = n ORDER BY o ASC, p DESC LIMIT 12 OFFSET 13 " +
-			"FETCH FIRST ? ROWS ONLY"
+			"FETCH FIRST ? ROWS ONLY " +
+			"UNION SELECT * FROM q TABLE WHERE r=? " +
+			"UNION ALL SELECT * FROM s WHERE t=?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14}
+	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16}
 	assert.Equal(t, expectedArgs, args)
 }
 
