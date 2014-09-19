@@ -14,7 +14,7 @@ type selectData struct {
 	Prefixes          exprs
 	Distinct          bool
 	Columns           []Sqlizer
-	From              string
+	FromPart          Sqlizer
 	Joins             []string
 	WhereParts        []Sqlizer
 	GroupBys          []string
@@ -51,12 +51,20 @@ func (d *selectData) QueryRow() RowScanner {
 }
 
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.toSql(false)
+}
+
+func (d *selectData) toSql(subquery bool) (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
 	}
 
 	sql := &bytes.Buffer{}
+
+	if subquery {
+		sql.WriteString("( ")
+	}
 
 	if len(d.Prefixes) > 0 {
 		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
@@ -76,9 +84,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if len(d.From) > 0 {
+	if d.FromPart != nil {
 		sql.WriteString(" FROM ")
-		sql.WriteString(d.From)
+		args, err = appendToSql([]Sqlizer{d.FromPart}, sql, ", ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.Joins) > 0 {
@@ -127,7 +138,16 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
+	if subquery {
+		sql.WriteString(" )")
+	}
+
+	if subquery {
+		sqlStr = sql.String()
+	} else {
+		sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
+	}
+
 	return
 }
 
@@ -214,8 +234,8 @@ func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBui
 }
 
 // From sets the FROM clause of the query.
-func (b SelectBuilder) From(from string) SelectBuilder {
-	return builder.Set(b, "From", from).(SelectBuilder)
+func (b SelectBuilder) From(from interface{}) SelectBuilder {
+	return builder.Set(b, "FromPart", newFromPart(from)).(SelectBuilder)
 }
 
 // JoinClause adds a join clause to the query.
