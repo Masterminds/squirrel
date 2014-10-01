@@ -77,5 +77,5 @@ sql == "SELECT * FROM elephants WHERE name IN ($1,$2)"
 
 ## License
 
-Builder is released under the
+Squirrel is released under the
 [MIT License](http://www.opensource.org/licenses/MIT).
