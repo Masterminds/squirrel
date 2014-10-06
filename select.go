@@ -62,6 +62,10 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	return
 }
 
+func (d *selectData) toSubQuerySql() (sqlStr string, args []interface{}, err error) {
+	return d.toSql(true)
+}
+
 func (d *selectData) toSql(subquery bool) (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")

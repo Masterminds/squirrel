@@ -10,6 +10,11 @@ func (b StatementBuilderType) Select(columns ...string) SelectBuilder {
 	return SelectBuilder(b).Columns(columns...)
 }
 
+// SubQuerySelect returns a SelectBuilder for this StatementBuilderType.
+func (b StatementBuilderType) SubQuerySelect(columns ...string) SubQueryBuilder {
+	return SubQueryBuilder(b).Columns(columns...)
+}
+
 // Insert returns a InsertBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Insert(into string) InsertBuilder {
 	return InsertBuilder(b).Into(into)
@@ -43,6 +48,13 @@ var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFor
 // See SelectBuilder.Columns.
 func Select(columns ...string) SelectBuilder {
 	return StatementBuilder.Select(columns...)
+}
+
+// SubQuerySelect returns a new SubQueryBuilder, optionally setting some result columns.
+//
+// See SubQueryBuilder.Columns.
+func SubQuerySelect(columns ...string) SubQueryBuilder {
+	return StatementBuilder.SubQuerySelect(columns...)
 }
 
 // Insert returns a new InsertBuilder with the given table name.

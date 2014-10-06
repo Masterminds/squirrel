@@ -19,7 +19,7 @@ func TestFromPartsAppendToSqlWithString(t *testing.T) {
 
 func TestFromPartAppendToSqlWithSelect(t *testing.T) {
 	parts := []Sqlizer{
-		newFromPart(Select("*").Where(Eq{"col":"value"})),
+		newFromPart(SubQuerySelect("*").Where(Eq{"col":"value"})),
 	}
 
 	sql := &bytes.Buffer{}

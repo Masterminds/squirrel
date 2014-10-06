@@ -2,7 +2,6 @@ package squirrel
 
 import (
 	"fmt"
-	"github.com/lann/builder"
 )
 
 type unionPart part
@@ -14,8 +13,8 @@ func newUnionPart(pred interface{}, args ...interface{}) Sqlizer {
 func (p unionPart) ToSql() (sqlStr string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case SelectBuilder:
-		entity := builder.GetStruct(pred).(selectData)
-		sqlStr, args, err = entity.toSql(false)
+		pred.PlaceholderFormat(Question)		// Use parent's placeholder setting if SELECT statement is in union.
+		sqlStr, args, err = pred.ToSql()
 	case string:
 		sqlStr = pred
 		args = p.args
