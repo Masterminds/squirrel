@@ -42,9 +42,7 @@ func (b SubQueryBuilder) Columns(columns ...string) SubQueryBuilder {
 }
 
 // Column adds a result column to the query.
-// Unlike Columns, Column accepts args which will be bound to placeholders in
-// the columns string, for example:
-//   Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
+// See SelectBuilder.Column
 func (b SubQueryBuilder) Column(column interface{}, args ...interface{}) SubQueryBuilder {
 	return builder.Append(b, "Columns", newPart(column, args...)).(SubQueryBuilder)
 }
@@ -75,25 +73,7 @@ func (b SubQueryBuilder) RightJoin(join string) SubQueryBuilder {
 }
 
 // Where adds an expression to the WHERE clause of the query.
-//
-// Expressions are ANDed together in the generated SQL.
-//
-// Where accepts several types for its pred argument:
-//
-// nil OR "" - ignored.
-//
-// string - SQL expression.
-// If the expression has SQL placeholders then a set of arguments must be passed
-// as well, one for each placeholder.
-//
-// map[string]interface{} OR Eq - map of SQL expressions to values. Each key is
-// transformed into an expression like "<key> = ?", with the corresponding value
-// bound to the placeholder. If the value is nil, the expression will be "<key>
-// IS NULL". If the value is an array or slice, the expression will be "<key> IN
-// (?,?,...)", with one placeholder for each item in the value. These expressions
-// are ANDed together.
-//
-// Where will panic if pred isn't any of the above types.
+// See SelectBuilder.Where
 func (b SubQueryBuilder) Where(pred interface{}, args ...interface{}) SubQueryBuilder {
 	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(SubQueryBuilder)
 }
