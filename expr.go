@@ -57,6 +57,10 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 		} else {
 			valVal := reflect.ValueOf(val)
 			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
+				if valVal.Len() == 0 {
+					err = fmt.Errorf("equality condition must contain at least one paramater")
+					return
+				}
 				placeholders := make([]string, valVal.Len())
 				for i := 0; i < valVal.Len(); i++ {
 					placeholders[i] = "?"

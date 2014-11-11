@@ -1,6 +1,7 @@
 package squirrel
 
 import (
+	"fmt"
 	"testing"
 
 	"bytes"
@@ -53,4 +54,9 @@ func TestWherePartMap(t *testing.T) {
 	m := map[string]interface{}{"x": 1, "y": 2}
 	test(m)
 	test(Eq(m))
+}
+
+func TestWherePartNoArgs(t *testing.T) {
+	_, _, err := newWherePart(Eq{"test": []string{}}).ToSql()
+	assert.Equal(t, err, fmt.Errorf("equality condition must contain at least one paramater"))
 }
