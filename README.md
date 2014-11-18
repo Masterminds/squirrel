@@ -73,6 +73,17 @@ sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", 
 
 /// ...squirrel replaces them using PlaceholderFormat.
 sql == "SELECT * FROM elephants WHERE name IN ($1,$2)"
+
+
+/// You can retrieve id ...
+query := sq.Insert("nodes").
+    Columns("uuid", "type", "data").
+    Values(node.Uuid, node.Type, node.Data).
+    Suffix("RETURNING \"id\"").
+    RunWith(m.db).
+    PlaceholderFormat(sq.Dollar)
+
+query.QueryRow().Scan(&node.id)
 ```
 
 ## License
