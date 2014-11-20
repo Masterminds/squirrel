@@ -26,7 +26,7 @@ sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NUL
 ```go
 sql, args, err := sq.
     Insert("users").Columns("name", "age").
-    Values("moe", 13).Values("larry", Expr("? + 5", 12)).
+    Values("moe", 13).Values("larry", sq.Expr("? + 5", 12)).
     ToSql()
 
 sql == "INSERT INTO users (name,age) VALUES (?,?),(?,? + 5)"
