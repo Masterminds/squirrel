@@ -8,7 +8,7 @@ import (
 )
 
 type expr struct {
-	sql string
+	sql  string
 	args []interface{}
 }
 
@@ -48,8 +48,18 @@ func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]inte
 //     .Where(Eq{"id": 1})
 type Eq map[string]interface{}
 
-func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
-	var exprs []string
+func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
+	var (
+		exprs    []string
+		equalOpr string = "="
+		inOpr    string = "IN"
+	)
+
+	if useNotOpr {
+		equalOpr = "<>"
+		inOpr = "NOT IN"
+	}
+
 	for key, val := range eq {
 		expr := ""
 		if val == nil {
@@ -67,9 +77,9 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 					args = append(args, valVal.Index(i).Interface())
 				}
 				placeholdersStr := strings.Join(placeholders, ",")
-				expr = fmt.Sprintf("%s IN (%s)", key, placeholdersStr)
+				expr = fmt.Sprintf("%s %s (%s)", key, inOpr, placeholdersStr)
 			} else {
-				expr = fmt.Sprintf("%s = ?", key)
+				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
 				args = append(args, val)
 			}
 		}
@@ -77,6 +87,19 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 	}
 	sql = strings.Join(exprs, " AND ")
 	return
+}
+
+func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
+	return eq.toSql(false)
+}
+
+// Eq is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(NotEq{"id": 1}) == "id <> 1"
+type NotEq Eq
+
+func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
+	return Eq(neq).toSql(true)
 }
 
 type conj []Sqlizer
