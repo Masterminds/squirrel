@@ -86,6 +86,20 @@ query := sq.Insert("nodes").
 query.QueryRow().Scan(&node.id)
 ```
 
+You can escape question mask by inserting two question marks:
+
+```sql
+SELECT * FROM nodes WHERE meta->'format' ??| array[?,?]
+```
+
+will generate with the Dollar Placeholder:
+
+```sql
+SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2] 
+```
+
+
+
 ## License
 
 Squirrel is released under the
