@@ -119,3 +119,8 @@ func (b SubQueryBuilder) Union(query interface{}, args ...interface{}) SubQueryB
 func (b SubQueryBuilder) UnionAll(query interface{}, args ...interface{}) SubQueryBuilder {
 	return builder.Append(b, "UnionAll", newUnionPart(query, args...)).(SubQueryBuilder)
 }
+
+// As adds a AS clause to the query
+func (b SubQueryBuilder) As(name string) SubQueryBuilder {
+	return builder.Set(b, "As", name).(SubQueryBuilder)
+}

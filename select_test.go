@@ -28,7 +28,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Limit(12).
 		Offset(13).
 		Union("SELECT * FROM q TABLE WHERE r=?", 15).
-		UnionAll(Select("*").From("s").Where("t=?", 16)).
+		UnionAll(Select("*").From(SubQuerySelect("*").From("s").As("u")).Where("t=?", 16)).
 		Suffix("FETCH FIRST ? ROWS ONLY", 14)
 
 	sql, args, err := b.ToSql()
@@ -43,7 +43,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 			"GROUP BY l HAVING m = n ORDER BY o ASC, p DESC LIMIT 12 OFFSET 13 " +
 			"FETCH FIRST ? ROWS ONLY " +
 			"UNION SELECT * FROM q TABLE WHERE r=? " +
-			"UNION ALL SELECT * FROM s WHERE t=?"
+			"UNION ALL SELECT * FROM ( SELECT * FROM s ) AS u WHERE t=?"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16}

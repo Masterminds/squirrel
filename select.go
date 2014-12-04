@@ -25,6 +25,7 @@ type selectData struct {
 	Union             []Sqlizer
 	UnionAll          []Sqlizer
 	Suffixes          exprs
+	As                string
 }
 
 func (d *selectData) Exec() (sql.Result, error) {
@@ -168,6 +169,10 @@ func (d *selectData) toSql(subquery bool) (sqlStr string, args []interface{}, er
 
 	if subquery {
 		sql.WriteString(" )")
+		if len(d.As) != 0 {
+			sql.WriteString(" AS ")
+			sql.WriteString(d.As)
+		}
 	}
 
 	sqlStr = sql.String()
