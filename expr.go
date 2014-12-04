@@ -20,6 +20,27 @@ func Expr(sql string, args ...interface{}) expr {
 	return expr{sql: sql, args: args}
 }
 
+func ExprSlice(sql string, size int, args ...interface{}) expr {
+	if len(args) != 1 {
+		return expr{sql: sql, args: args}
+	}
+
+	b := make([]interface{}, size)
+
+	switch t := args[0].(type) {
+		case []string:
+			for i := range t {
+				b[i] = t[i]
+			}
+		case []int:
+			for i := range t {
+				b[i] = t[i]
+			}
+	}
+
+	return expr{sql: sql, args: b}
+}
+
 func (e expr) ToSql() (sql string, args []interface{}, err error) {
 	return e.sql, e.args, nil
 }
