@@ -53,17 +53,19 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 		exprs    []string
 		equalOpr string = "="
 		inOpr    string = "IN"
+		nullOpr  string = "IS"
 	)
 
 	if useNotOpr {
 		equalOpr = "<>"
 		inOpr = "NOT IN"
+		nullOpr = "IS NOT"
 	}
 
 	for key, val := range eq {
 		expr := ""
 		if val == nil {
-			expr = fmt.Sprintf("%s IS NULL", key)
+			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
 		} else {
 			valVal := reflect.ValueOf(val)
 			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
@@ -93,7 +95,7 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 	return eq.toSql(false)
 }
 
-// Eq is syntactic sugar for use with Where/Having/Set methods.
+// NotEq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
 //     .Where(NotEq{"id": 1}) == "id <> 1"
 type NotEq Eq

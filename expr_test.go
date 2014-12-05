@@ -1,8 +1,8 @@
 package squirrel
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestEqToSql(t *testing.T) {
@@ -51,4 +51,23 @@ func TestEqNotInToSql(t *testing.T) {
 
 	expectedArgs := []interface{}{1, 2, 3}
 	assert.Equal(t, expectedArgs, args)
+}
+
+func TestExprNilToSql(t *testing.T) {
+	var b Sqlizer
+	b = NotEq{"name": nil}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+
+	expectedSql := "name IS NOT NULL"
+	assert.Equal(t, expectedSql, sql)
+
+	b = Eq{"name": nil}
+	sql, args, err = b.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+
+	expectedSql = "name IS NULL"
+	assert.Equal(t, expectedSql, sql)
 }
