@@ -73,13 +73,10 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 					err = fmt.Errorf("equality condition must contain at least one paramater")
 					return
 				}
-				placeholders := make([]string, valVal.Len())
 				for i := 0; i < valVal.Len(); i++ {
-					placeholders[i] = "?"
 					args = append(args, valVal.Index(i).Interface())
 				}
-				placeholdersStr := strings.Join(placeholders, ",")
-				expr = fmt.Sprintf("%s %s (%s)", key, inOpr, placeholdersStr)
+				expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
 			} else {
 				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
 				args = append(args, val)
@@ -114,6 +111,17 @@ func (c conj) join(sep string) (sql string, args []interface{}, err error) {
 			return "", nil, err
 		}
 		if partSql != "" {
+			switch v := sqlizer.(type) {
+			case Eq:
+				if len(v) > 1 {
+					partSql = fmt.Sprintf("(%s)", partSql)
+				}
+			case NotEq:
+				if len(v) > 1 {
+					partSql = fmt.Sprintf("(%s)", partSql)
+				}
+			}
+
 			sqlParts = append(sqlParts, partSql)
 			args = append(args, partArgs...)
 		}

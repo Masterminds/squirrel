@@ -75,7 +75,6 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	return
 }
 
-
 // Builder
 
 // DeleteBuilder builds SQL DELETE statements.
