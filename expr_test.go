@@ -71,3 +71,15 @@ func TestExprNilToSql(t *testing.T) {
 	expectedSql = "name IS NULL"
 	assert.Equal(t, expectedSql, sql)
 }
+
+func TestOrExprToSql(t *testing.T) {
+	cond := Or{
+		NotEq{"first_name": nil, "last_name": nil},
+		NotEq{"full_name": nil},
+	}
+
+	sql, _, err := cond.ToSql()
+	expectedSql := "((first_name IS NOT NULL AND last_name IS NOT NULL) OR full_name IS NOT NULL)"
+	assert.Equal(t, expectedSql, sql)
+	assert.NoError(t, err)
+}

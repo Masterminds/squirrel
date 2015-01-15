@@ -103,7 +103,6 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	return
 }
 
-
 // Builder
 
 // UpdateBuilder builds SQL UPDATE statements.

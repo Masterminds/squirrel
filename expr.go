@@ -114,6 +114,17 @@ func (c conj) join(sep string) (sql string, args []interface{}, err error) {
 			return "", nil, err
 		}
 		if partSql != "" {
+			switch v := sqlizer.(type) {
+			case Eq:
+				if len(v) > 1 {
+					partSql = fmt.Sprintf("(%s)", partSql)
+				}
+			case NotEq:
+				if len(v) > 1 {
+					partSql = fmt.Sprintf("(%s)", partSql)
+				}
+			}
+
 			sqlParts = append(sqlParts, partSql)
 			args = append(args, partArgs...)
 		}
