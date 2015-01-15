@@ -79,7 +79,10 @@ func TestOrExprToSql(t *testing.T) {
 	}
 
 	sql, _, err := cond.ToSql()
-	expectedSql := "((first_name IS NOT NULL AND last_name IS NOT NULL) OR full_name IS NOT NULL)"
-	assert.Equal(t, expectedSql, sql)
+	expectedSqls := []string{
+		"((first_name IS NOT NULL AND last_name IS NOT NULL) OR full_name IS NOT NULL)",
+		"((last_name IS NOT NULL AND first_name IS NOT NULL) OR full_name IS NOT NULL)",
+	}
+	assert.Contains(t, expectedSqls, sql)
 	assert.NoError(t, err)
 }
