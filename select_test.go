@@ -12,6 +12,8 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Distinct().
 		Columns("c").
 		Column("IF(d IN ("+Placeholders(3)+"), 1, 0) as stat_column", 1, 2, 3).
+		Column(Expr("a > ?", 100)).
+		Column(Eq{"b": []int{101, 102, 103}}).
 		From("e").
 		JoinClause("CROSS JOIN j1").
 		Join("j2").
@@ -34,7 +36,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column " +
+			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, a > ?, b IN (?,?,?) " +
 			"FROM e " +
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +
@@ -42,7 +44,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14}
+	expectedArgs := []interface{}{0, 1, 2, 3, 100, 101, 102, 103, 4, 5, 6, 7, 8, 9, 10, 11, 14}
 	assert.Equal(t, expectedArgs, args)
 }
 
