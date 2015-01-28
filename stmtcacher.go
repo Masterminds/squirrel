@@ -88,3 +88,67 @@ func NewStmtCacheProxy(db *sql.DB) DBProxyBeginner {
 func (sp *stmtCacheProxy) Begin() (*sql.Tx, error) {
 	return sp.db.Begin()
 }
+
+// DBTransactionProxy wraps transaction and includes DBProxy interface
+type DBTransactionProxy interface {
+	DBProxy
+	Begin() error
+	Commit() error
+	Rollback() error
+}
+
+type stmtCacheTransactionProxy struct {
+	DBProxy
+	db          *sql.DB
+	transaction *sql.Tx
+}
+
+// NewStmtCacheTransactionProxy returns a DBTransactionProxy
+// wrapping an open transaction in stmtCacher.
+// You should use Begin() each time you want a new transaction and
+// cache will be valid only for that transaction.
+// By default without calling Begin proxy will use simple stmtCacher
+//
+// Usage example:
+//	proxy := sq.NewStmtCacheTransactionProxy(db)
+//	mydb := sq.StatementBuilder.RunWith(proxy)
+//	insertUsers := mydb.Insert("users").Columns("name")
+//	insertUsers.Values("username1").Exec()
+//	insertUsers.Values("username2").Exec()
+//	proxy.Commit()
+//
+//	proxy.Begin()
+//	insertPets := mydb.Insert("pets").Columns("name", "username")
+//	insertPets.Values("petname1", "username1").Exec()
+//	insertPets.Values("petname2", "username1").Exec()
+//	proxy.Commit()
+func NewStmtCacheTransactionProxy(db *sql.DB) (proxy DBTransactionProxy) {
+	return &stmtCacheTransactionProxy{DBProxy: NewStmtCacher(db), db: db}
+}
+
+func (s *stmtCacheTransactionProxy) Begin() (err error) {
+	tr, err := s.db.Begin()
+
+	if err != nil {
+		return
+	}
+
+	s.DBProxy = NewStmtCacher(tr)
+	s.transaction = tr
+
+	return
+}
+
+func (s *stmtCacheTransactionProxy) Commit() error {
+	defer s.resetProxy()
+	return s.transaction.Commit()
+}
+
+func (s *stmtCacheTransactionProxy) Rollback() error {
+	defer s.resetProxy()
+	return s.transaction.Rollback()
+}
+
+func (s *stmtCacheTransactionProxy) resetProxy() {
+	s.DBProxy = NewStmtCacher(s.db)
+}
