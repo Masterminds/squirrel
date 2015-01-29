@@ -43,6 +43,28 @@ func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]inte
 	return args, nil
 }
 
+// aliasExpr helps to alias part of SQL query generated with underlying "expr"
+type aliasExpr struct {
+	expr  Sqlizer
+	alias string
+}
+
+// Alias allows to define alias for column in SelectBuilder. Useful when column is
+// defined as complex expression like IF or CASE
+// Ex:
+//		.Column(Alias(caseStmt, "case_column"))
+func Alias(expr Sqlizer, alias string) aliasExpr {
+	return aliasExpr{expr, alias}
+}
+
+func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
+	sql, args, err = e.expr.ToSql()
+	if err == nil {
+		sql = fmt.Sprintf("%s AS %s", sql, e.alias)
+	}
+	return
+}
+
 // Eq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
 //     .Where(Eq{"id": 1})
