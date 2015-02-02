@@ -96,8 +96,8 @@ func TestMultipleCase(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedSql := "SELECT " +
-		"CASE x = ? WHEN true THEN ? ELSE 42 END AS case_noval, " +
-		"CASE WHEN x = ? THEN 'x is zero' WHEN x > ? THEN CONCAT('x is greater than ', ?) END AS case_expr " +
+		"(CASE x = ? WHEN true THEN ? ELSE 42 END) AS case_noval, " +
+		"(CASE WHEN x = ? THEN 'x is zero' WHEN x > ? THEN CONCAT('x is greater than ', ?) END) AS case_expr " +
 		"FROM table"
 
 	assert.Equal(t, expectedSql, sql)
