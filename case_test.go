@@ -7,8 +7,7 @@ import (
 )
 
 func TestCaseWithVal(t *testing.T) {
-	caseStmt := Case().
-		What("number").
+	caseStmt := Case("number").
 		When("1", "one").
 		When("2", "two").
 		Else(Expr("?", "big number"))
@@ -55,8 +54,7 @@ func TestCaseWithNoVal(t *testing.T) {
 }
 
 func TestCaseWithExpr(t *testing.T) {
-	caseStmt := Case().
-		What(Expr("x = ?", true)).
+	caseStmt := Case(Expr("x = ?", true)).
 		When("true", Expr("?", "it's true!")).
 		Else("42")
 
@@ -78,8 +76,7 @@ func TestCaseWithExpr(t *testing.T) {
 }
 
 func TestMultipleCase(t *testing.T) {
-	caseStmtNoval := Case().
-		What(Expr("x = ?", true)).
+	caseStmtNoval := Case(Expr("x = ?", true)).
 		When("true", Expr("?", "it's true!")).
 		Else("42")
 	caseStmtExpr := Case().
@@ -110,8 +107,7 @@ func TestMultipleCase(t *testing.T) {
 }
 
 func TestCaseWithNoWhenClause(t *testing.T) {
-	caseStmt := Case().
-		What(Expr("x = ?", true)).
+	caseStmt := Case("something").
 		Else("42")
 
 	qb := Select().Column(caseStmt).From("table")

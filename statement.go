@@ -67,6 +67,13 @@ func Delete(from string) DeleteBuilder {
 }
 
 // Case returns a new CaseBuilder
-func Case() CaseBuilder {
-	return CaseBuilder(builder.EmptyBuilder)
+// "what" represents case value, can be empty or just single value,
+// extra values are ignored
+func Case(what ...interface{}) CaseBuilder {
+	b := CaseBuilder(builder.EmptyBuilder)
+	if len(what) > 0 {
+		b = b.what(what[0])
+	}
+
+	return b
 }

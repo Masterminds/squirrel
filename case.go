@@ -100,8 +100,8 @@ func (b CaseBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
-// What sets optional value for CASE construct "CASE [value] ..."
-func (b CaseBuilder) What(expr interface{}) CaseBuilder {
+// what sets optional value for CASE construct "CASE [value] ..."
+func (b CaseBuilder) what(expr interface{}) CaseBuilder {
 	return builder.Set(b, "What", newPart(expr)).(CaseBuilder)
 }
 
