@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"bytes"
+	"errors"
 
 	"github.com/lann/builder"
 )
@@ -59,7 +60,13 @@ type caseData struct {
 }
 
 // ToSql implements Sqlizer
-func (d *caseData) ToSql() (string, []interface{}, error) {
+func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
+	if len(d.WhenParts) == 0 {
+		err = errors.New("case expression must contain at lease one WHEN clause")
+
+		return
+	}
+
 	sql := sqlizerBuffer{}
 
 	sql.WriteString("CASE ")

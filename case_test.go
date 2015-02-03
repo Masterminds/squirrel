@@ -108,3 +108,17 @@ func TestMultipleCase(t *testing.T) {
 	}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestCaseWithNoWhenClause(t *testing.T) {
+	caseStmt := Case().
+		What(Expr("x = ?", true)).
+		Else("42")
+
+	qb := Select().Column(caseStmt).From("table")
+
+	_, _, err := qb.ToSql()
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "case expression must contain at lease one WHEN clause", err.Error())
+}
