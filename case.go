@@ -53,10 +53,9 @@ func newWhenPart(when interface{}, then interface{}) whenPart {
 
 // caseData holds all the data required to build a CASE SQL construct
 type caseData struct {
-	PlaceholderFormat PlaceholderFormat
-	What              Sqlizer
-	WhenParts         []whenPart
-	Else              Sqlizer
+	What      Sqlizer
+	WhenParts []whenPart
+	Else      Sqlizer
 }
 
 // ToSql implements Sqlizer

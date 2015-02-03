@@ -25,11 +25,6 @@ func (b StatementBuilderType) Delete(from string) DeleteBuilder {
 	return DeleteBuilder(b).From(from)
 }
 
-// Case returns a CaseBuilder for this StatementBuilderType.
-func (b StatementBuilderType) Case() CaseBuilder {
-	return CaseBuilder(b)
-}
-
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -73,5 +68,5 @@ func Delete(from string) DeleteBuilder {
 
 // Case returns a new CaseBuilder
 func Case() CaseBuilder {
-	return StatementBuilder.Case()
+	return CaseBuilder(builder.EmptyBuilder)
 }
