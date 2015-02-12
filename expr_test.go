@@ -1,6 +1,7 @@
 package squirrel
 
 import (
+	"database/sql"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -70,4 +71,43 @@ func TestExprNilToSql(t *testing.T) {
 
 	expectedSql = "name IS NULL"
 	assert.Equal(t, expectedSql, sql)
+}
+
+func TestNullTypeString(t *testing.T) {
+	var b Sqlizer
+	var name sql.NullString
+
+	b = Eq{"name": name}
+	sql, args, err := b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "name IS NULL", sql)
+
+	name.Scan("Name")
+	b = Eq{"name": name}
+	sql, args, err = b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{"Name"}, args)
+	assert.Equal(t, "name = ?", sql)
+}
+
+func TestNullTypeInt64(t *testing.T) {
+	var userID sql.NullInt64
+	userID.Scan(nil)
+	b := Eq{"user_id": userID}
+	sql, args, err := b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "user_id IS NULL", sql)
+
+	userID.Scan(10)
+	b = Eq{"user_id": userID}
+	sql, args, err = b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{10}, args)
+	assert.Equal(t, "user_id = ?", sql)
 }

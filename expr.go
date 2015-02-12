@@ -1,11 +1,16 @@
 package squirrel
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"io"
 	"reflect"
 	"strings"
 )
+
+type nullType interface {
+	Value() (driver.Value, error)
+}
 
 type expr struct {
 	sql  string
@@ -64,6 +69,12 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 
 	for key, val := range eq {
 		expr := ""
+
+		switch v := val.(type) {
+		case nullType:
+			val, _ = v.Value()
+		}
+
 		if val == nil {
 			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
 		} else {
