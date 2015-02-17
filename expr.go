@@ -8,10 +8,6 @@ import (
 	"strings"
 )
 
-type nullType interface {
-	Value() (driver.Value, error)
-}
-
 type expr struct {
 	sql  string
 	args []interface{}
@@ -71,8 +67,10 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 		expr := ""
 
 		switch v := val.(type) {
-		case nullType:
-			val, _ = v.Value()
+		case driver.Valuer:
+			if val, err = v.Value(); err != nil {
+				return
+			}
 		}
 
 		if val == nil {
