@@ -1,6 +1,7 @@
 package squirrel
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"io"
 	"reflect"
@@ -64,6 +65,14 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 
 	for key, val := range eq {
 		expr := ""
+
+		switch v := val.(type) {
+		case driver.Valuer:
+			if val, err = v.Value(); err != nil {
+				return
+			}
+		}
+
 		if val == nil {
 			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
 		} else {
