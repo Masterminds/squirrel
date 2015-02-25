@@ -63,3 +63,16 @@ func TestInsertBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestInsertBuilderSetMap(t *testing.T) {
+	b := Insert("table").SetMap(Eq{"field1": 1})
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "INSERT INTO table (field1) VALUES (?)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}

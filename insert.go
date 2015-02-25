@@ -190,3 +190,18 @@ func (b InsertBuilder) Values(values ...interface{}) InsertBuilder {
 func (b InsertBuilder) Suffix(sql string, args ...interface{}) InsertBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(InsertBuilder)
 }
+
+// SetMap set columns and values for insert builder from a map of column name and value
+// note that it will reset all previous columns and values was set if any
+func (b InsertBuilder) SetMap(clauses map[string]interface{}) InsertBuilder {
+	cols := make([]string, len(clauses))
+	vals := make([]interface{}, len(clauses))
+	idx := 0
+	for cols[idx], vals[idx] = range clauses {
+		idx++
+	}
+
+	b = builder.Set(b, "Columns", cols).(InsertBuilder)
+	b = builder.Set(b, "Values", [][]interface{}{vals}).(InsertBuilder)
+	return b
+}
