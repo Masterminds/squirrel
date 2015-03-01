@@ -31,6 +31,27 @@ func TestCaseWithVal(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestCaseWithComplexVal(t *testing.T) {
+	caseStmt := Case("? > ?", 10, 5).
+		When("true", "'T'")
+
+	qb := Select().
+		Column(Alias(caseStmt, "complexCase")).
+		From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT (CASE ? > ? " +
+		"WHEN true THEN 'T' " +
+		"END) AS complexCase " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{10, 5}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestCaseWithNoVal(t *testing.T) {
 	caseStmt := Case().
 		When(Eq{"x": 0}, "x is zero").
