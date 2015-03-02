@@ -7,13 +7,15 @@ import (
 )
 
 func TestSelectBuilderToSql(t *testing.T) {
+	subQ := Select("aa", "bb").From("dd")
 	b := Select("a", "b").
 		Prefix("WITH prefix AS ?", 0).
 		Distinct().
 		Columns("c").
 		Column("IF(d IN ("+Placeholders(3)+"), 1, 0) as stat_column", 1, 2, 3).
 		Column(Expr("a > ?", 100)).
-		Column(Eq{"b": []int{101, 102, 103}}).
+		Column(Alias(Eq{"b": []int{101, 102, 103}}, "b_alias")).
+		Column(Alias(subQ, "subq")).
 		From("e").
 		JoinClause("CROSS JOIN j1").
 		Join("j2").
@@ -36,7 +38,9 @@ func TestSelectBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, a > ?, b IN (?,?,?) " +
+			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, a > ?, " +
+			"(b IN (?,?,?)) AS b_alias, " +
+			"(SELECT aa, bb FROM dd) AS subq " +
 			"FROM e " +
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +

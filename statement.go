@@ -65,3 +65,19 @@ func Update(table string) UpdateBuilder {
 func Delete(from string) DeleteBuilder {
 	return StatementBuilder.Delete(from)
 }
+
+// Case returns a new CaseBuilder
+// "what" represents case value
+func Case(what ...interface{}) CaseBuilder {
+	b := CaseBuilder(builder.EmptyBuilder)
+
+	switch len(what) {
+	case 0:
+	case 1:
+		b = b.what(what[0])
+	default:
+		b = b.what(newPart(what[0], what[1:]...))
+
+	}
+	return b
+}
