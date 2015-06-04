@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-type expr struct {
-	sql  string
+type Expression struct {
+	sql string
 	args []interface{}
 }
 
@@ -17,15 +17,15 @@ type expr struct {
 //
 // Ex:
 //     .Values(Expr("FROM_UNIXTIME(?)", t))
-func Expr(sql string, args ...interface{}) expr {
-	return expr{sql: sql, args: args}
+func Expr(sql string, args ...interface{}) Expression {
+	return Expression{sql: sql, args: args}
 }
 
-func (e expr) ToSql() (sql string, args []interface{}, err error) {
+func (e Expression) ToSql() (sql string, args []interface{}, err error) {
 	return e.sql, e.args, nil
 }
 
-type exprs []expr
+type exprs []Expression
 
 func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, e := range es {

@@ -84,7 +84,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	for r, row := range d.Values {
 		valueStrings := make([]string, len(row))
 		for v, val := range row {
-			e, isExpr := val.(expr)
+			e, isExpr := val.(Expression)
 			if isExpr {
 				valueStrings[v] = e.sql
 				args = append(args, e.args...)
