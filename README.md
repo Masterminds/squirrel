@@ -66,7 +66,7 @@ select_users := mydb.Select("*").From("users")
 Squirrel loves PostgreSQL:
 
 ```go
-psql := sq.StatementBuilder.PlaceholderFormat(Dollar)
+psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 // You use question marks for placeholders...
 sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna")
