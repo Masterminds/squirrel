@@ -132,6 +132,86 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 	return Eq(neq).toSql(true)
 }
 
+// Lt is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(Lt{"id": 1})
+type Lt map[string]interface{}
+
+func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
+	var (
+		exprs   []string
+		opr     string = "<"
+		nullOpr string = "IS"
+	)
+
+	if opposite {
+		opr = ">"
+		nullOpr = "IS NOT"
+	}
+
+	if orEq {
+		opr = fmt.Sprintf("%s%s", opr, "=")
+	}
+
+	for key, val := range lt {
+		expr := ""
+
+		switch v := val.(type) {
+		case driver.Valuer:
+			if val, err = v.Value(); err != nil {
+				return
+			}
+		}
+
+		if val == nil {
+			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
+		} else {
+			valVal := reflect.ValueOf(val)
+			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
+				err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
+				return
+			} else {
+				expr = fmt.Sprintf("%s %s ?", key, opr)
+				args = append(args, val)
+			}
+		}
+		exprs = append(exprs, expr)
+	}
+	sql = strings.Join(exprs, " AND ")
+	return
+}
+
+func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
+	return lt.toSql(false, false)
+}
+
+// LtOrEq is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(LtOrEq{"id": 1}) == "id <= 1"
+type LtOrEq Lt
+
+func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
+	return Lt(ltOrEq).toSql(false, true)
+}
+
+// Gt is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(Gt{"id": 1}) == "id > 1"
+type Gt Lt
+
+func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
+	return Lt(gt).toSql(true, false)
+}
+
+// GtOrEq is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(GtOrEq{"id": 1}) == "id >= 1"
+type GtOrEq Lt
+
+func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {
+	return Lt(gtOrEq).toSql(true, true)
+}
+
 type conj []Sqlizer
 
 func (c conj) join(sep string) (sql string, args []interface{}, err error) {
