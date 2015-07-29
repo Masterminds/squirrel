@@ -7,7 +7,9 @@ import "github.com/lann/squirrel"
 [![GoDoc](https://godoc.org/github.com/lann/squirrel?status.png)](https://godoc.org/github.com/lann/squirrel)
 [![Build Status](https://travis-ci.org/lann/squirrel.png?branch=master)](https://travis-ci.org/lann/squirrel)
 
-_**Note:** I will not be able to put significant time into this project for the forseeable future; I'll merge bug fixes or other trivial changes, but major features will not be reviewed. If anyone would like to maintain a fork for new features I would be happy to link to it._
+_**Note:** This project has moved from `github.com/lann/squirrel` to
+`github.com/Masterminds/squirrel`. Lann remains the architect of the
+project, but we're helping him currate.
 
 **Squirrel is not an ORM.**
 
