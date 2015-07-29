@@ -16,3 +16,6 @@ sudo: false
 install:
   - go get
   - go get github.com/stretchr/testify/assert
+
+notifications:
+  irc: "irc.freenode.net#masterminds"
