@@ -4,8 +4,12 @@
 import "github.com/lann/squirrel"
 ```
 
-[![GoDoc](https://godoc.org/github.com/lann/squirrel?status.png)](https://godoc.org/github.com/lann/squirrel)
-[![Build Status](https://travis-ci.org/lann/squirrel.png?branch=master)](https://travis-ci.org/lann/squirrel)
+[![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
+[![Build Status](https://travis-ci.org/Masterminds/squirrel.svg?branch=v1)](https://travis-ci.org/Masterminds/squirrel)
+
+_**Note:** This project has moved from `github.com/lann/squirrel` to
+`github.com/Masterminds/squirrel`. Lann remains the architect of the
+project, but we're helping him currate.
 
 **Squirrel is not an ORM.**
 
