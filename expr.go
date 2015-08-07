@@ -139,14 +139,12 @@ type Lt map[string]interface{}
 
 func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
 	var (
-		exprs   []string
-		opr     string = "<"
-		nullOpr string = "IS"
+		exprs []string
+		opr   string = "<"
 	)
 
 	if opposite {
 		opr = ">"
-		nullOpr = "IS NOT"
 	}
 
 	if orEq {
@@ -164,7 +162,8 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 		}
 
 		if val == nil {
-			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
+			err = fmt.Errorf("cannot use null with less than or greater than operators")
+			return
 		} else {
 			valVal := reflect.ValueOf(val)
 			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
