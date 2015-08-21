@@ -98,3 +98,47 @@ func TestSelectBuilderNoRunner(t *testing.T) {
 	err = b.Scan()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestSelectBuilderSimpleJoin(t *testing.T) {
+
+	expectedSql := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo"
+	expectedArgs := []interface{}(nil)
+
+	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo")
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, args, expectedArgs)
+}
+
+func TestSelectBuilderParamJoin(t *testing.T) {
+
+	expectedSql := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo AND baz.foo = ?"
+	expectedArgs := []interface{}{42}
+
+	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo AND baz.foo = ?", 42)
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, args, expectedArgs)
+}
+
+func TestSelectBuilderNestedSelectJoin(t *testing.T) {
+
+	expectedSql := "SELECT * FROM bar JOIN ( SELECT * FROM baz WHERE foo = ? ) r ON bar.foo = r.foo"
+	expectedArgs := []interface{}{42}
+
+	nestedSelect := Select("*").From("baz").Where("foo = ?", 42)
+
+	b := Select("*").From("bar").JoinClause(nestedSelect.Prefix("JOIN (").Suffix(") r ON bar.foo = r.foo"))
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, args, expectedArgs)
+}
