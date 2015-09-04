@@ -1,7 +1,7 @@
 # Squirrel - fluent SQL generator for Go
 
 ```go
-import "github.com/lann/squirrel"
+import "github.com/Masterminds/squirrel"
 ```
 
 [![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
