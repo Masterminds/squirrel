@@ -11,7 +11,9 @@ _**Note:** This project has moved from `github.com/lann/squirrel` to
 `github.com/Masterminds/squirrel`. Lann remains the architect of the
 project, but we're helping him currate.
 
-**Squirrel is not an ORM.**
+**Squirrel is not an ORM.** For an application of Squirrel, check out
+[structable, a table-struct mapper](https://github.com/technosophos/structable)
+
 
 Squirrel helps you build SQL queries from composable parts:
 
@@ -99,7 +101,7 @@ SELECT * FROM nodes WHERE meta->'format' ??| array[?,?]
 will generate with the Dollar Placeholder:
 
 ```sql
-SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2] 
+SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2]
 ```
 
 
