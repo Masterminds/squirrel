@@ -54,6 +54,54 @@ func TestEqNotInToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestLtToSql(t *testing.T) {
+	b := Lt{"id": 1}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id < ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestLtOrEqToSql(t *testing.T) {
+	b := LtOrEq{"id": 1}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id <= ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestGtToSql(t *testing.T) {
+	b := Gt{"id": 1}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id > ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestGtOrEqToSql(t *testing.T) {
+	b := GtOrEq{"id": 1}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id >= ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestExprNilToSql(t *testing.T) {
 	var b Sqlizer
 	b = NotEq{"name": nil}
