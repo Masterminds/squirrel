@@ -18,7 +18,7 @@ project, but we're helping him currate.
 Squirrel helps you build SQL queries from composable parts:
 
 ```go
-import sq "github.com/lann/squirrel"
+import sq "github.com/Masterminds/squirrel"
 
 users := sq.Select("*").From("users").Join("emails USING (email_id)")
 
