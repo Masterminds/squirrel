@@ -218,8 +218,13 @@ func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBui
 }
 
 // From sets the FROM clause of the query.
-func (b SelectBuilder) From(from interface{}) SelectBuilder {
+func (b SelectBuilder) From(from string) SelectBuilder {
 	return builder.Set(b, "From", newPart(from)).(SelectBuilder)
+}
+
+// FromSelect sets a subquery into the FROM clause of the query.
+func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilder {
+	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
 // JoinClause adds a join clause to the query.

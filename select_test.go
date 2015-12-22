@@ -52,9 +52,9 @@ func TestSelectBuilderToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestSelectBuilderSqlizedFrom(t *testing.T) {
+func TestSelectBuilderFromSelect(t *testing.T) {
 	subQ := Select("c").From("d").Where(Eq{"i": 0})
-	b := Select("a", "b").From(Alias(subQ, "subq"))
+	b := Select("a", "b").FromSelect(subQ, "subq")
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
