@@ -52,6 +52,19 @@ func TestSelectBuilderToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestSelectBuilderSqlizedFrom(t *testing.T) {
+	subQ := Select("c").From("d").Where(Eq{"i": 0})
+	b := Select("a", "b").From(Alias(subQ, "subq"))
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT a, b FROM (SELECT c FROM d WHERE i = ?) AS subq"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{0}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestSelectBuilderToSqlErr(t *testing.T) {
 	_, _, err := Select().From("x").ToSql()
 	assert.Error(t, err)
