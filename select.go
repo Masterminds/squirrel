@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/lann/builder"
 	"strings"
+
+	"github.com/lann/builder"
 )
 
 type selectData struct {
@@ -14,7 +15,7 @@ type selectData struct {
 	Prefixes          exprs
 	Distinct          bool
 	Columns           []Sqlizer
-	From              string
+	From              Sqlizer
 	Joins             []Sqlizer
 	WhereParts        []Sqlizer
 	GroupBys          []string
@@ -76,9 +77,12 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if len(d.From) > 0 {
+	if d.From != nil {
 		sql.WriteString(" FROM ")
-		sql.WriteString(d.From)
+		args, err = appendToSql([]Sqlizer{d.From}, sql, "", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.Joins) > 0 {
@@ -215,7 +219,12 @@ func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBui
 
 // From sets the FROM clause of the query.
 func (b SelectBuilder) From(from string) SelectBuilder {
-	return builder.Set(b, "From", from).(SelectBuilder)
+	return builder.Set(b, "From", newPart(from)).(SelectBuilder)
+}
+
+// FromSelect sets a subquery into the FROM clause of the query.
+func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilder {
+	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
 // JoinClause adds a join clause to the query.
