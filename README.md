@@ -4,6 +4,8 @@
 import "gopkg.in/Masterminds/squirrel.v1"
 ```
 or if you prefer using `master` (which may be arbitrarily ahead of or behind `v1`):
+
+**NOTE:** as of Go 1.6, `go get` correctly clones the Github default branch (which is `v1` in this repo).
 ```go
 import "github.com/Masterminds/squirrel"
 ```
