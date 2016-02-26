@@ -1,7 +1,7 @@
 Squirrel
 The Masterminds
 Copyright (C) 2014-2015, Lann Martin
-Copyright (C) 2015, Google
+Copyright (C) 2015-2016, Google
 Copyright (C) 2015, Matt Farina and Matt Butcher
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

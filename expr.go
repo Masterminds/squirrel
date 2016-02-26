@@ -101,13 +101,16 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 			valVal := reflect.ValueOf(val)
 			if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
 				if valVal.Len() == 0 {
-					err = fmt.Errorf("equality condition must contain at least one paramater")
-					return
+					expr = fmt.Sprintf("%s %s (NULL)", key, inOpr)
+					if args == nil {
+						args = []interface{}{}
+					}
+				} else {
+					for i := 0; i < valVal.Len(); i++ {
+						args = append(args, valVal.Index(i).Interface())
+					}
+					expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
 				}
-				for i := 0; i < valVal.Len(); i++ {
-					args = append(args, valVal.Index(i).Interface())
-				}
-				expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
 			} else {
 				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
 				args = append(args, val)
