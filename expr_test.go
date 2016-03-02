@@ -54,6 +54,18 @@ func TestEqNotInToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestEqInEmptyToSql(t *testing.T) {
+	b := Eq{"id": []int{}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id IN (NULL)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestLtToSql(t *testing.T) {
 	b := Lt{"id": 1}
 	sql, args, err := b.ToSql()
