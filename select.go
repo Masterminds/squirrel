@@ -13,7 +13,7 @@ type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
 	Prefixes          exprs
-	Distinct          bool
+	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
 	Joins             []Sqlizer
@@ -66,8 +66,9 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("SELECT ")
 
-	if d.Distinct {
-		sql.WriteString("DISTINCT ")
+	if len(d.Options) > 0 {
+		sql.WriteString(strings.Join(d.Options, " "))
+		sql.WriteString(" ")
 	}
 
 	if len(d.Columns) > 0 {
@@ -88,6 +89,9 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Joins) > 0 {
 		sql.WriteString(" ")
 		args, err = appendToSql(d.Joins, sql, " ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.WhereParts) > 0 {
@@ -197,7 +201,12 @@ func (b SelectBuilder) Prefix(sql string, args ...interface{}) SelectBuilder {
 
 // Distinct adds a DISTINCT clause to the query.
 func (b SelectBuilder) Distinct() SelectBuilder {
-	return builder.Set(b, "Distinct", true).(SelectBuilder)
+	return b.Options("DISTINCT")
+}
+
+// Options adds select option to the query
+func (b SelectBuilder) Options(options ...string) SelectBuilder {
+	return builder.Extend(b, "Options", options).(SelectBuilder)
 }
 
 // Columns adds result columns to the query.
