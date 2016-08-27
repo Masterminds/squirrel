@@ -15,7 +15,7 @@ import "github.com/Masterminds/squirrel"
 
 _**Note:** This project has moved from `github.com/lann/squirrel` to
 `github.com/Masterminds/squirrel`. Lann remains the architect of the
-project, but we're helping him currate.
+project, but we're helping him curate.
 
 **Squirrel is not an ORM.** For an application of Squirrel, check out
 [structable, a table-struct mapper](https://github.com/technosophos/structable)
