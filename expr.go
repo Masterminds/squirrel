@@ -95,7 +95,7 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 			}
 		}
 
-		if val == nil {
+		if (reflect.ValueOf(val).Kind() == reflect.Ptr && reflect.ValueOf(val).IsNil()) || val == nil {
 			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
 		} else {
 			valVal := reflect.ValueOf(val)

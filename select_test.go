@@ -155,3 +155,14 @@ func TestSelectBuilderNestedSelectJoin(t *testing.T) {
 	assert.Equal(t, expectedSql, sql)
 	assert.Equal(t, args, expectedArgs)
 }
+
+func TestSelectBuilderNilParam(t *testing.T) {
+	var nilVar *string
+	a := Select("test").Where(Eq{"param": nil})
+	b := Select("test").Where(Eq{"param": nilVar})
+
+	aSql, _, _ := a.ToSql()
+	bSql, _, _ := b.ToSql()
+	assert.Equal(t, aSql, bSql)
+}
+
