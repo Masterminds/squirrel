@@ -218,6 +218,11 @@ func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
 	return builder.Extend(b, "Columns", parts).(SelectBuilder)
 }
 
+// SetColumns sets the columns in the query.
+func (b SelectBuilder) SetColumns(columns ...string) SelectBuilder {
+	return builder.Delete(b, "Columns").(SelectBuilder).Columns(columns...)
+}
+
 // Column adds a result column to the query.
 // Unlike Columns, Column accepts args which will be bound to placeholders in
 // the columns string, for example:

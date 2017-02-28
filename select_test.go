@@ -162,3 +162,14 @@ func TestSelectWithOptions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)
 }
+
+func TestSetColumns(t *testing.T) {
+	builder := Select("blarg").From("foo")
+	sql, _, err := builder.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT blarg FROM foo", sql)
+
+	sql, _, err = builder.SetColumns("biz", "baz").ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT biz, baz FROM foo", sql)
+}
