@@ -65,14 +65,14 @@ func TestInsertBuilderNoRunner(t *testing.T) {
 }
 
 func TestInsertBuilderSetMap(t *testing.T) {
-	b := Insert("table").SetMap(Eq{"field1": 1})
+	b := Insert("table").SetMap(Eq{"field1": 1, "field2": 2, "field3": 3})
 
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSql := "INSERT INTO table (field1) VALUES (?)"
+	expectedSql := "INSERT INTO table (field1,field2,field3) VALUES (?,?,?)"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1}
+	expectedArgs := []interface{}{1, 2, 3}
 	assert.Equal(t, expectedArgs, args)
 }
