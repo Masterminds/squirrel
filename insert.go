@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/lann/builder"
 	"strings"
+
+	"github.com/lann/builder"
 )
 
 type insertData struct {
