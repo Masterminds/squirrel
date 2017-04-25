@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDeleteBuilderToSql(t *testing.T) {
+func TestDeleteBuilderToSQL(t *testing.T) {
 	b := Delete("").
 		Prefix("WITH prefix AS ?", 0).
 		From("a").
@@ -16,31 +16,31 @@ func TestDeleteBuilderToSql(t *testing.T) {
 		Offset(3).
 		Suffix("RETURNING ?", 4)
 
-	sql, args, err := b.ToSql()
+	sql, args, err := b.ToSQL()
 	assert.NoError(t, err)
 
-	expectedSql :=
+	expectedSQL :=
 		"WITH prefix AS ? " +
 			"DELETE FROM a WHERE b = ? ORDER BY c LIMIT 2 OFFSET 3 " +
 			"RETURNING ?"
-	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, expectedSQL, sql)
 
 	expectedArgs := []interface{}{0, 1, 4}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestDeleteBuilderToSqlErr(t *testing.T) {
-	_, _, err := Delete("").ToSql()
+func TestDeleteBuilderToSQLErr(t *testing.T) {
+	_, _, err := Delete("").ToSQL()
 	assert.Error(t, err)
 }
 
 func TestDeleteBuilderPlaceholders(t *testing.T) {
 	b := Delete("test").Where("x = ? AND y = ?", 1, 2)
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
+	sql, _, _ := b.PlaceholderFormat(Question).ToSQL()
 	assert.Equal(t, "DELETE FROM test WHERE x = ? AND y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSQL()
 	assert.Equal(t, "DELETE FROM test WHERE x = $1 AND y = $2", sql)
 }
 
@@ -48,10 +48,10 @@ func TestDeleteBuilderRunners(t *testing.T) {
 	db := &DBStub{}
 	b := Delete("test").Where("x = ?", 1).RunWith(db)
 
-	expectedSql := "DELETE FROM test WHERE x = ?"
+	expectedSQL := "DELETE FROM test WHERE x = ?"
 
 	b.Exec()
-	assert.Equal(t, expectedSql, db.LastExecSql)
+	assert.Equal(t, expectedSQL, db.LastExecSql)
 }
 
 func TestDeleteBuilderNoRunner(t *testing.T) {

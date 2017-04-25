@@ -30,30 +30,30 @@ type setClause struct {
 
 func (d *updateData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
-		return nil, RunnerNotSet
+		return nil, ErrRunnerNotSet
 	}
 	return ExecWith(d.RunWith, d)
 }
 
 func (d *updateData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
-		return nil, RunnerNotSet
+		return nil, ErrRunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
 }
 
 func (d *updateData) QueryRow() RowScanner {
 	if d.RunWith == nil {
-		return &Row{err: RunnerNotSet}
+		return &Row{err: ErrRunnerNotSet}
 	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
-		return &Row{err: RunnerNotQueryRunner}
+		return &Row{err: ErrRunnerNotQueryRunner}
 	}
 	return QueryRowWith(queryRower, d)
 }
 
-func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *updateData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.Table) == 0 {
 		err = fmt.Errorf("update statements must specify a table")
 		return
@@ -66,7 +66,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -76,22 +76,22 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql.WriteString(" SET ")
 	setSqls := make([]string, len(d.SetClauses))
 	for i, setClause := range d.SetClauses {
-		var valSql string
+		var valSQL string
 		e, isExpr := setClause.value.(expr)
 		if isExpr {
-			valSql = e.sql
+			valSQL = e.sql
 			args = append(args, e.args...)
 		} else {
-			valSql = "?"
+			valSQL = "?"
 			args = append(args, setClause.value)
 		}
-		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSql)
+		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSQL)
 	}
 	sql.WriteString(strings.Join(setSqls, ", "))
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		args, err = appendToSQL(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -114,7 +114,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -167,10 +167,10 @@ func (b UpdateBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b UpdateBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b UpdateBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(updateData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // Prefix adds an expression to the beginning of the query

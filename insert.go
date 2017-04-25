@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/lann/builder"
 	"strings"
+
+	"github.com/lann/builder"
 )
 
 type insertData struct {
@@ -21,30 +22,30 @@ type insertData struct {
 
 func (d *insertData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
-		return nil, RunnerNotSet
+		return nil, ErrRunnerNotSet
 	}
 	return ExecWith(d.RunWith, d)
 }
 
 func (d *insertData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
-		return nil, RunnerNotSet
+		return nil, ErrRunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
 }
 
 func (d *insertData) QueryRow() RowScanner {
 	if d.RunWith == nil {
-		return &Row{err: RunnerNotSet}
+		return &Row{err: ErrRunnerNotSet}
 	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
-		return &Row{err: RunnerNotQueryRunner}
+		return &Row{err: ErrRunnerNotQueryRunner}
 	}
 	return QueryRowWith(queryRower, d)
 }
 
-func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *insertData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.Into) == 0 {
 		err = fmt.Errorf("insert statements must specify a table")
 		return
@@ -57,7 +58,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -99,7 +100,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -155,10 +156,10 @@ func (b InsertBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b InsertBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b InsertBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(insertData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // Prefix adds an expression to the beginning of the query
