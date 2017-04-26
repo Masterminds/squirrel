@@ -23,14 +23,26 @@ func TestGenerateOrderPredicateIndex(t *testing.T) {
 		{"OrderPredTest2", args{Eq{"one": 1}}, []string{"one"}},
 		{"OrderPredTest3", args{Eq{"one": 1, "two": 2}}, output},
 		{"OrderPredTest4", args{Eq{"two": 2, "one": 1}}, output},
-		{"OrderPredTest5", args{Lt{"one": 1, "two": 2}}, output},
-		{"OrderPredTest6", args{Lt{"two": 2, "one": 1}}, output},
-		{"OrderPredTest7", args{Gt{"one": 1, "two": 2}}, output},
-		{"OrderPredTest8", args{Gt{"two": 2, "one": 1}}, output},
-		{"OrderPredTest9", args{GtOrEq{"one": 1, "two": 2}}, output},
-		{"OrderPredTes10", args{GtOrEq{"two": 2, "one": 1}}, output},
-		{"OrderPredTest11", args{LtOrEq{"one": 1, "two": 2}}, output},
-		{"OrderPredTest12", args{LtOrEq{"two": 2, "one": 1}}, output},
+
+		{"OrderPredTest5", args{Lt{}}, []string{}},
+		{"OrderPredTest6", args{Lt{"one": 1}}, []string{"one"}},
+		{"OrderPredTest7", args{Lt{"one": 1, "two": 2}}, output},
+		{"OrderPredTest8", args{Lt{"two": 2, "one": 1}}, output},
+
+		{"OrderPredTest9", args{Gt{}}, []string{}},
+		{"OrderPredTest10", args{Gt{"one": 1}}, []string{"one"}},
+		{"OrderPredTest11", args{Gt{"one": 1, "two": 2}}, output},
+		{"OrderPredTest12", args{Gt{"two": 2, "one": 1}}, output},
+
+		{"OrderPredTest13", args{GtOrEq{}}, []string{}},
+		{"OrderPredTest14", args{GtOrEq{"one": 1}}, []string{"one"}},
+		{"OrderPredTest15", args{GtOrEq{"one": 1, "two": 2}}, output},
+		{"OrderPredTest16", args{GtOrEq{"two": 2, "one": 1}}, output},
+
+		{"OrderPredTest17", args{LtOrEq{}}, []string{}},
+		{"OrderPredTest18", args{LtOrEq{"one": 1}}, []string{"one"}},
+		{"OrderPredTest19", args{LtOrEq{"one": 1, "two": 2}}, output},
+		{"OrderPredTest20", args{LtOrEq{"two": 2, "one": 1}}, output},
 	}
 
 	for _, tt := range tests {
