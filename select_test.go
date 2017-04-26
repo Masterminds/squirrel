@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSelectBuilderToSQL(t *testing.T) {
+func TestSelectBuilderToSql(t *testing.T) {
 	subQ := Select("aa", "bb").From("dd")
 	b := Select("a", "b").
 		Prefix("WITH prefix AS ?", 0).
@@ -33,10 +33,10 @@ func TestSelectBuilderToSQL(t *testing.T) {
 		Offset(13).
 		Suffix("FETCH FIRST ? ROWS ONLY", 14)
 
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL :=
+	expectedSql :=
 		"WITH prefix AS ? " +
 			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, a > ?, " +
 			"(b IN (?,?,?)) AS b_alias, " +
@@ -46,7 +46,7 @@ func TestSelectBuilderToSQL(t *testing.T) {
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +
 			"GROUP BY l HAVING m = n ORDER BY o ASC, p DESC LIMIT 12 OFFSET 13 " +
 			"FETCH FIRST ? ROWS ONLY"
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{0, 1, 2, 3, 100, 101, 102, 103, 4, 5, 6, 7, 8, 9, 10, 11, 14}
 	assert.Equal(t, expectedArgs, args)
@@ -55,28 +55,28 @@ func TestSelectBuilderToSQL(t *testing.T) {
 func TestSelectBuilderFromSelect(t *testing.T) {
 	subQ := Select("c").From("d").Where(Eq{"i": 0})
 	b := Select("a", "b").FromSelect(subQ, "subq")
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT a, b FROM (SELECT c FROM d WHERE i = ?) AS subq"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "SELECT a, b FROM (SELECT c FROM d WHERE i = ?) AS subq"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{0}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestSelectBuilderToSQLErr(t *testing.T) {
-	_, _, err := Select().From("x").ToSQL()
+func TestSelectBuilderToSqlErr(t *testing.T) {
+	_, _, err := Select().From("x").ToSql()
 	assert.Error(t, err)
 }
 
 func TestSelectBuilderPlaceholders(t *testing.T) {
 	b := Select("test").Where("x = ? AND y = ?")
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSQL()
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "SELECT test WHERE x = ? AND y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSQL()
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "SELECT test WHERE x = $1 AND y = $2", sql)
 }
 
@@ -84,16 +84,16 @@ func TestSelectBuilderRunners(t *testing.T) {
 	db := &DBStub{}
 	b := Select("test").RunWith(db)
 
-	expectedSQL := "SELECT test"
+	expectedSql := "SELECT test"
 
 	b.Exec()
-	assert.Equal(t, expectedSQL, db.LastExecSQL)
+	assert.Equal(t, expectedSql, db.LastExecSql)
 
 	b.Query()
-	assert.Equal(t, expectedSQL, db.LastQuerySQL)
+	assert.Equal(t, expectedSql, db.LastQuerySql)
 
 	b.QueryRow()
-	assert.Equal(t, expectedSQL, db.LastQueryRowSQL)
+	assert.Equal(t, expectedSql, db.LastQueryRowSql)
 
 	err := b.Scan()
 	assert.NoError(t, err)
@@ -103,61 +103,61 @@ func TestSelectBuilderNoRunner(t *testing.T) {
 	b := Select("test")
 
 	_, err := b.Exec()
-	assert.Equal(t, ErrRunnerNotSet, err)
+	assert.Equal(t, RunnerNotSet, err)
 
 	_, err = b.Query()
-	assert.Equal(t, ErrRunnerNotSet, err)
+	assert.Equal(t, RunnerNotSet, err)
 
 	err = b.Scan()
-	assert.Equal(t, ErrRunnerNotSet, err)
+	assert.Equal(t, RunnerNotSet, err)
 }
 
 func TestSelectBuilderSimpleJoin(t *testing.T) {
 
-	expectedSQL := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo"
+	expectedSql := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo"
 	expectedArgs := []interface{}(nil)
 
 	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo")
 
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 	assert.Equal(t, args, expectedArgs)
 }
 
 func TestSelectBuilderParamJoin(t *testing.T) {
 
-	expectedSQL := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo AND baz.foo = ?"
+	expectedSql := "SELECT * FROM bar JOIN baz ON bar.foo = baz.foo AND baz.foo = ?"
 	expectedArgs := []interface{}{42}
 
 	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo AND baz.foo = ?", 42)
 
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 	assert.Equal(t, args, expectedArgs)
 }
 
 func TestSelectBuilderNestedSelectJoin(t *testing.T) {
 
-	expectedSQL := "SELECT * FROM bar JOIN ( SELECT * FROM baz WHERE foo = ? ) r ON bar.foo = r.foo"
+	expectedSql := "SELECT * FROM bar JOIN ( SELECT * FROM baz WHERE foo = ? ) r ON bar.foo = r.foo"
 	expectedArgs := []interface{}{42}
 
 	nestedSelect := Select("*").From("baz").Where("foo = ?", 42)
 
 	b := Select("*").From("bar").JoinClause(nestedSelect.Prefix("JOIN (").Suffix(") r ON bar.foo = r.foo"))
 
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 	assert.Equal(t, args, expectedArgs)
 }
 
 func TestSelectWithOptions(t *testing.T) {
-	sql, _, err := Select("*").From("foo").Distinct().Options("SQL_NO_CACHE").ToSQL()
+	sql, _, err := Select("*").From("foo").Distinct().Options("SQL_NO_CACHE").ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)

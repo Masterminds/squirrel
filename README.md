@@ -30,7 +30,7 @@ users := sq.Select("*").From("users").Join("emails USING (email_id)")
 
 active := users.Where(sq.Eq{"deleted_at": nil})
 
-sql, args, err := active.ToSQL()
+sql, args, err := active.ToSql()
 
 sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NULL"
 ```
@@ -39,7 +39,7 @@ sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NUL
 sql, args, err := sq.
     Insert("users").Columns("name", "age").
     Values("moe", 13).Values("larry", sq.Expr("? + 5", 12)).
-    ToSQL()
+    ToSql()
 
 sql == "INSERT INTO users (name,age) VALUES (?,?),(?,? + 5)"
 ```

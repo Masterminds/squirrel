@@ -14,12 +14,12 @@ func newPart(pred interface{}, args ...interface{}) Sqlizer {
 	return &part{pred, args}
 }
 
-func (p part) ToSQL() (sql string, args []interface{}, err error) {
+func (p part) ToSql() (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:
 		// no-op
 	case Sqlizer:
-		sql, args, err = pred.ToSQL()
+		sql, args, err = pred.ToSql()
 	case string:
 		sql = pred
 		args = p.args
@@ -29,23 +29,23 @@ func (p part) ToSQL() (sql string, args []interface{}, err error) {
 	return
 }
 
-func appendToSQL(parts []Sqlizer, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+func appendToSql(parts []Sqlizer, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, p := range parts {
-		partSQL, partArgs, err := p.ToSQL()
+		partSql, partArgs, err := p.ToSql()
 		if err != nil {
 			return nil, err
-		} else if len(partSQL) == 0 {
+		} else if len(partSql) == 0 {
 			continue
 		}
 
 		if i > 0 {
-			_, err = io.WriteString(w, sep)
+			_, err := io.WriteString(w, sep)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		_, err = io.WriteString(w, partSQL)
+		_, err = io.WriteString(w, partSql)
 		if err != nil {
 			return nil, err
 		}

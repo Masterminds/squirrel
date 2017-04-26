@@ -28,30 +28,30 @@ type selectData struct {
 
 func (d *selectData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
-		return nil, ErrRunnerNotSet
+		return nil, RunnerNotSet
 	}
 	return ExecWith(d.RunWith, d)
 }
 
 func (d *selectData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
-		return nil, ErrRunnerNotSet
+		return nil, RunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
 }
 
 func (d *selectData) QueryRow() RowScanner {
 	if d.RunWith == nil {
-		return &Row{err: ErrRunnerNotSet}
+		return &Row{err: RunnerNotSet}
 	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
-		return &Row{err: ErrRunnerNotQueryRunner}
+		return &Row{err: RunnerNotQueryRunner}
 	}
 	return QueryRowWith(queryRower, d)
 }
 
-func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
+func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
@@ -60,7 +60,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -72,7 +72,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	}
 
 	if len(d.Columns) > 0 {
-		args, err = appendToSQL(d.Columns, sql, ", ", args)
+		args, err = appendToSql(d.Columns, sql, ", ", args)
 		if err != nil {
 			return
 		}
@@ -80,7 +80,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if d.From != nil {
 		sql.WriteString(" FROM ")
-		args, err = appendToSQL([]Sqlizer{d.From}, sql, "", args)
+		args, err = appendToSql([]Sqlizer{d.From}, sql, "", args)
 		if err != nil {
 			return
 		}
@@ -88,7 +88,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Joins) > 0 {
 		sql.WriteString(" ")
-		args, err = appendToSQL(d.Joins, sql, " ", args)
+		args, err = appendToSql(d.Joins, sql, " ", args)
 		if err != nil {
 			return
 		}
@@ -96,7 +96,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSQL(d.WhereParts, sql, " AND ", args)
+		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -109,7 +109,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		args, err = appendToSQL(d.HavingParts, sql, " AND ", args)
+		args, err = appendToSql(d.HavingParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -132,7 +132,7 @@ func (d *selectData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -188,10 +188,10 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSQL builds the query into a SQL string and bound args.
-func (b SelectBuilder) ToSQL() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args.
+func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
-	return data.ToSQL()
+	return data.ToSql()
 }
 
 // Prefix adds an expression to the beginning of the query

@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
-
 	"github.com/lann/builder"
+	"strings"
 )
 
 type deleteData struct {
@@ -23,12 +22,12 @@ type deleteData struct {
 
 func (d *deleteData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
-		return nil, ErrRunnerNotSet
+		return nil, RunnerNotSet
 	}
 	return ExecWith(d.RunWith, d)
 }
 
-func (d *deleteData) ToSQL() (sqlStr string, args []interface{}, err error) {
+func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.From) == 0 {
 		err = fmt.Errorf("delete statements must specify a From table")
 		return
@@ -37,7 +36,7 @@ func (d *deleteData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -46,7 +45,7 @@ func (d *deleteData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSQL(d.WhereParts, sql, " AND ", args)
+		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -69,12 +68,13 @@ func (d *deleteData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
+
 
 // Builder
 
@@ -108,10 +108,10 @@ func (b DeleteBuilder) Exec() (sql.Result, error) {
 
 // SQL methods
 
-// ToSQL builds the query into a SQL string and bound args.
-func (b DeleteBuilder) ToSQL() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args.
+func (b DeleteBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(deleteData)
-	return data.ToSQL()
+	return data.ToSql()
 }
 
 // Prefix adds an expression to the beginning of the query
