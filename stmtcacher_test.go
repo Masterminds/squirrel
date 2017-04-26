@@ -12,7 +12,7 @@ func TestStmtCacherPrepare(t *testing.T) {
 	query := "SELECT 1"
 
 	sc.Prepare(query)
-	assert.Equal(t, query, db.LastPrepareSQL)
+	assert.Equal(t, query, db.LastPrepareSql)
 
 	sc.Prepare(query)
 	assert.Equal(t, 1, db.PrepareCount, "expected 1 Prepare, got %d", db.PrepareCount)

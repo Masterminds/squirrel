@@ -19,15 +19,15 @@ type sqlizerBuffer struct {
 	err  error
 }
 
-// WriteSQL converts Sqlizer to SQL strings and writes it to buffer
-func (b *sqlizerBuffer) WriteSQL(item Sqlizer) {
+// WriteSql converts Sqlizer to SQL strings and writes it to buffer
+func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
 	if b.err != nil {
 		return
 	}
 
 	var str string
 	var args []interface{}
-	str, args, b.err = item.ToSQL()
+	str, args, b.err = item.ToSql()
 
 	if b.err != nil {
 		return
@@ -38,7 +38,7 @@ func (b *sqlizerBuffer) WriteSQL(item Sqlizer) {
 	b.args = append(b.args, args...)
 }
 
-func (b *sqlizerBuffer) ToSQL() (string, []interface{}, error) {
+func (b *sqlizerBuffer) ToSql() (string, []interface{}, error) {
 	return b.String(), b.args, b.err
 }
 
@@ -59,8 +59,8 @@ type caseData struct {
 	Else      Sqlizer
 }
 
-// ToSQL implements Sqlizer
-func (d *caseData) ToSQL() (sqlStr string, args []interface{}, err error) {
+// ToSql implements Sqlizer
+func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.WhenParts) == 0 {
 		err = errors.New("case expression must contain at lease one WHEN clause")
 
@@ -71,33 +71,33 @@ func (d *caseData) ToSQL() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("CASE ")
 	if d.What != nil {
-		sql.WriteSQL(d.What)
+		sql.WriteSql(d.What)
 	}
 
 	for _, p := range d.WhenParts {
 		sql.WriteString("WHEN ")
-		sql.WriteSQL(p.when)
+		sql.WriteSql(p.when)
 		sql.WriteString("THEN ")
-		sql.WriteSQL(p.then)
+		sql.WriteSql(p.then)
 	}
 
 	if d.Else != nil {
 		sql.WriteString("ELSE ")
-		sql.WriteSQL(d.Else)
+		sql.WriteSql(d.Else)
 	}
 
 	sql.WriteString("END")
 
-	return sql.ToSQL()
+	return sql.ToSql()
 }
 
 // CaseBuilder builds SQL CASE construct which could be used as parts of queries.
 type CaseBuilder builder.Builder
 
-// ToSQL builds the query into a SQL string and bound args.
-func (b CaseBuilder) ToSQL() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args.
+func (b CaseBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(caseData)
-	return data.ToSQL()
+	return data.ToSql()
 }
 
 // what sets optional value for CASE construct "CASE [value] ..."
@@ -112,7 +112,7 @@ func (b CaseBuilder) When(when interface{}, then interface{}) CaseBuilder {
 	return builder.Append(b, "WhenParts", newWhenPart(when, then)).(CaseBuilder)
 }
 
-// Else sets optional "ELSE ..." part for CASE construct
+// What sets optional "ELSE ..." part for CASE construct
 func (b CaseBuilder) Else(expr interface{}) CaseBuilder {
 	return builder.Set(b, "Else", newPart(expr)).(CaseBuilder)
 }

@@ -42,131 +42,131 @@ func TestGenerateOrderPredicateIndex(t *testing.T) {
 	}
 }
 
-func TestEqToSQL(t *testing.T) {
+func TestEqToSql(t *testing.T) {
 	b := Eq{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id = ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id = ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestEqInToSQL(t *testing.T) {
+func TestEqInToSql(t *testing.T) {
 	b := Eq{"id": []int{1, 2, 3}}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id IN (?,?,?)"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id IN (?,?,?)"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestNotEqToSQL(t *testing.T) {
+func TestNotEqToSql(t *testing.T) {
 	b := NotEq{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id <> ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id <> ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestEqNotInToSQL(t *testing.T) {
+func TestEqNotInToSql(t *testing.T) {
 	b := NotEq{"id": []int{1, 2, 3}}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id NOT IN (?,?,?)"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id NOT IN (?,?,?)"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestEqInEmptyToSQL(t *testing.T) {
+func TestEqInEmptyToSql(t *testing.T) {
 	b := Eq{"id": []int{}}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id IN (NULL)"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id IN (NULL)"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestLtToSQL(t *testing.T) {
+func TestLtToSql(t *testing.T) {
 	b := Lt{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id < ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id < ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestLtOrEqToSQL(t *testing.T) {
+func TestLtOrEqToSql(t *testing.T) {
 	b := LtOrEq{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id <= ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id <= ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestGtToSQL(t *testing.T) {
+func TestGtToSql(t *testing.T) {
 	b := Gt{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id > ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id > ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestGtOrEqToSQL(t *testing.T) {
+func TestGtOrEqToSql(t *testing.T) {
 	b := GtOrEq{"id": 1}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSQL := "id >= ?"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "id >= ?"
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestExprNilToSQL(t *testing.T) {
+func TestExprNilToSql(t *testing.T) {
 	var b Sqlizer
 	b = NotEq{"name": nil}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 	assert.Empty(t, args)
 
-	expectedSQL := "name IS NOT NULL"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql := "name IS NOT NULL"
+	assert.Equal(t, expectedSql, sql)
 
 	b = Eq{"name": nil}
-	sql, args, err = b.ToSQL()
+	sql, args, err = b.ToSql()
 	assert.NoError(t, err)
 	assert.Empty(t, args)
 
-	expectedSQL = "name IS NULL"
-	assert.Equal(t, expectedSQL, sql)
+	expectedSql = "name IS NULL"
+	assert.Equal(t, expectedSql, sql)
 }
 
 func TestNullTypeString(t *testing.T) {
@@ -174,7 +174,7 @@ func TestNullTypeString(t *testing.T) {
 	var name sql.NullString
 
 	b = Eq{"name": name}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Empty(t, args)
@@ -182,7 +182,7 @@ func TestNullTypeString(t *testing.T) {
 
 	name.Scan("Name")
 	b = Eq{"name": name}
-	sql, args, err = b.ToSQL()
+	sql, args, err = b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{"Name"}, args)
@@ -193,7 +193,7 @@ func TestNullTypeInt64(t *testing.T) {
 	var userID sql.NullInt64
 	userID.Scan(nil)
 	b := Eq{"user_id": userID}
-	sql, args, err := b.ToSQL()
+	sql, args, err := b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Empty(t, args)
@@ -201,7 +201,7 @@ func TestNullTypeInt64(t *testing.T) {
 
 	userID.Scan(int64(10))
 	b = Eq{"user_id": userID}
-	sql, args, err = b.ToSQL()
+	sql, args, err = b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{int64(10)}, args)

@@ -10,14 +10,14 @@ func newWherePart(pred interface{}, args ...interface{}) Sqlizer {
 	return &wherePart{pred: pred, args: args}
 }
 
-func (p wherePart) ToSQL() (sql string, args []interface{}, err error) {
+func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:
 		// no-op
 	case Sqlizer:
-		return pred.ToSQL()
+		return pred.ToSql()
 	case map[string]interface{}:
-		return Eq(pred).ToSQL()
+		return Eq(pred).ToSql()
 	case string:
 		sql = pred
 		args = p.args

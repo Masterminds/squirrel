@@ -15,17 +15,17 @@ func TestCaseWithVal(t *testing.T) {
 	qb := Select().
 		Column(caseStmt).
 		From("table")
-	sql, args, err := qb.ToSQL()
+	sql, args, err := qb.ToSql()
 
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT CASE number " +
+	expectedSql := "SELECT CASE number " +
 		"WHEN 1 THEN one " +
 		"WHEN 2 THEN two " +
 		"ELSE ? " +
 		"END " +
 		"FROM table"
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{"big number"}
 	assert.Equal(t, expectedArgs, args)
@@ -38,15 +38,15 @@ func TestCaseWithComplexVal(t *testing.T) {
 	qb := Select().
 		Column(Alias(caseStmt, "complexCase")).
 		From("table")
-	sql, args, err := qb.ToSQL()
+	sql, args, err := qb.ToSql()
 
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT (CASE ? > ? " +
+	expectedSql := "SELECT (CASE ? > ? " +
 		"WHEN true THEN 'T' " +
 		"END) AS complexCase " +
 		"FROM table"
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{10, 5}
 	assert.Equal(t, expectedArgs, args)
@@ -58,17 +58,17 @@ func TestCaseWithNoVal(t *testing.T) {
 		When(Expr("x > ?", 1), Expr("CONCAT('x is greater than ', ?)", 2))
 
 	qb := Select().Column(caseStmt).From("table")
-	sql, args, err := qb.ToSQL()
+	sql, args, err := qb.ToSql()
 
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT CASE " +
+	expectedSql := "SELECT CASE " +
 		"WHEN x = ? THEN x is zero " +
 		"WHEN x > ? THEN CONCAT('x is greater than ', ?) " +
 		"END " +
 		"FROM table"
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{0, 1, 2}
 	assert.Equal(t, expectedArgs, args)
@@ -80,17 +80,17 @@ func TestCaseWithExpr(t *testing.T) {
 		Else("42")
 
 	qb := Select().Column(caseStmt).From("table")
-	sql, args, err := qb.ToSQL()
+	sql, args, err := qb.ToSql()
 
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT CASE x = ? " +
+	expectedSql := "SELECT CASE x = ? " +
 		"WHEN true THEN ? " +
 		"ELSE 42 " +
 		"END " +
 		"FROM table"
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{true, "it's true!"}
 	assert.Equal(t, expectedArgs, args)
@@ -109,16 +109,16 @@ func TestMultipleCase(t *testing.T) {
 		Column(Alias(caseStmtExpr, "case_expr")).
 		From("table")
 
-	sql, args, err := qb.ToSQL()
+	sql, args, err := qb.ToSql()
 
 	assert.NoError(t, err)
 
-	expectedSQL := "SELECT " +
+	expectedSql := "SELECT " +
 		"(CASE x = ? WHEN true THEN ? ELSE 42 END) AS case_noval, " +
 		"(CASE WHEN x = ? THEN 'x is zero' WHEN x > ? THEN CONCAT('x is greater than ', ?) END) AS case_expr " +
 		"FROM table"
 
-	assert.Equal(t, expectedSQL, sql)
+	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{
 		true, "it's true!",
@@ -133,7 +133,7 @@ func TestCaseWithNoWhenClause(t *testing.T) {
 
 	qb := Select().Column(caseStmt).From("table")
 
-	_, _, err := qb.ToSQL()
+	_, _, err := qb.ToSql()
 
 	assert.Error(t, err)
 
