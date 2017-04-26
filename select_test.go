@@ -87,13 +87,13 @@ func TestSelectBuilderRunners(t *testing.T) {
 	expectedSQL := "SELECT test"
 
 	b.Exec()
-	assert.Equal(t, expectedSQL, db.LastExecSql)
+	assert.Equal(t, expectedSQL, db.LastExecSQL)
 
 	b.Query()
-	assert.Equal(t, expectedSQL, db.LastQuerySql)
+	assert.Equal(t, expectedSQL, db.LastQuerySQL)
 
 	b.QueryRow()
-	assert.Equal(t, expectedSQL, db.LastQueryRowSql)
+	assert.Equal(t, expectedSQL, db.LastQueryRowSQL)
 
 	err := b.Scan()
 	assert.NoError(t, err)
@@ -103,13 +103,13 @@ func TestSelectBuilderNoRunner(t *testing.T) {
 	b := Select("test")
 
 	_, err := b.Exec()
-	assert.Equal(t, RunnerNotSet, err)
+	assert.Equal(t, ErrRunnerNotSet, err)
 
 	_, err = b.Query()
-	assert.Equal(t, RunnerNotSet, err)
+	assert.Equal(t, ErrRunnerNotSet, err)
 
 	err = b.Scan()
-	assert.Equal(t, RunnerNotSet, err)
+	assert.Equal(t, ErrRunnerNotSet, err)
 }
 
 func TestSelectBuilderSimpleJoin(t *testing.T) {

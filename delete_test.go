@@ -51,12 +51,12 @@ func TestDeleteBuilderRunners(t *testing.T) {
 	expectedSQL := "DELETE FROM test WHERE x = ?"
 
 	b.Exec()
-	assert.Equal(t, expectedSQL, db.LastExecSql)
+	assert.Equal(t, expectedSQL, db.LastExecSQL)
 }
 
 func TestDeleteBuilderNoRunner(t *testing.T) {
 	b := Delete("test")
 
 	_, err := b.Exec()
-	assert.Equal(t, RunnerNotSet, err)
+	assert.Equal(t, ErrRunnerNotSet, err)
 }

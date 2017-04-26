@@ -54,14 +54,14 @@ func TestInsertBuilderRunners(t *testing.T) {
 	expectedSQL := "INSERT INTO test VALUES (?)"
 
 	b.Exec()
-	assert.Equal(t, expectedSQL, db.LastExecSql)
+	assert.Equal(t, expectedSQL, db.LastExecSQL)
 }
 
 func TestInsertBuilderNoRunner(t *testing.T) {
 	b := Insert("test").Values(1)
 
 	_, err := b.Exec()
-	assert.Equal(t, RunnerNotSet, err)
+	assert.Equal(t, ErrRunnerNotSet, err)
 }
 
 func TestInsertBuilderSetMap(t *testing.T) {

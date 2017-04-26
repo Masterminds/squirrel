@@ -39,7 +39,7 @@ func appendToSQL(parts []Sqlizer, w io.Writer, sep string, args []interface{}) (
 		}
 
 		if i > 0 {
-			_, err := io.WriteString(w, sep)
+			_, err = io.WriteString(w, sep)
 			if err != nil {
 				return nil, err
 			}
