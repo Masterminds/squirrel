@@ -85,8 +85,6 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 		nullOpr = "IS NOT"
 	}
 
-	// Order the pairs.
-
 	for key, val := range eq {
 		var expr string
 
