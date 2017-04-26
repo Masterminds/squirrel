@@ -32,13 +32,8 @@ func TestGenerateOrderPredicateIndex(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := GenerateOrderPredicateIndex(tt.args.predicates)
-			assert.Equal(t, tt.want, got)
-		})
+		got := GenerateOrderPredicateIndex(tt.args.predicates)
+		assert.Equal(t, tt.want, got)
 	}
 }
 
