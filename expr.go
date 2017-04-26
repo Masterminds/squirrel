@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -66,6 +67,18 @@ func (e aliasExpr) ToSQL() (sql string, args []interface{}, err error) {
 	return
 }
 
+// GenerateOrderPredicateIndex provides a slice of keys useful for ordering predicates.
+func GenerateOrderPredicateIndex(predicates map[string]interface{}) []string {
+	keys := make([]string, len(predicates))
+	counter := 0
+	for key := range predicates {
+		keys[counter] = key
+		counter++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // Eq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
 //     .Where(Eq{"id": 1})
@@ -85,9 +98,11 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 		nullOpr = "IS NOT"
 	}
 
-	// Order the pairs.
+	predicateIndex := GenerateOrderPredicateIndex(eq)
 
-	for key, val := range eq {
+	for _, key := range predicateIndex {
+		val := eq[key]
+
 		var expr string
 
 		switch v := val.(type) {
@@ -156,7 +171,11 @@ func (lt Lt) toSQL(opposite, orEq bool) (sql string, args []interface{}, err err
 		opr = fmt.Sprintf("%s%s", opr, "=")
 	}
 
-	for key, val := range lt {
+	predicateIndex := GenerateOrderPredicateIndex(lt)
+
+	for _, key := range predicateIndex {
+		val := lt[key]
+
 		switch v := val.(type) {
 		case driver.Valuer:
 			if val, err = v.Value(); err != nil {
