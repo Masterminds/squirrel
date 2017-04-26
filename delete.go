@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/lann/builder"
 	"strings"
+
+	"github.com/lann/builder"
 )
 
 type deleteData struct {
@@ -22,12 +23,12 @@ type deleteData struct {
 
 func (d *deleteData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
-		return nil, RunnerNotSet
+		return nil, ErrRunnerNotSet
 	}
 	return ExecWith(d.RunWith, d)
 }
 
-func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *deleteData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.From) == 0 {
 		err = fmt.Errorf("delete statements must specify a From table")
 		return
@@ -36,7 +37,7 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -45,7 +46,7 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		args, err = appendToSQL(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -68,13 +69,12 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
-
 
 // Builder
 
@@ -108,10 +108,10 @@ func (b DeleteBuilder) Exec() (sql.Result, error) {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b DeleteBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b DeleteBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(deleteData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // Prefix adds an expression to the beginning of the query

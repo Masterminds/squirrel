@@ -12,41 +12,41 @@ import (
 type DBStub struct {
 	err error
 
-	LastPrepareSql string
+	LastPrepareSQL string
 	PrepareCount   int
 
-	LastExecSql  string
+	LastExecSQL  string
 	LastExecArgs []interface{}
 
-	LastQuerySql  string
+	LastQuerySQL  string
 	LastQueryArgs []interface{}
 
-	LastQueryRowSql  string
+	LastQueryRowSQL  string
 	LastQueryRowArgs []interface{}
 }
 
-var StubError = fmt.Errorf("this is a stub; this is only a stub")
+var ErrStubError = fmt.Errorf("this is a stub; this is only a stub")
 
 func (s *DBStub) Prepare(query string) (*sql.Stmt, error) {
-	s.LastPrepareSql = query
+	s.LastPrepareSQL = query
 	s.PrepareCount++
 	return nil, nil
 }
 
 func (s *DBStub) Exec(query string, args ...interface{}) (sql.Result, error) {
-	s.LastExecSql = query
+	s.LastExecSQL = query
 	s.LastExecArgs = args
 	return nil, nil
 }
 
 func (s *DBStub) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	s.LastQuerySql = query
+	s.LastQuerySQL = query
 	s.LastQueryArgs = args
 	return nil, nil
 }
 
 func (s *DBStub) QueryRow(query string, args ...interface{}) RowScanner {
-	s.LastQueryRowSql = query
+	s.LastQueryRowSQL = query
 	s.LastQueryRowArgs = args
 	return &Row{RowScanner: &RowStub{}}
 }
@@ -57,22 +57,22 @@ var sqlStr = "SELECT test"
 func TestExecWith(t *testing.T) {
 	db := &DBStub{}
 	ExecWith(db, sqlizer)
-	assert.Equal(t, sqlStr, db.LastExecSql)
+	assert.Equal(t, sqlStr, db.LastExecSQL)
 }
 
 func TestQueryWith(t *testing.T) {
 	db := &DBStub{}
 	QueryWith(db, sqlizer)
-	assert.Equal(t, sqlStr, db.LastQuerySql)
+	assert.Equal(t, sqlStr, db.LastQuerySQL)
 }
 
 func TestQueryRowWith(t *testing.T) {
 	db := &DBStub{}
 	QueryRowWith(db, sqlizer)
-	assert.Equal(t, sqlStr, db.LastQueryRowSql)
+	assert.Equal(t, sqlStr, db.LastQueryRowSQL)
 }
 
-func TestWithToSqlErr(t *testing.T) {
+func TestWithToSQLErr(t *testing.T) {
 	db := &DBStub{}
 	sqlizer := Select()
 
@@ -100,5 +100,5 @@ func TestDebugSqlizerErrors(t *testing.T) {
 	assert.True(t, strings.HasPrefix(errorMsg, "[DebugSqlizer error: "))
 
 	errorMsg = DebugSqlizer(Lt{"x": nil}) // Cannot use nil values with Lt
-	assert.True(t, strings.HasPrefix(errorMsg, "[ToSql error: "))
+	assert.True(t, strings.HasPrefix(errorMsg, "[ToSQL error: "))
 }
