@@ -85,8 +85,10 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 		nullOpr = "IS NOT"
 	}
 
+	// Order the pairs.
+
 	for key, val := range eq {
-		expr := ""
+		var expr string
 
 		switch v := val.(type) {
 		case driver.Valuer:
@@ -155,8 +157,6 @@ func (lt Lt) toSQL(opposite, orEq bool) (sql string, args []interface{}, err err
 	}
 
 	for key, val := range lt {
-		expr := ""
-
 		switch v := val.(type) {
 		case driver.Valuer:
 			if val, err = v.Value(); err != nil {
@@ -175,7 +175,7 @@ func (lt Lt) toSQL(opposite, orEq bool) (sql string, args []interface{}, err err
 			return
 		}
 
-		expr = fmt.Sprintf("%s %s ?", key, opr)
+		expr := fmt.Sprintf("%s %s ?", key, opr)
 		args = append(args, val)
 		exprs = append(exprs, expr)
 	}

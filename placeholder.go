@@ -42,21 +42,31 @@ func (_ dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 		}
 
 		if len(sql[p:]) > 1 && sql[p:p+2] == "??" { // escape ?? => ?
-			buf.WriteString(sql[:p])
-			buf.WriteString("?")
+			if _, err := buf.WriteString(sql[:p]); err != nil {
+				return "", err
+			}
+			if _, err := buf.WriteString("?"); err != nil {
+				return "", err
+			}
 			if len(sql[p:]) == 1 {
 				break
 			}
 			sql = sql[p+2:]
 		} else {
 			i++
-			buf.WriteString(sql[:p])
-			fmt.Fprintf(buf, "$%d", i)
+			if _, err := buf.WriteString(sql[:p]); err != nil {
+				return "", err
+			}
+			if _, err := fmt.Fprintf(buf, "$%d", i); err != nil {
+				return "", err
+			}
 			sql = sql[p+1:]
 		}
 	}
 
-	buf.WriteString(sql)
+	if _, err := buf.WriteString(sql); err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 

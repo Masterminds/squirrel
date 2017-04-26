@@ -198,7 +198,7 @@ func (b UpdateBuilder) SetMap(clauses map[string]interface{}) UpdateBuilder {
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		val, _ := clauses[key]
+		val := clauses[key]
 		b = b.Set(key, val)
 	}
 	return b
