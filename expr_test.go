@@ -2,9 +2,53 @@ package squirrel
 
 import (
 	"database/sql"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestGenerateOrderPredicateIndex(t *testing.T) {
+	output := []string{"one", "two"}
+
+	type args struct {
+		predicates map[string]interface{}
+	}
+
+	tests := []struct {
+		args args
+		want []string
+	}{
+		{args{Eq{}}, []string{}},
+		{args{Eq{"one": 1}}, []string{"one"}},
+		{args{Eq{"one": 1, "two": 2}}, output},
+		{args{Eq{"two": 2, "one": 1}}, output},
+
+		{args{Lt{}}, []string{}},
+		{args{Lt{"one": 1}}, []string{"one"}},
+		{args{Lt{"one": 1, "two": 2}}, output},
+		{args{Lt{"two": 2, "one": 1}}, output},
+
+		{args{Gt{}}, []string{}},
+		{args{Gt{"one": 1}}, []string{"one"}},
+		{args{Gt{"one": 1, "two": 2}}, output},
+		{args{Gt{"two": 2, "one": 1}}, output},
+
+		{args{GtOrEq{}}, []string{}},
+		{args{GtOrEq{"one": 1}}, []string{"one"}},
+		{args{GtOrEq{"one": 1, "two": 2}}, output},
+		{args{GtOrEq{"two": 2, "one": 1}}, output},
+
+		{args{LtOrEq{}}, []string{}},
+		{args{LtOrEq{"one": 1}}, []string{"one"}},
+		{args{LtOrEq{"one": 1, "two": 2}}, output},
+		{args{LtOrEq{"two": 2, "one": 1}}, output},
+	}
+
+	for _, tt := range tests {
+		got := GenerateOrderPredicateIndex(tt.args.predicates)
+		assert.Equal(t, tt.want, got)
+	}
+}
 
 func TestEqToSql(t *testing.T) {
 	b := Eq{"id": 1}
