@@ -66,6 +66,18 @@ func TestEqInEmptyToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestEqBytesToSql(t *testing.T) {
+	b := Eq{"id": []byte("test")}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id = ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{[]byte("test")}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestLtToSql(t *testing.T) {
 	b := Lt{"id": 1}
 	sql, args, err := b.ToSql()
