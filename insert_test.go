@@ -76,3 +76,17 @@ func TestInsertBuilderSetMap(t *testing.T) {
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestInsertBuilderSelect(t *testing.T) {
+	sb := Select("field1").From("table1").Where(Eq{"field1": 1})
+	ib := Insert("table2").Columns("field1").Select(sb)
+
+	sql, args, err := ib.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "INSERT INTO table2 (field1) SELECT field1 FROM table1 WHERE field1 = ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
