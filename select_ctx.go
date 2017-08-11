@@ -13,23 +13,34 @@ func (d *selectData) ExecContext(ctx context.Context) (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return ExecContextWith(ctx, d.RunWith, d)
+	ctxRunner, ok := d.RunWith.(ExecerContext)
+	if !ok {
+		return nil, NoContextSupport
+	}
+	return ExecContextWith(ctx, ctxRunner, d)
 }
 
 func (d *selectData) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return QueryContextWith(ctx, d.RunWith, d)
+	ctxRunner, ok := d.RunWith.(QueryerContext)
+	if !ok {
+		return nil, NoContextSupport
+	}
+	return QueryContextWith(ctx, ctxRunner, d)
 }
 
 func (d *selectData) QueryRowContext(ctx context.Context) RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
-	queryRower, ok := d.RunWith.(QueryRower)
+	queryRower, ok := d.RunWith.(QueryRowerContext)
 	if !ok {
-		return &Row{err: RunnerNotQueryRunner}
+		if _, ok := d.RunWith.(QueryerContext); !ok {
+			return &Row{err: RunnerNotQueryRunner}
+		}
+		return &Row{err: NoContextSupport}
 	}
 	return QueryRowContextWith(ctx, queryRower, d)
 }
@@ -50,4 +61,9 @@ func (b SelectBuilder) QueryContext(ctx context.Context) (*sql.Rows, error) {
 func (b SelectBuilder) QueryRowContext(ctx context.Context) RowScanner {
 	data := builder.GetStruct(b).(selectData)
 	return data.QueryRowContext(ctx)
+}
+
+// ScanContext is a shortcut for QueryRowContext().Scan.
+func (b SelectBuilder) ScanContext(ctx context.Context, dest ...interface{}) error {
+	return b.QueryRowContext(ctx).Scan(dest...)
 }
