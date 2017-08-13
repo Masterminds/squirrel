@@ -20,17 +20,12 @@ type DBProxy interface {
 	Preparer
 }
 
+// NOTE: NewStmtCacher is defined in stmtcacher_ctx.go (Go >= 1.8) or stmtcacher_noctx.go (Go < 1.8).
+
 type stmtCacher struct {
 	prep  Preparer
 	cache map[string]*sql.Stmt
 	mu    sync.Mutex
-}
-
-// NewStmtCacher returns a DBProxy wrapping prep that caches Prepared Stmts.
-//
-// Stmts are cached based on the string value of their queries.
-func NewStmtCacher(prep Preparer) DBProxy {
-	return &stmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
 }
 
 func (sc *stmtCacher) Prepare(query string) (*sql.Stmt, error) {
