@@ -12,4 +12,3 @@ import (
 func NewStmtCacher(prep Preparer) DBProxy {
 	return &stmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
 }
-

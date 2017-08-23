@@ -31,7 +31,6 @@ func NewStmtCacher(prep PreparerContext) DBProxyContext {
 	return &stmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
 }
 
-
 func (sc *stmtCacher) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	ctxPrep, ok := sc.prep.(PreparerContext)
 	if !ok {
@@ -59,7 +58,7 @@ func (sc *stmtCacher) ExecContext(ctx context.Context, query string, args ...int
 }
 
 func (sc *stmtCacher) QueryContext(ctx context.Context, query string, args ...interface{}) (rows *sql.Rows, err error) {
-	stmt, err := sc.PrepareContext(ctx,query)
+	stmt, err := sc.PrepareContext(ctx, query)
 	if err != nil {
 		return
 	}
