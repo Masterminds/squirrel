@@ -39,4 +39,3 @@ func TestInsertBuilderContextNoRunner(t *testing.T) {
 	err = b.ScanContext(ctx)
 	assert.Equal(t, RunnerNotSet, err)
 }
-

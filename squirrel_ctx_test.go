@@ -53,4 +53,3 @@ func TestQueryRowContextWith(t *testing.T) {
 	QueryRowContextWith(ctx, db, sqlizer)
 	assert.Equal(t, sqlStr, db.LastQueryRowSql)
 }
-
