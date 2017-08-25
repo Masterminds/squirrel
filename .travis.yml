@@ -5,6 +5,10 @@ go:
   - 1.8
   - tip
 
+services:
+  - mysql
+  - postgresql
+
 # Setting sudo access to false will let Travis CI use containers rather than
 # VMs to run the tests. For more details see:
 # - http://docs.travis-ci.com/user/workers/container-based-infrastructure/
@@ -12,8 +16,17 @@ go:
 sudo: false
 
 install:
-  - go get
-  - go get github.com/stretchr/testify/assert
+  - go get -t -tags integration
+  - go install github.com/mattn/go-sqlite3 # Precompile so test timing is accurate
+
+before_script:
+  - mysql -e 'CREATE DATABASE squirrel;'
+  - psql -c 'CREATE DATABASE squirrel;' -U postgres
+
+script:
+  - go test -tags integration -args -driver sqlite3
+  - go test -tags integration -args -driver mysql -dataSource travis@/squirrel
+  - go test -tags integration -args -driver postgres -dataSource 'postgres://postgres@localhost/squirrel?sslmode=disable'
 
 notifications:
   irc: "irc.freenode.net#masterminds"
