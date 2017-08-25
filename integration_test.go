@@ -74,18 +74,21 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func assertVals(t *testing.T, s SelectBuilder, vals ...string) {
+func assertVals(t *testing.T, s SelectBuilder, expected ...string) {
 	rows, err := s.Query()
 	assert.NoError(t, err)
 	defer rows.Close()
 
-	var val string
-	for _, expected := range vals {
+	vals := make([]string, len(expected))
+	for i := range vals {
 		assert.True(t, rows.Next())
-		assert.NoError(t, rows.Scan(&val))
-		assert.Equal(t, expected, val)
+		assert.NoError(t, rows.Scan(&vals[i]))
 	}
 	assert.False(t, rows.Next())
+
+	if expected != nil {
+		assert.Equal(t, expected, vals)
+	}
 }
 
 func TestSimpleSelect(t *testing.T) {
@@ -104,6 +107,7 @@ func TestEq(t *testing.T) {
 	assertVals(t, s.Where(Eq{"k": nil}))
 	assertVals(t, s.Where(NotEq{"k": nil}), "foo", "bar", "foo", "baz")
 	assertVals(t, s.Where(Eq{"k": []int{}}))
+	assertVals(t, s.Where(NotEq{"k": []int{}}), "foo", "bar", "foo", "baz")
 }
 
 func TestIneq(t *testing.T) {

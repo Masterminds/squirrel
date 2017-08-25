@@ -73,16 +73,18 @@ type Eq map[string]interface{}
 
 func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 	var (
-		exprs    []string
-		equalOpr string = "="
-		inOpr    string = "IN"
-		nullOpr  string = "IS"
+		exprs      []string
+		equalOpr   = "="
+		inOpr      = "IN"
+		nullOpr    = "IS"
+		inEmptyExpr = "(1=0)" // Portable FALSE
 	)
 
 	if useNotOpr {
 		equalOpr = "<>"
 		inOpr = "NOT IN"
 		nullOpr = "IS NOT"
+		inEmptyExpr = "(1=1)" // Portable TRUE
 	}
 
 	for key, val := range eq {
@@ -101,7 +103,7 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 			if isListType(val) {
 				valVal := reflect.ValueOf(val)
 				if valVal.Len() == 0 {
-					expr = fmt.Sprintf("%s %s (NULL)", key, inOpr)
+					expr = inEmptyExpr
 					if args == nil {
 						args = []interface{}{}
 					}
