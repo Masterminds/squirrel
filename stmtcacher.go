@@ -25,19 +25,21 @@ type DBProxy interface {
 type stmtCacher struct {
 	prep  Preparer
 	cache map[string]*sql.Stmt
-	mu    sync.Mutex
+	mu    sync.RWMutex
 }
 
 func (sc *stmtCacher) Prepare(query string) (*sql.Stmt, error) {
-	sc.mu.Lock()
-	defer sc.mu.Unlock()
+	sc.mu.RLock()
 	stmt, ok := sc.cache[query]
+	sc.mu.RUnlock()
 	if ok {
 		return stmt, nil
 	}
 	stmt, err := sc.prep.Prepare(query)
 	if err == nil {
+		sc.mu.Lock()
 		sc.cache[query] = stmt
+		sc.mu.Unlock()
 	}
 	return stmt, err
 }
