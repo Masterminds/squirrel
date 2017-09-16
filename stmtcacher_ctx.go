@@ -36,15 +36,17 @@ func (sc *stmtCacher) PrepareContext(ctx context.Context, query string) (*sql.St
 	if !ok {
 		return nil, NoContextSupport
 	}
-	sc.mu.Lock()
-	defer sc.mu.Unlock()
+	sc.mu.RLock()
 	stmt, ok := sc.cache[query]
+	sc.mu.RUnlock()
 	if ok {
 		return stmt, nil
 	}
 	stmt, err := ctxPrep.PrepareContext(ctx, query)
 	if err == nil {
+		sc.mu.Lock()
 		sc.cache[query] = stmt
+		sc.mu.Unlock()
 	}
 	return stmt, err
 }
