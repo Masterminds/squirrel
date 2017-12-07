@@ -1,20 +1,24 @@
 # Squirrel - fluent SQL generator for Go
 
+**NOTE:** This is a WIP fork of the [Masterminds Squirrel repo](https://github.com/Masterminds/squirrel), which aims to extend Squirrel with database specific serialization.
+For instance, this port aims to build queries which are compatible with MSSQL / Sql Server.
+
+---
+
 ```go
-import "gopkg.in/Masterminds/squirrel.v1"
+import "gopkg.in/Kernle32DLL/squirrel.v1"
 ```
 or if you prefer using `master` (which may be arbitrarily ahead of or behind `v1`):
 
 **NOTE:** as of Go 1.6, `go get` correctly clones the Github default branch (which is `v1` in this repo).
 ```go
-import "github.com/Masterminds/squirrel"
+import "github.com/Kernle32DLL/squirrel"
 ```
 
-[![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
-[![Build Status](https://travis-ci.org/Masterminds/squirrel.svg?branch=v1)](https://travis-ci.org/Masterminds/squirrel)
+[![GoDoc](https://godoc.org/github.com/Kernle32DLL/squirrel?status.png)](https://godoc.org/github.com/Kernle32DLL/squirrel)
 
 _**Note:** This project has moved from `github.com/lann/squirrel` to
-`github.com/Masterminds/squirrel`. Lann remains the architect of the
+`github.com/Kernle32DLL/squirrel`. Lann remains the architect of the
 project, but we're helping him curate.
 
 **Squirrel is not an ORM.** For an application of Squirrel, check out
@@ -24,7 +28,7 @@ project, but we're helping him curate.
 Squirrel helps you build SQL queries from composable parts:
 
 ```go
-import sq "github.com/Masterminds/squirrel"
+import sq "github.com/Kernle32DLL/squirrel"
 
 users := sq.Select("*").From("users").Join("emails USING (email_id)")
 
