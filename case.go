@@ -67,28 +67,7 @@ func (d *caseData) ToSql(serializer Serializer) (sqlStr string, args []interface
 		return
 	}
 
-	sql := sqlizerBuffer{}
-
-	sql.WriteString("CASE ")
-	if d.What != nil {
-		sql.WriteSql(d.What, serializer)
-	}
-
-	for _, p := range d.WhenParts {
-		sql.WriteString("WHEN ")
-		sql.WriteSql(p.when, serializer)
-		sql.WriteString("THEN ")
-		sql.WriteSql(p.then, serializer)
-	}
-
-	if d.Else != nil {
-		sql.WriteString("ELSE ")
-		sql.WriteSql(d.Else, serializer)
-	}
-
-	sql.WriteString("END")
-
-	return sql.ToSql()
+	return serializer.Case(*d)
 }
 
 // CaseBuilder builds SQL CASE construct which could be used as parts of queries.

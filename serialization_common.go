@@ -13,11 +13,6 @@ import (
 type DefaultSerializer struct{}
 
 func (serializer DefaultSerializer) Select(d selectData) (sqlStr string, args []interface{}, err error) {
-	if len(d.Columns) == 0 {
-		err = fmt.Errorf("select statements must have at least one result column")
-		return
-	}
-
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
@@ -338,4 +333,29 @@ func (serializer DefaultSerializer) Insert(d insertData) (sqlStr string, args []
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
+}
+
+func (serializer DefaultSerializer) Case(d caseData) (sqlStr string, args []interface{}, err error) {
+	sql := sqlizerBuffer{}
+
+	sql.WriteString("CASE ")
+	if d.What != nil {
+		sql.WriteSql(d.What, serializer)
+	}
+
+	for _, p := range d.WhenParts {
+		sql.WriteString("WHEN ")
+		sql.WriteSql(p.when, serializer)
+		sql.WriteString("THEN ")
+		sql.WriteSql(p.then, serializer)
+	}
+
+	if d.Else != nil {
+		sql.WriteString("ELSE ")
+		sql.WriteSql(d.Else, serializer)
+	}
+
+	sql.WriteString("END")
+
+	return sql.ToSql()
 }
