@@ -1,10 +1,8 @@
 package squirrel
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/lann/builder"
 )
@@ -12,6 +10,7 @@ import (
 type deleteData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
+	SerializeWith     Serializer
 	Prefixes          exprs
 	From              string
 	WhereParts        []Sqlizer
@@ -25,55 +24,19 @@ func (d *deleteData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return ExecWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return ExecWith(d.RunWith, d, d.SerializeWith)
 }
 
-func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *deleteData) ToSql(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.From) == 0 {
 		err = fmt.Errorf("delete statements must specify a From table")
 		return
 	}
 
-	sql := &bytes.Buffer{}
-
-	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
-		sql.WriteString(" ")
-	}
-
-	sql.WriteString("DELETE FROM ")
-	sql.WriteString(d.From)
-
-	if len(d.WhereParts) > 0 {
-		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.OrderBys) > 0 {
-		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
-	}
-
-	if len(d.Limit) > 0 {
-		sql.WriteString(" LIMIT ")
-		sql.WriteString(d.Limit)
-	}
-
-	if len(d.Offset) > 0 {
-		sql.WriteString(" OFFSET ")
-		sql.WriteString(d.Offset)
-	}
-
-	if len(d.Suffixes) > 0 {
-		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
-	}
-
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
-	return
+	return serializer.Delete(*d)
 }
 
 // Builder
@@ -100,6 +63,11 @@ func (b DeleteBuilder) RunWith(runner BaseRunner) DeleteBuilder {
 	return setRunWith(b, runner).(DeleteBuilder)
 }
 
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b DeleteBuilder) SerializeWith(serializer Serializer) DeleteBuilder {
+	return setSerializeWith(b, serializer).(DeleteBuilder)
+}
+
 // Exec builds and Execs the query with the Runner set by RunWith.
 func (b DeleteBuilder) Exec() (sql.Result, error) {
 	data := builder.GetStruct(b).(deleteData)
@@ -109,9 +77,9 @@ func (b DeleteBuilder) Exec() (sql.Result, error) {
 // SQL methods
 
 // ToSql builds the query into a SQL string and bound args.
-func (b DeleteBuilder) ToSql() (string, []interface{}, error) {
+func (b DeleteBuilder) ToSql(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(deleteData)
-	return data.ToSql()
+	return data.ToSql(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

@@ -56,19 +56,19 @@ var sqlStr = "SELECT test"
 
 func TestExecWith(t *testing.T) {
 	db := &DBStub{}
-	ExecWith(db, sqlizer)
+	ExecWith(db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastExecSql)
 }
 
 func TestQueryWith(t *testing.T) {
 	db := &DBStub{}
-	QueryWith(db, sqlizer)
+	QueryWith(db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastQuerySql)
 }
 
 func TestQueryRowWith(t *testing.T) {
 	db := &DBStub{}
-	QueryRowWith(db, sqlizer)
+	QueryRowWith(db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastQueryRowSql)
 }
 
@@ -76,29 +76,29 @@ func TestWithToSqlErr(t *testing.T) {
 	db := &DBStub{}
 	sqlizer := Select()
 
-	_, err := ExecWith(db, sqlizer)
+	_, err := ExecWith(db, sqlizer, DefaultSerializer{})
 	assert.Error(t, err)
 
-	_, err = QueryWith(db, sqlizer)
+	_, err = QueryWith(db, sqlizer, DefaultSerializer{})
 	assert.Error(t, err)
 
-	err = QueryRowWith(db, sqlizer).Scan()
+	err = QueryRowWith(db, sqlizer, DefaultSerializer{}).Scan()
 	assert.Error(t, err)
 }
 
 func TestDebugSqlizer(t *testing.T) {
 	sqlizer := Expr("x = ? AND y = ? AND z = '??'", 1, "text")
 	expectedDebug := "x = '1' AND y = 'text' AND z = '?'"
-	assert.Equal(t, expectedDebug, DebugSqlizer(sqlizer))
+	assert.Equal(t, expectedDebug, DebugSqlizer(sqlizer, DefaultSerializer{}))
 }
 
 func TestDebugSqlizerErrors(t *testing.T) {
-	errorMsg := DebugSqlizer(Expr("x = ?", 1, 2)) // Not enough placeholders
+	errorMsg := DebugSqlizer(Expr("x = ?", 1, 2), DefaultSerializer{}) // Not enough placeholders
 	assert.True(t, strings.HasPrefix(errorMsg, "[DebugSqlizer error: "))
 
-	errorMsg = DebugSqlizer(Expr("x = ? AND y = ?", 1)) // Too many placeholders
+	errorMsg = DebugSqlizer(Expr("x = ? AND y = ?", 1), DefaultSerializer{}) // Too many placeholders
 	assert.True(t, strings.HasPrefix(errorMsg, "[DebugSqlizer error: "))
 
-	errorMsg = DebugSqlizer(Lt{"x": nil}) // Cannot use nil values with Lt
+	errorMsg = DebugSqlizer(Lt{"x": nil}, DefaultSerializer{}) // Cannot use nil values with Lt
 	assert.True(t, strings.HasPrefix(errorMsg, "[ToSql error: "))
 }

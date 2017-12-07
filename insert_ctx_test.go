@@ -10,7 +10,7 @@ import (
 
 func TestInsertBuilderContextRunners(t *testing.T) {
 	db := &DBStub{}
-	b := Insert("test").Values(1).RunWith(db)
+	b := Insert("test").Values(1).RunWith(db).SerializeWith(DefaultSerializer{})
 
 	expectedSql := "INSERT INTO test VALUES (?)"
 

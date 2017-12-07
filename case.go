@@ -20,14 +20,14 @@ type sqlizerBuffer struct {
 }
 
 // WriteSql converts Sqlizer to SQL strings and writes it to buffer
-func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
+func (b *sqlizerBuffer) WriteSql(item Sqlizer, serializer Serializer) {
 	if b.err != nil {
 		return
 	}
 
 	var str string
 	var args []interface{}
-	str, args, b.err = item.ToSql()
+	str, args, b.err = item.ToSql(serializer)
 
 	if b.err != nil {
 		return
@@ -60,7 +60,7 @@ type caseData struct {
 }
 
 // ToSql implements Sqlizer
-func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *caseData) ToSql(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.WhenParts) == 0 {
 		err = errors.New("case expression must contain at lease one WHEN clause")
 
@@ -71,19 +71,19 @@ func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("CASE ")
 	if d.What != nil {
-		sql.WriteSql(d.What)
+		sql.WriteSql(d.What, serializer)
 	}
 
 	for _, p := range d.WhenParts {
 		sql.WriteString("WHEN ")
-		sql.WriteSql(p.when)
+		sql.WriteSql(p.when, serializer)
 		sql.WriteString("THEN ")
-		sql.WriteSql(p.then)
+		sql.WriteSql(p.then, serializer)
 	}
 
 	if d.Else != nil {
 		sql.WriteString("ELSE ")
-		sql.WriteSql(d.Else)
+		sql.WriteSql(d.Else, serializer)
 	}
 
 	sql.WriteString("END")
@@ -95,9 +95,9 @@ func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
 type CaseBuilder builder.Builder
 
 // ToSql builds the query into a SQL string and bound args.
-func (b CaseBuilder) ToSql() (string, []interface{}, error) {
+func (b CaseBuilder) ToSql(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(caseData)
-	return data.ToSql()
+	return data.ToSql(serializer)
 }
 
 // what sets optional value for CASE construct "CASE [value] ..."

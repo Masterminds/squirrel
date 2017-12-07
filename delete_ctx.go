@@ -13,11 +13,14 @@ func (d *deleteData) ExecContext(ctx context.Context) (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
 	ctxRunner, ok := d.RunWith.(ExecerContext)
 	if !ok {
 		return nil, NoContextSupport
 	}
-	return ExecContextWith(ctx, ctxRunner, d)
+	return ExecContextWith(ctx, ctxRunner, d, d.SerializeWith)
 }
 
 // ExecContext builds and ExecContexts the query with the Runner set by RunWith.

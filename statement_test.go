@@ -10,7 +10,7 @@ import (
 
 func TestStatementBuilder(t *testing.T) {
 	db := &DBStub{}
-	sb := StatementBuilder.RunWith(db)
+	sb := StatementBuilder.RunWith(db).SerializeWith(DefaultSerializer{})
 
 	sb.Select("test").Exec()
 	assert.Equal(t, "SELECT test", db.LastExecSql)
@@ -18,7 +18,7 @@ func TestStatementBuilder(t *testing.T) {
 
 func TestStatementBuilderPlaceholderFormat(t *testing.T) {
 	db := &DBStub{}
-	sb := StatementBuilder.RunWith(db).PlaceholderFormat(Dollar)
+	sb := StatementBuilder.RunWith(db).SerializeWith(DefaultSerializer{}).PlaceholderFormat(Dollar)
 
 	sb.Select("test").Where("x = ?").Exec()
 	assert.Equal(t, "SELECT test WHERE x = $1", db.LastExecSql)
@@ -27,10 +27,10 @@ func TestStatementBuilderPlaceholderFormat(t *testing.T) {
 func TestRunWithDB(t *testing.T) {
 	db := &sql.DB{}
 	assert.NotPanics(t, func() {
-		builder.GetStruct(Select().RunWith(db))
-		builder.GetStruct(Insert("t").RunWith(db))
-		builder.GetStruct(Update("t").RunWith(db))
-		builder.GetStruct(Delete("t").RunWith(db))
+		builder.GetStruct(Select().RunWith(db).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Insert("t").RunWith(db).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Update("t").RunWith(db).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Delete("t").RunWith(db).SerializeWith(DefaultSerializer{}))
 	}, "RunWith(*sql.DB) should not panic")
 
 }
@@ -38,9 +38,9 @@ func TestRunWithDB(t *testing.T) {
 func TestRunWithTx(t *testing.T) {
 	tx := &sql.Tx{}
 	assert.NotPanics(t, func() {
-		builder.GetStruct(Select().RunWith(tx))
-		builder.GetStruct(Insert("t").RunWith(tx))
-		builder.GetStruct(Update("t").RunWith(tx))
-		builder.GetStruct(Delete("t").RunWith(tx))
+		builder.GetStruct(Select().RunWith(tx).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Insert("t").RunWith(tx).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Update("t").RunWith(tx).SerializeWith(DefaultSerializer{}))
+		builder.GetStruct(Delete("t").RunWith(tx).SerializeWith(DefaultSerializer{}))
 	}, "RunWith(*sql.Tx) should not panic")
 }

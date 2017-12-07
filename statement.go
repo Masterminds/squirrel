@@ -35,6 +35,11 @@ func (b StatementBuilderType) RunWith(runner BaseRunner) StatementBuilderType {
 	return setRunWith(b, runner).(StatementBuilderType)
 }
 
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b StatementBuilderType) SerializeWith(serializer Serializer) StatementBuilderType {
+	return setSerializeWith(b, serializer).(StatementBuilderType)
+}
+
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.
 var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFormat(Question)
 
