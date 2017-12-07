@@ -16,7 +16,7 @@ func TestInsertBuilderToSql(t *testing.T) {
 		Values(3, Expr("? + 1", 4)).
 		Suffix("RETURNING ?", 5)
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
@@ -30,20 +30,20 @@ func TestInsertBuilderToSql(t *testing.T) {
 }
 
 func TestInsertBuilderToSqlErr(t *testing.T) {
-	_, _, err := Insert("").Values(1).ToSql(DefaultSerializer{})
+	_, _, err := Insert("").Values(1).ToSql()
 	assert.Error(t, err)
 
-	_, _, err = Insert("x").ToSql(DefaultSerializer{})
+	_, _, err = Insert("x").ToSql()
 	assert.Error(t, err)
 }
 
 func TestInsertBuilderPlaceholders(t *testing.T) {
 	b := Insert("test").Values(1, 2)
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql(DefaultSerializer{})
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "INSERT INTO test VALUES (?,?)", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql(DefaultSerializer{})
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "INSERT INTO test VALUES ($1,$2)", sql)
 }
 
@@ -67,7 +67,7 @@ func TestInsertBuilderNoRunner(t *testing.T) {
 func TestInsertBuilderSetMap(t *testing.T) {
 	b := Insert("table").SetMap(Eq{"field1": 1})
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "INSERT INTO table (field1) VALUES (?)"
@@ -81,7 +81,7 @@ func TestInsertBuilderSelect(t *testing.T) {
 	sb := Select("field1").From("table1").Where(Eq{"field1": 1})
 	ib := Insert("table2").Columns("field1").Select(sb)
 
-	sql, args, err := ib.ToSql(DefaultSerializer{})
+	sql, args, err := ib.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "INSERT INTO table2 (field1) SELECT field1 FROM table1 WHERE field1 = ?"

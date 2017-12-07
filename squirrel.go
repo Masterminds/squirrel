@@ -17,7 +17,8 @@ import (
 // ToSql returns a SQL representation of the Sqlizer, along with a slice of args
 // as passed to e.g. database/sql.Exec. It can also return an error.
 type Sqlizer interface {
-	ToSql(Serializer Serializer) (string, []interface{}, error)
+	ToSqlWithSerializer(Serializer Serializer) (string, []interface{}, error)
+	ToSql() (string, []interface{}, error)
 }
 
 // Execer is the interface that wraps the Exec method.
@@ -99,7 +100,7 @@ var SerializerNotSet = fmt.Errorf("cannot run; no Serializer set (RunWith)")
 
 // ExecWith Execs the SQL returned by s with db.
 func ExecWith(db Execer, s Sqlizer, serializer Serializer) (res sql.Result, err error) {
-	query, args, err := s.ToSql(serializer)
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return
 	}
@@ -108,7 +109,7 @@ func ExecWith(db Execer, s Sqlizer, serializer Serializer) (res sql.Result, err 
 
 // QueryWith Querys the SQL returned by s with db.
 func QueryWith(db Queryer, s Sqlizer, serializer Serializer) (rows *sql.Rows, err error) {
-	query, args, err := s.ToSql(serializer)
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return
 	}
@@ -117,7 +118,7 @@ func QueryWith(db Queryer, s Sqlizer, serializer Serializer) (rows *sql.Rows, er
 
 // QueryRowWith QueryRows the SQL returned by s with db.
 func QueryRowWith(db QueryRower, s Sqlizer, serializer Serializer) RowScanner {
-	query, args, err := s.ToSql(serializer)
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	return &Row{RowScanner: db.QueryRow(query, args...), err: err}
 }
 
@@ -131,7 +132,7 @@ func QueryRowWith(db QueryRower, s Sqlizer, serializer Serializer) RowScanner {
 // not try very hard to ensure it. Additionally, executing the output of this
 // function with any untrusted user input is certainly insecure.
 func DebugSqlizer(s Sqlizer, serializer Serializer) string {
-	sql, args, err := s.ToSql(serializer)
+	sql, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return fmt.Sprintf("[ToSql error: %s]", err)
 	}

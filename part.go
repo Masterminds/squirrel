@@ -14,12 +14,16 @@ func newPart(pred interface{}, args ...interface{}) Sqlizer {
 	return &part{pred, args}
 }
 
-func (p part) ToSql(serializer Serializer) (sql string, args []interface{}, err error) {
+func (p part) ToSql() (sqlStr string, args []interface{}, err error) {
+	return p.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (p part) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:
 		// no-op
 	case Sqlizer:
-		sql, args, err = pred.ToSql(serializer)
+		sql, args, err = pred.ToSqlWithSerializer(serializer)
 	case string:
 		sql = pred
 		args = p.args
@@ -31,7 +35,7 @@ func (p part) ToSql(serializer Serializer) (sql string, args []interface{}, err 
 
 func appendToSql(parts []Sqlizer, w io.Writer, sep string, args []interface{}, serializer Serializer) ([]interface{}, error) {
 	for i, p := range parts {
-		partSql, partArgs, err := p.ToSql(serializer)
+		partSql, partArgs, err := p.ToSqlWithSerializer(serializer)
 		if err != nil {
 			return nil, err
 		} else if len(partSql) == 0 {

@@ -33,7 +33,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Offset(13).
 		Suffix("FETCH FIRST ? ROWS ONLY", 14)
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
@@ -55,7 +55,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 func TestSelectBuilderFromSelect(t *testing.T) {
 	subQ := Select("c").From("d").Where(Eq{"i": 0})
 	b := Select("a", "b").FromSelect(subQ, "subq")
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "SELECT a, b FROM (SELECT c FROM d WHERE i = ?) AS subq"
@@ -66,17 +66,17 @@ func TestSelectBuilderFromSelect(t *testing.T) {
 }
 
 func TestSelectBuilderToSqlErr(t *testing.T) {
-	_, _, err := Select().From("x").ToSql(DefaultSerializer{})
+	_, _, err := Select().From("x").ToSql()
 	assert.Error(t, err)
 }
 
 func TestSelectBuilderPlaceholders(t *testing.T) {
 	b := Select("test").Where("x = ? AND y = ?")
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql(DefaultSerializer{})
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "SELECT test WHERE x = ? AND y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql(DefaultSerializer{})
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "SELECT test WHERE x = $1 AND y = $2", sql)
 }
 
@@ -119,7 +119,7 @@ func TestSelectBuilderSimpleJoin(t *testing.T) {
 
 	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo")
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedSql, sql)
@@ -133,7 +133,7 @@ func TestSelectBuilderParamJoin(t *testing.T) {
 
 	b := Select("*").From("bar").Join("baz ON bar.foo = baz.foo AND baz.foo = ?", 42)
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedSql, sql)
@@ -149,7 +149,7 @@ func TestSelectBuilderNestedSelectJoin(t *testing.T) {
 
 	b := Select("*").From("bar").JoinClause(nestedSelect.Prefix("JOIN (").Suffix(") r ON bar.foo = r.foo"))
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedSql, sql)
@@ -157,7 +157,7 @@ func TestSelectBuilderNestedSelectJoin(t *testing.T) {
 }
 
 func TestSelectWithOptions(t *testing.T) {
-	sql, _, err := Select("*").From("foo").Distinct().Options("SQL_NO_CACHE").ToSql(DefaultSerializer{})
+	sql, _, err := Select("*").From("foo").Distinct().Options("SQL_NO_CACHE").ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)

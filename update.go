@@ -62,7 +62,11 @@ func (d *updateData) QueryRow() RowScanner {
 	return QueryRowWith(queryRower, d, d.SerializeWith)
 }
 
-func (d *updateData) ToSql(serializer Serializer) (sqlStr string, args []interface{}, err error) {
+func (d updateData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *updateData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.Table) == 0 {
 		err = fmt.Errorf("update statements must specify a table")
 		return
@@ -126,10 +130,15 @@ func (b UpdateBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b UpdateBuilder) ToSql(serializer Serializer) (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b UpdateBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b UpdateBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(updateData)
-	return data.ToSql(serializer)
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

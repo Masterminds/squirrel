@@ -30,7 +30,11 @@ func (d *deleteData) Exec() (sql.Result, error) {
 	return ExecWith(d.RunWith, d, d.SerializeWith)
 }
 
-func (d *deleteData) ToSql(serializer Serializer) (sqlStr string, args []interface{}, err error) {
+func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *deleteData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.From) == 0 {
 		err = fmt.Errorf("delete statements must specify a From table")
 		return
@@ -76,10 +80,15 @@ func (b DeleteBuilder) Exec() (sql.Result, error) {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b DeleteBuilder) ToSql(serializer Serializer) (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b DeleteBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b DeleteBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(deleteData)
-	return data.ToSql(serializer)
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

@@ -9,7 +9,7 @@ import (
 
 func TestEqToSql(t *testing.T) {
 	b := Eq{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id = ?"
@@ -21,7 +21,7 @@ func TestEqToSql(t *testing.T) {
 
 func TestEqInToSql(t *testing.T) {
 	b := Eq{"id": []int{1, 2, 3}}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id IN (?,?,?)"
@@ -33,7 +33,7 @@ func TestEqInToSql(t *testing.T) {
 
 func TestNotEqToSql(t *testing.T) {
 	b := NotEq{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id <> ?"
@@ -45,7 +45,7 @@ func TestNotEqToSql(t *testing.T) {
 
 func TestEqNotInToSql(t *testing.T) {
 	b := NotEq{"id": []int{1, 2, 3}}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id NOT IN (?,?,?)"
@@ -57,7 +57,7 @@ func TestEqNotInToSql(t *testing.T) {
 
 func TestEqInEmptyToSql(t *testing.T) {
 	b := Eq{"id": []int{}}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "(1=0)"
@@ -69,7 +69,7 @@ func TestEqInEmptyToSql(t *testing.T) {
 
 func TestNotEqInEmptyToSql(t *testing.T) {
 	b := NotEq{"id": []int{}}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "(1=1)"
@@ -81,7 +81,7 @@ func TestNotEqInEmptyToSql(t *testing.T) {
 
 func TestEqBytesToSql(t *testing.T) {
 	b := Eq{"id": []byte("test")}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id = ?"
@@ -93,7 +93,7 @@ func TestEqBytesToSql(t *testing.T) {
 
 func TestLtToSql(t *testing.T) {
 	b := Lt{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id < ?"
@@ -105,7 +105,7 @@ func TestLtToSql(t *testing.T) {
 
 func TestLtOrEqToSql(t *testing.T) {
 	b := LtOrEq{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id <= ?"
@@ -117,7 +117,7 @@ func TestLtOrEqToSql(t *testing.T) {
 
 func TestGtToSql(t *testing.T) {
 	b := Gt{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id > ?"
@@ -129,7 +129,7 @@ func TestGtToSql(t *testing.T) {
 
 func TestGtOrEqToSql(t *testing.T) {
 	b := GtOrEq{"id": 1}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql := "id >= ?"
@@ -142,7 +142,7 @@ func TestGtOrEqToSql(t *testing.T) {
 func TestExprNilToSql(t *testing.T) {
 	var b Sqlizer
 	b = NotEq{"name": nil}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 	assert.Empty(t, args)
 
@@ -150,7 +150,7 @@ func TestExprNilToSql(t *testing.T) {
 	assert.Equal(t, expectedSql, sql)
 
 	b = Eq{"name": nil}
-	sql, args, err = b.ToSql(DefaultSerializer{})
+	sql, args, err = b.ToSql()
 	assert.NoError(t, err)
 	assert.Empty(t, args)
 
@@ -163,7 +163,7 @@ func TestNullTypeString(t *testing.T) {
 	var name sql.NullString
 
 	b = Eq{"name": name}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Empty(t, args)
@@ -171,7 +171,7 @@ func TestNullTypeString(t *testing.T) {
 
 	name.Scan("Name")
 	b = Eq{"name": name}
-	sql, args, err = b.ToSql(DefaultSerializer{})
+	sql, args, err = b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{"Name"}, args)
@@ -182,7 +182,7 @@ func TestNullTypeInt64(t *testing.T) {
 	var userID sql.NullInt64
 	userID.Scan(nil)
 	b := Eq{"user_id": userID}
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Empty(t, args)
@@ -190,7 +190,7 @@ func TestNullTypeInt64(t *testing.T) {
 
 	userID.Scan(int64(10))
 	b = Eq{"user_id": userID}
-	sql, args, err = b.ToSql(DefaultSerializer{})
+	sql, args, err = b.ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{int64(10)}, args)

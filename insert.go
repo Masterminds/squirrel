@@ -57,7 +57,11 @@ func (d *insertData) QueryRow() RowScanner {
 	return QueryRowWith(queryRower, d, d.SerializeWith)
 }
 
-func (d *insertData) ToSql(serializer Serializer) (sqlStr string, args []interface{}, err error) {
+func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *insertData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.Into) == 0 {
 		err = errors.New("insert statements must specify a table")
 		return
@@ -103,7 +107,7 @@ func (d *insertData) appendSelectToSQL(w io.Writer, args []interface{}, serializ
 		return args, errors.New("select clause for insert statements are not set")
 	}
 
-	selectClause, sArgs, err := d.Select.ToSql(serializer)
+	selectClause, sArgs, err := d.Select.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return args, err
 	}
@@ -168,10 +172,15 @@ func (b InsertBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b InsertBuilder) ToSql(serializer Serializer) (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b InsertBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b InsertBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(insertData)
-	return data.ToSql(serializer)
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

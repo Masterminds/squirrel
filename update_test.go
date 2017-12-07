@@ -18,7 +18,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		Offset(5).
 		Suffix("RETURNING ?", 6)
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
@@ -33,20 +33,20 @@ func TestUpdateBuilderToSql(t *testing.T) {
 }
 
 func TestUpdateBuilderToSqlErr(t *testing.T) {
-	_, _, err := Update("").Set("x", 1).ToSql(DefaultSerializer{})
+	_, _, err := Update("").Set("x", 1).ToSql()
 	assert.Error(t, err)
 
-	_, _, err = Update("x").ToSql(DefaultSerializer{})
+	_, _, err = Update("x").ToSql()
 	assert.Error(t, err)
 }
 
 func TestUpdateBuilderPlaceholders(t *testing.T) {
 	b := Update("test").SetMap(Eq{"x": 1, "y": 2})
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql(DefaultSerializer{})
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "UPDATE test SET x = ?, y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql(DefaultSerializer{})
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "UPDATE test SET x = $1, y = $2", sql)
 }
 

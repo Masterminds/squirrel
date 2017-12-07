@@ -16,7 +16,7 @@ func TestDeleteBuilderToSql(t *testing.T) {
 		Offset(3).
 		Suffix("RETURNING ?", 4)
 
-	sql, args, err := b.ToSql(DefaultSerializer{})
+	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
 	expectedSql :=
@@ -30,17 +30,17 @@ func TestDeleteBuilderToSql(t *testing.T) {
 }
 
 func TestDeleteBuilderToSqlErr(t *testing.T) {
-	_, _, err := Delete("").ToSql(DefaultSerializer{})
+	_, _, err := Delete("").ToSql()
 	assert.Error(t, err)
 }
 
 func TestDeleteBuilderPlaceholders(t *testing.T) {
 	b := Delete("test").Where("x = ? AND y = ?", 1, 2)
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql(DefaultSerializer{})
+	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
 	assert.Equal(t, "DELETE FROM test WHERE x = ? AND y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql(DefaultSerializer{})
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "DELETE FROM test WHERE x = $1 AND y = $2", sql)
 }
 
