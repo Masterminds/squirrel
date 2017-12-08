@@ -10,7 +10,7 @@ import (
 
 func TestSelectBuilderContextRunners(t *testing.T) {
 	db := &DBStub{}
-	b := Select("test").RunWith(db).SerializeWith(DefaultSerializer{})
+	b := Select("test").RunWith(db)
 
 	expectedSql := "SELECT test"
 

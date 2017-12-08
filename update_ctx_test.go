@@ -10,7 +10,7 @@ import (
 
 func TestUpdateBuilderContextRunners(t *testing.T) {
 	db := &DBStub{}
-	b := Update("test").Set("x", 1).RunWith(db).SerializeWith(DefaultSerializer{})
+	b := Update("test").Set("x", 1).RunWith(db)
 
 	expectedSql := "UPDATE test SET x = ?"
 

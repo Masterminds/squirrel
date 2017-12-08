@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 		os.Exit(-3)
 	}
 
-	sqrl = StatementBuilder.RunWith(db).SerializeWith(DefaultSerializer{})
+	sqrl = StatementBuilder.RunWith(db)
 
 	if driver == "postgres" {
 		sqrl = sqrl.PlaceholderFormat(Dollar)

@@ -49,7 +49,7 @@ func TestInsertBuilderPlaceholders(t *testing.T) {
 
 func TestInsertBuilderRunners(t *testing.T) {
 	db := &DBStub{}
-	b := Insert("test").Values(1).RunWith(db).SerializeWith(DefaultSerializer{})
+	b := Insert("test").Values(1).RunWith(db)
 
 	expectedSql := "INSERT INTO test VALUES (?)"
 

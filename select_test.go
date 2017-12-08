@@ -82,7 +82,7 @@ func TestSelectBuilderPlaceholders(t *testing.T) {
 
 func TestSelectBuilderRunners(t *testing.T) {
 	db := &DBStub{}
-	b := Select("test").RunWith(db).SerializeWith(DefaultSerializer{})
+	b := Select("test").RunWith(db)
 
 	expectedSql := "SELECT test"
 
