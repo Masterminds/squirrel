@@ -256,6 +256,11 @@ func (b SelectBuilder) RightJoin(join string, rest ...interface{}) SelectBuilder
 	return b.JoinClause("RIGHT JOIN "+join, rest...)
 }
 
+// NaturalJoin adds a NATURAL JOIN clause to the query.
+func (b SelectBuilder) NaturalJoin(join string, rest ...interface{}) SelectBuilder {
+	return b.JoinClause("NATURAL JOIN "+join, rest...)
+}
+
 // Where adds an expression to the WHERE clause of the query.
 //
 // Expressions are ANDed together in the generated SQL.
