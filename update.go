@@ -1,11 +1,9 @@
 package squirrel
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/lann/builder"
 )
@@ -13,14 +11,16 @@ import (
 type updateData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
-	Prefixes          exprs
-	Table             string
-	SetClauses        []setClause
-	WhereParts        []Sqlizer
-	OrderBys          []string
-	Limit             string
-	Offset            string
-	Suffixes          exprs
+	SerializeWith     Serializer
+
+	Prefixes   exprs
+	Table      string
+	SetClauses []setClause
+	WhereParts []Sqlizer
+	OrderBys   []string
+	Limit      string
+	Offset     string
+	Suffixes   exprs
 }
 
 type setClause struct {
@@ -32,28 +32,41 @@ func (d *updateData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return ExecWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return ExecWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *updateData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return QueryWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return QueryWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *updateData) QueryRow() RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
+	if d.SerializeWith == nil {
+		return &Row{err: RunnerNotSet}
+	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
 		return &Row{err: RunnerNotQueryRunner}
 	}
-	return QueryRowWith(queryRower, d)
+	return QueryRowWith(queryRower, d, d.SerializeWith)
 }
 
-func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d updateData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *updateData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.Table) == 0 {
 		err = fmt.Errorf("update statements must specify a table")
 		return
@@ -63,62 +76,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	sql := &bytes.Buffer{}
-
-	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
-		sql.WriteString(" ")
-	}
-
-	sql.WriteString("UPDATE ")
-	sql.WriteString(d.Table)
-
-	sql.WriteString(" SET ")
-	setSqls := make([]string, len(d.SetClauses))
-	for i, setClause := range d.SetClauses {
-		var valSql string
-		e, isExpr := setClause.value.(expr)
-		if isExpr {
-			valSql = e.sql
-			args = append(args, e.args...)
-		} else {
-			valSql = "?"
-			args = append(args, setClause.value)
-		}
-		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSql)
-	}
-	sql.WriteString(strings.Join(setSqls, ", "))
-
-	if len(d.WhereParts) > 0 {
-		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.OrderBys) > 0 {
-		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
-	}
-
-	if len(d.Limit) > 0 {
-		sql.WriteString(" LIMIT ")
-		sql.WriteString(d.Limit)
-	}
-
-	if len(d.Offset) > 0 {
-		sql.WriteString(" OFFSET ")
-		sql.WriteString(d.Offset)
-	}
-
-	if len(d.Suffixes) > 0 {
-		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
-	}
-
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
-	return
+	return serializer.Update(*d)
 }
 
 // Builder
@@ -145,6 +103,11 @@ func (b UpdateBuilder) RunWith(runner BaseRunner) UpdateBuilder {
 	return setRunWith(b, runner).(UpdateBuilder)
 }
 
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b UpdateBuilder) SerializeWith(serializer Serializer) UpdateBuilder {
+	return setSerializeWith(b, serializer).(UpdateBuilder)
+}
+
 // Exec builds and Execs the query with the Runner set by RunWith.
 func (b UpdateBuilder) Exec() (sql.Result, error) {
 	data := builder.GetStruct(b).(updateData)
@@ -167,10 +130,15 @@ func (b UpdateBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b UpdateBuilder) ToSql() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b UpdateBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b UpdateBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(updateData)
-	return data.ToSql()
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

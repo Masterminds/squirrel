@@ -11,13 +11,17 @@ func newWherePart(pred interface{}, args ...interface{}) Sqlizer {
 }
 
 func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
+	return p.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (p wherePart) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:
 		// no-op
 	case Sqlizer:
-		return pred.ToSql()
+		return pred.ToSqlWithSerializer(serializer)
 	case map[string]interface{}:
-		return Eq(pred).ToSql()
+		return Eq(pred).ToSqlWithSerializer(serializer)
 	case string:
 		sql = pred
 		args = p.args

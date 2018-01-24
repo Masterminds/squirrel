@@ -22,6 +22,10 @@ func Expr(sql string, args ...interface{}) expr {
 }
 
 func (e expr) ToSql() (sql string, args []interface{}, err error) {
+	return e.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (e expr) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
 	return e.sql, e.args, nil
 }
 
@@ -59,7 +63,11 @@ func Alias(expr Sqlizer, alias string) aliasExpr {
 }
 
 func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
-	sql, args, err = e.expr.ToSql()
+	return e.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (e aliasExpr) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	sql, args, err = e.expr.ToSqlWithSerializer(serializer)
 	if err == nil {
 		sql = fmt.Sprintf("(%s) AS %s", sql, e.alias)
 	}
@@ -71,61 +79,16 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Eq{"id": 1})
 type Eq map[string]interface{}
 
-func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
-	var (
-		exprs      []string
-		equalOpr   = "="
-		inOpr      = "IN"
-		nullOpr    = "IS"
-		inEmptyExpr = "(1=0)" // Portable FALSE
-	)
-
-	if useNotOpr {
-		equalOpr = "<>"
-		inOpr = "NOT IN"
-		nullOpr = "IS NOT"
-		inEmptyExpr = "(1=1)" // Portable TRUE
-	}
-
-	for key, val := range eq {
-		expr := ""
-
-		switch v := val.(type) {
-		case driver.Valuer:
-			if val, err = v.Value(); err != nil {
-				return
-			}
-		}
-
-		if val == nil {
-			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
-		} else {
-			if isListType(val) {
-				valVal := reflect.ValueOf(val)
-				if valVal.Len() == 0 {
-					expr = inEmptyExpr
-					if args == nil {
-						args = []interface{}{}
-					}
-				} else {
-					for i := 0; i < valVal.Len(); i++ {
-						args = append(args, valVal.Index(i).Interface())
-					}
-					expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
-				}
-			} else {
-				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
-				args = append(args, val)
-			}
-		}
-		exprs = append(exprs, expr)
-	}
-	sql = strings.Join(exprs, " AND ")
-	return
+func (eq Eq) toSqlWithSerializer(useNotOpr bool, serializer Serializer) (sql string, args []interface{}, err error) {
+	return serializer.EQ(eq, useNotOpr)
 }
 
-func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
-	return eq.toSql(false)
+func (eq Eq) ToSql() (sqlStr string, args []interface{}, err error) {
+	return eq.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (eq Eq) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return eq.toSqlWithSerializer(false, serializer)
 }
 
 // NotEq is syntactic sugar for use with Where/Having/Set methods.
@@ -133,8 +96,12 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(NotEq{"id": 1}) == "id <> 1"
 type NotEq Eq
 
-func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
-	return Eq(neq).toSql(true)
+func (neq NotEq) ToSql() (sqlStr string, args []interface{}, err error) {
+	return neq.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (neq NotEq) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return Eq(neq).toSqlWithSerializer(true, serializer)
 }
 
 // Lt is syntactic sugar for use with Where/Having/Set methods.
@@ -142,50 +109,16 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Lt{"id": 1})
 type Lt map[string]interface{}
 
-func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
-	var (
-		exprs []string
-		opr   string = "<"
-	)
-
-	if opposite {
-		opr = ">"
-	}
-
-	if orEq {
-		opr = fmt.Sprintf("%s%s", opr, "=")
-	}
-
-	for key, val := range lt {
-		expr := ""
-
-		switch v := val.(type) {
-		case driver.Valuer:
-			if val, err = v.Value(); err != nil {
-				return
-			}
-		}
-
-		if val == nil {
-			err = fmt.Errorf("cannot use null with less than or greater than operators")
-			return
-		} else {
-			if isListType(val) {
-				err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
-				return
-			} else {
-				expr = fmt.Sprintf("%s %s ?", key, opr)
-				args = append(args, val)
-			}
-		}
-		exprs = append(exprs, expr)
-	}
-	sql = strings.Join(exprs, " AND ")
-	return
+func (lt Lt) toSqlWithSerializer(opposite, orEq bool, serializer Serializer) (sql string, args []interface{}, err error) {
+	return serializer.LT(lt, opposite, orEq)
 }
 
-func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
-	return lt.toSql(false, false)
+func (lt Lt) ToSql() (sqlStr string, args []interface{}, err error) {
+	return lt.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (lt Lt) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return lt.toSqlWithSerializer(false, false, serializer)
 }
 
 // LtOrEq is syntactic sugar for use with Where/Having/Set methods.
@@ -193,8 +126,12 @@ func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(LtOrEq{"id": 1}) == "id <= 1"
 type LtOrEq Lt
 
-func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(ltOrEq).toSql(false, true)
+func (ltOrEq LtOrEq) ToSql() (sqlStr string, args []interface{}, err error) {
+	return ltOrEq.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (ltOrEq LtOrEq) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return Lt(ltOrEq).toSqlWithSerializer(false, true, serializer)
 }
 
 // Gt is syntactic sugar for use with Where/Having/Set methods.
@@ -202,8 +139,12 @@ func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Gt{"id": 1}) == "id > 1"
 type Gt Lt
 
-func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(gt).toSql(true, false)
+func (gt Gt) ToSql() (sqlStr string, args []interface{}, err error) {
+	return gt.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (gt Gt) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return Lt(gt).toSqlWithSerializer(true, false, serializer)
 }
 
 // GtOrEq is syntactic sugar for use with Where/Having/Set methods.
@@ -211,16 +152,20 @@ func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(GtOrEq{"id": 1}) == "id >= 1"
 type GtOrEq Lt
 
-func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(gtOrEq).toSql(true, true)
+func (gtOrEq GtOrEq) ToSql() (sqlStr string, args []interface{}, err error) {
+	return gtOrEq.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (gtOrEq GtOrEq) ToSqlWithSerializer(serializer Serializer) (sql string, args []interface{}, err error) {
+	return Lt(gtOrEq).toSqlWithSerializer(true, true, serializer)
 }
 
 type conj []Sqlizer
 
-func (c conj) join(sep string) (sql string, args []interface{}, err error) {
+func (c conj) join(sep string, serializer Serializer) (sql string, args []interface{}, err error) {
 	var sqlParts []string
 	for _, sqlizer := range c {
-		partSql, partArgs, err := sqlizer.ToSql()
+		partSql, partArgs, err := sqlizer.ToSqlWithSerializer(serializer)
 		if err != nil {
 			return "", nil, err
 		}
@@ -238,13 +183,21 @@ func (c conj) join(sep string) (sql string, args []interface{}, err error) {
 type And conj
 
 func (a And) ToSql() (string, []interface{}, error) {
-	return conj(a).join(" AND ")
+	return a.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (a And) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
+	return conj(a).join(" AND ", serializer)
 }
 
 type Or conj
 
 func (o Or) ToSql() (string, []interface{}, error) {
-	return conj(o).join(" OR ")
+	return o.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (o Or) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
+	return conj(o).join(" OR ", serializer)
 }
 
 func isListType(val interface{}) bool {

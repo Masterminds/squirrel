@@ -13,27 +13,36 @@ func (d *updateData) ExecContext(ctx context.Context) (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
 	ctxRunner, ok := d.RunWith.(ExecerContext)
 	if !ok {
 		return nil, NoContextSupport
 	}
-	return ExecContextWith(ctx, ctxRunner, d)
+	return ExecContextWith(ctx, ctxRunner, d, d.SerializeWith)
 }
 
 func (d *updateData) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
 	ctxRunner, ok := d.RunWith.(QueryerContext)
 	if !ok {
 		return nil, NoContextSupport
 	}
-	return QueryContextWith(ctx, ctxRunner, d)
+	return QueryContextWith(ctx, ctxRunner, d, d.SerializeWith)
 }
 
 func (d *updateData) QueryRowContext(ctx context.Context) RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
+	}
+	if d.SerializeWith == nil {
+		return &Row{err: SerializerNotSet}
 	}
 	queryRower, ok := d.RunWith.(QueryRowerContext)
 	if !ok {
@@ -42,7 +51,7 @@ func (d *updateData) QueryRowContext(ctx context.Context) RowScanner {
 		}
 		return &Row{err: NoContextSupport}
 	}
-	return QueryRowContextWith(ctx, queryRower, d)
+	return QueryRowContextWith(ctx, queryRower, d, d.SerializeWith)
 }
 
 // ExecContext builds and ExecContexts the query with the Runner set by RunWith.

@@ -15,14 +15,14 @@ func TestWherePartsAppendToSql(t *testing.T) {
 		newWherePart(Eq{"y": 2}),
 	}
 	sql := &bytes.Buffer{}
-	args, _ := appendToSql(parts, sql, " AND ", []interface{}{})
+	args, _ := appendToSql(parts, sql, " AND ", []interface{}{}, DefaultSerializer{})
 	assert.Equal(t, "x = ? AND y = ?", sql.String())
 	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
 func TestWherePartsAppendToSqlErr(t *testing.T) {
 	parts := []Sqlizer{newWherePart(1)}
-	_, err := appendToSql(parts, &bytes.Buffer{}, "", []interface{}{})
+	_, err := appendToSql(parts, &bytes.Buffer{}, "", []interface{}{}, DefaultSerializer{})
 	assert.Error(t, err)
 }
 

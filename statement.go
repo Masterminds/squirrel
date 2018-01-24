@@ -7,22 +7,22 @@ type StatementBuilderType builder.Builder
 
 // Select returns a SelectBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Select(columns ...string) SelectBuilder {
-	return SelectBuilder(b).Columns(columns...)
+	return SelectBuilder(b).Columns(columns...).SerializeWith(DefaultSerializer{})
 }
 
 // Insert returns a InsertBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Insert(into string) InsertBuilder {
-	return InsertBuilder(b).Into(into)
+	return InsertBuilder(b).Into(into).SerializeWith(DefaultSerializer{})
 }
 
 // Update returns a UpdateBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Update(table string) UpdateBuilder {
-	return UpdateBuilder(b).Table(table)
+	return UpdateBuilder(b).Table(table).SerializeWith(DefaultSerializer{})
 }
 
 // Delete returns a DeleteBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Delete(from string) DeleteBuilder {
-	return DeleteBuilder(b).From(from)
+	return DeleteBuilder(b).From(from).SerializeWith(DefaultSerializer{})
 }
 
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
@@ -33,6 +33,11 @@ func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBu
 // RunWith sets the RunWith field for any child builders.
 func (b StatementBuilderType) RunWith(runner BaseRunner) StatementBuilderType {
 	return setRunWith(b, runner).(StatementBuilderType)
+}
+
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b StatementBuilderType) SerializeWith(serializer Serializer) StatementBuilderType {
+	return setSerializeWith(b, serializer).(StatementBuilderType)
 }
 
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.

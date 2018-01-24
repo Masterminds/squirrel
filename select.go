@@ -1,10 +1,8 @@
 package squirrel
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/lann/builder"
 )
@@ -12,6 +10,7 @@ import (
 type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
+	SerializeWith     Serializer
 	Prefixes          exprs
 	Options           []string
 	Columns           []Sqlizer
@@ -30,113 +29,47 @@ func (d *selectData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return ExecWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return ExecWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *selectData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return QueryWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return QueryWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *selectData) QueryRow() RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
+	if d.SerializeWith == nil {
+		return &Row{err: SerializerNotSet}
+	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
 		return &Row{err: RunnerNotQueryRunner}
 	}
-	return QueryRowWith(queryRower, d)
+	return QueryRowWith(queryRower, d, d.SerializeWith)
 }
 
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *selectData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
 	}
 
-	sql := &bytes.Buffer{}
-
-	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
-		sql.WriteString(" ")
-	}
-
-	sql.WriteString("SELECT ")
-
-	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
-		sql.WriteString(" ")
-	}
-
-	if len(d.Columns) > 0 {
-		args, err = appendToSql(d.Columns, sql, ", ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if d.From != nil {
-		sql.WriteString(" FROM ")
-		args, err = appendToSql([]Sqlizer{d.From}, sql, "", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.Joins) > 0 {
-		sql.WriteString(" ")
-		args, err = appendToSql(d.Joins, sql, " ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.WhereParts) > 0 {
-		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.GroupBys) > 0 {
-		sql.WriteString(" GROUP BY ")
-		sql.WriteString(strings.Join(d.GroupBys, ", "))
-	}
-
-	if len(d.HavingParts) > 0 {
-		sql.WriteString(" HAVING ")
-		args, err = appendToSql(d.HavingParts, sql, " AND ", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(d.OrderBys) > 0 {
-		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
-	}
-
-	if len(d.Limit) > 0 {
-		sql.WriteString(" LIMIT ")
-		sql.WriteString(d.Limit)
-	}
-
-	if len(d.Offset) > 0 {
-		sql.WriteString(" OFFSET ")
-		sql.WriteString(d.Offset)
-	}
-
-	if len(d.Suffixes) > 0 {
-		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
-	}
-
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
-	return
+	return serializer.Select(*d)
 }
 
 // Builder
@@ -161,6 +94,11 @@ func (b SelectBuilder) PlaceholderFormat(f PlaceholderFormat) SelectBuilder {
 // RunWith sets a Runner (like database/sql.DB) to be used with e.g. Exec.
 func (b SelectBuilder) RunWith(runner BaseRunner) SelectBuilder {
 	return setRunWith(b, runner).(SelectBuilder)
+}
+
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b SelectBuilder) SerializeWith(serializer Serializer) SelectBuilder {
+	return setSerializeWith(b, serializer).(SelectBuilder)
 }
 
 // Exec builds and Execs the query with the Runner set by RunWith.
@@ -188,10 +126,15 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b SelectBuilder) ToSql() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b SelectBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
-	return data.ToSql()
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

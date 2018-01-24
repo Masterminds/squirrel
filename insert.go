@@ -1,7 +1,6 @@
 package squirrel
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 type insertData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
+	SerializeWith     Serializer
 	Prefixes          exprs
 	Options           []string
 	Into              string
@@ -27,28 +27,41 @@ func (d *insertData) Exec() (sql.Result, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return ExecWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return ExecWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *insertData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
-	return QueryWith(d.RunWith, d)
+	if d.SerializeWith == nil {
+		return nil, SerializerNotSet
+	}
+	return QueryWith(d.RunWith, d, d.SerializeWith)
 }
 
 func (d *insertData) QueryRow() RowScanner {
 	if d.RunWith == nil {
 		return &Row{err: RunnerNotSet}
 	}
+	if d.SerializeWith == nil {
+		return &Row{err: SerializerNotSet}
+	}
 	queryRower, ok := d.RunWith.(QueryRower)
 	if !ok {
 		return &Row{err: RunnerNotQueryRunner}
 	}
-	return QueryRowWith(queryRower, d)
+	return QueryRowWith(queryRower, d, d.SerializeWith)
 }
 
 func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+func (d *insertData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.Into) == 0 {
 		err = errors.New("insert statements must specify a table")
 		return
@@ -58,46 +71,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 
-	sql := &bytes.Buffer{}
-
-	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
-		sql.WriteString(" ")
-	}
-
-	sql.WriteString("INSERT ")
-
-	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
-		sql.WriteString(" ")
-	}
-
-	sql.WriteString("INTO ")
-	sql.WriteString(d.Into)
-	sql.WriteString(" ")
-
-	if len(d.Columns) > 0 {
-		sql.WriteString("(")
-		sql.WriteString(strings.Join(d.Columns, ","))
-		sql.WriteString(") ")
-	}
-
-	if d.Select != nil {
-		args, err = d.appendSelectToSQL(sql, args)
-	} else {
-		args, err = d.appendValuesToSQL(sql, args)
-	}
-	if err != nil {
-		return
-	}
-
-	if len(d.Suffixes) > 0 {
-		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
-	}
-
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
-	return
+	return serializer.Insert(*d)
 }
 
 func (d *insertData) appendValuesToSQL(w io.Writer, args []interface{}) ([]interface{}, error) {
@@ -128,12 +102,12 @@ func (d *insertData) appendValuesToSQL(w io.Writer, args []interface{}) ([]inter
 	return args, nil
 }
 
-func (d *insertData) appendSelectToSQL(w io.Writer, args []interface{}) ([]interface{}, error) {
+func (d *insertData) appendSelectToSQL(w io.Writer, args []interface{}, serializer Serializer) ([]interface{}, error) {
 	if d.Select == nil {
 		return args, errors.New("select clause for insert statements are not set")
 	}
 
-	selectClause, sArgs, err := d.Select.ToSql()
+	selectClause, sArgs, err := d.Select.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return args, err
 	}
@@ -168,6 +142,11 @@ func (b InsertBuilder) RunWith(runner BaseRunner) InsertBuilder {
 	return setRunWith(b, runner).(InsertBuilder)
 }
 
+// SerializeWith sets a Serializer (that is, db specific writer) to be used with.
+func (b InsertBuilder) SerializeWith(serializer Serializer) InsertBuilder {
+	return setSerializeWith(b, serializer).(InsertBuilder)
+}
+
 // Exec builds and Execs the query with the Runner set by RunWith.
 func (b InsertBuilder) Exec() (sql.Result, error) {
 	data := builder.GetStruct(b).(insertData)
@@ -193,10 +172,15 @@ func (b InsertBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b InsertBuilder) ToSql() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b InsertBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b InsertBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(insertData)
-	return data.ToSql()
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // Prefix adds an expression to the beginning of the query

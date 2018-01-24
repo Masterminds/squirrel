@@ -20,14 +20,14 @@ type sqlizerBuffer struct {
 }
 
 // WriteSql converts Sqlizer to SQL strings and writes it to buffer
-func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
+func (b *sqlizerBuffer) WriteSql(item Sqlizer, serializer Serializer) {
 	if b.err != nil {
 		return
 	}
 
 	var str string
 	var args []interface{}
-	str, args, b.err = item.ToSql()
+	str, args, b.err = item.ToSqlWithSerializer(serializer)
 
 	if b.err != nil {
 		return
@@ -61,43 +61,32 @@ type caseData struct {
 
 // ToSql implements Sqlizer
 func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
+	return d.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql implements Sqlizer
+func (d *caseData) ToSqlWithSerializer(serializer Serializer) (sqlStr string, args []interface{}, err error) {
 	if len(d.WhenParts) == 0 {
 		err = errors.New("case expression must contain at lease one WHEN clause")
 
 		return
 	}
 
-	sql := sqlizerBuffer{}
-
-	sql.WriteString("CASE ")
-	if d.What != nil {
-		sql.WriteSql(d.What)
-	}
-
-	for _, p := range d.WhenParts {
-		sql.WriteString("WHEN ")
-		sql.WriteSql(p.when)
-		sql.WriteString("THEN ")
-		sql.WriteSql(p.then)
-	}
-
-	if d.Else != nil {
-		sql.WriteString("ELSE ")
-		sql.WriteSql(d.Else)
-	}
-
-	sql.WriteString("END")
-
-	return sql.ToSql()
+	return serializer.Case(*d)
 }
 
 // CaseBuilder builds SQL CASE construct which could be used as parts of queries.
 type CaseBuilder builder.Builder
 
-// ToSql builds the query into a SQL string and bound args.
-func (b CaseBuilder) ToSql() (string, []interface{}, error) {
+// ToSql builds the query into a SQL string and bound args with the default serializer.
+func (b CaseBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+	return b.ToSqlWithSerializer(DefaultSerializer{})
+}
+
+// ToSql builds the query into a SQL string and bound args with a specific serializer.
+func (b CaseBuilder) ToSqlWithSerializer(serializer Serializer) (string, []interface{}, error) {
 	data := builder.GetStruct(b).(caseData)
-	return data.ToSql()
+	return data.ToSqlWithSerializer(serializer)
 }
 
 // what sets optional value for CASE construct "CASE [value] ..."

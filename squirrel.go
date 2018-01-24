@@ -17,6 +17,7 @@ import (
 // ToSql returns a SQL representation of the Sqlizer, along with a slice of args
 // as passed to e.g. database/sql.Exec. It can also return an error.
 type Sqlizer interface {
+	ToSqlWithSerializer(Serializer Serializer) (string, []interface{}, error)
 	ToSql() (string, []interface{}, error)
 }
 
@@ -84,15 +85,22 @@ func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 	return builder.Set(b, "RunWith", runner)
 }
 
+func setSerializeWith(b interface{}, serializer Serializer) interface{} {
+	return builder.Set(b, "SerializeWith", serializer)
+}
+
 // RunnerNotSet is returned by methods that need a Runner if it isn't set.
 var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
 
 // RunnerNotQueryRunner is returned by QueryRow if the RunWith value doesn't implement QueryRower.
 var RunnerNotQueryRunner = fmt.Errorf("cannot QueryRow; Runner is not a QueryRower")
 
+// SerializerNotSet is returned by methods that need a Serializer if it isn't set.
+var SerializerNotSet = fmt.Errorf("cannot run; no Serializer set (RunWith)")
+
 // ExecWith Execs the SQL returned by s with db.
-func ExecWith(db Execer, s Sqlizer) (res sql.Result, err error) {
-	query, args, err := s.ToSql()
+func ExecWith(db Execer, s Sqlizer, serializer Serializer) (res sql.Result, err error) {
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return
 	}
@@ -100,8 +108,8 @@ func ExecWith(db Execer, s Sqlizer) (res sql.Result, err error) {
 }
 
 // QueryWith Querys the SQL returned by s with db.
-func QueryWith(db Queryer, s Sqlizer) (rows *sql.Rows, err error) {
-	query, args, err := s.ToSql()
+func QueryWith(db Queryer, s Sqlizer, serializer Serializer) (rows *sql.Rows, err error) {
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return
 	}
@@ -109,8 +117,8 @@ func QueryWith(db Queryer, s Sqlizer) (rows *sql.Rows, err error) {
 }
 
 // QueryRowWith QueryRows the SQL returned by s with db.
-func QueryRowWith(db QueryRower, s Sqlizer) RowScanner {
-	query, args, err := s.ToSql()
+func QueryRowWith(db QueryRower, s Sqlizer, serializer Serializer) RowScanner {
+	query, args, err := s.ToSqlWithSerializer(serializer)
 	return &Row{RowScanner: db.QueryRow(query, args...), err: err}
 }
 
@@ -123,8 +131,8 @@ func QueryRowWith(db QueryRower, s Sqlizer) RowScanner {
 // debugging. While the string result *might* be valid SQL, this function does
 // not try very hard to ensure it. Additionally, executing the output of this
 // function with any untrusted user input is certainly insecure.
-func DebugSqlizer(s Sqlizer) string {
-	sql, args, err := s.ToSql()
+func DebugSqlizer(s Sqlizer, serializer Serializer) string {
+	sql, args, err := s.ToSqlWithSerializer(serializer)
 	if err != nil {
 		return fmt.Sprintf("[ToSql error: %s]", err)
 	}

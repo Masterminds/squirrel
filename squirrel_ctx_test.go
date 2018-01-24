@@ -38,18 +38,18 @@ var ctx = context.Background()
 
 func TestExecContextWith(t *testing.T) {
 	db := &DBStub{}
-	ExecContextWith(ctx, db, sqlizer)
+	ExecContextWith(ctx, db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastExecSql)
 }
 
 func TestQueryContextWith(t *testing.T) {
 	db := &DBStub{}
-	QueryContextWith(ctx, db, sqlizer)
+	QueryContextWith(ctx, db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastQuerySql)
 }
 
 func TestQueryRowContextWith(t *testing.T) {
 	db := &DBStub{}
-	QueryRowContextWith(ctx, db, sqlizer)
+	QueryRowContextWith(ctx, db, sqlizer, DefaultSerializer{})
 	assert.Equal(t, sqlStr, db.LastQueryRowSql)
 }
