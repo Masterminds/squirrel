@@ -196,3 +196,25 @@ func TestNullTypeInt64(t *testing.T) {
 	assert.Equal(t, []interface{}{int64(10)}, args)
 	assert.Equal(t, "user_id = ?", sql)
 }
+
+func TestEmptyAndToSql(t *testing.T) {
+	sql, args, err := And{}.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "(1=1)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestEmptyOrToSql(t *testing.T) {
+	sql, args, err := Or{}.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "(1=0)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{}
+	assert.Equal(t, expectedArgs, args)
+}
