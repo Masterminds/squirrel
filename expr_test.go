@@ -227,7 +227,7 @@ func TestLikeToSql(t *testing.T) {
 	expectedSql := "name LIKE ?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1}
+	expectedArgs := []interface{}{"%irrel"}
 	assert.Equal(t, expectedArgs, args)
 }
 
@@ -239,6 +239,6 @@ func TestNotLikeToSql(t *testing.T) {
 	expectedSql := "name NOT LIKE ?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{1}
+	expectedArgs := []interface{}{"%irrel"}
 	assert.Equal(t, expectedArgs, args)
 }
