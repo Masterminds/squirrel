@@ -81,7 +81,7 @@ Squirrel loves PostgreSQL:
 psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 // You use question marks for placeholders...
-sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna")
+sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna").ToSql()
 
 /// ...squirrel replaces them using PlaceholderFormat.
 sql == "SELECT * FROM elephants WHERE name IN ($1,$2)"
