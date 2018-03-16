@@ -218,3 +218,27 @@ func TestEmptyOrToSql(t *testing.T) {
 	expectedArgs := []interface{}{}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestLikeToSql(t *testing.T) {
+	b := Lk{"name": "%irrel"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name LIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestNotLikeToSql(t *testing.T) {
+	b := NotLk{"name": "%irrel"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name NOT LIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
