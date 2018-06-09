@@ -52,6 +52,20 @@ func (d *selectData) QueryRow() RowScanner {
 }
 
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
+	sqlStr, args, err = d.toSql()
+	if err != nil {
+		return
+	}
+
+	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sqlStr)
+	return
+}
+
+func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
+	return d.toSql()
+}
+
+func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
@@ -135,7 +149,7 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
 	}
 
-	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
+	sqlStr = sql.String()
 	return
 }
 
@@ -192,6 +206,11 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
+}
+
+func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
+	data := builder.GetStruct(b).(selectData)
+	return data.toSqlRaw()
 }
 
 // Prefix adds an expression to the beginning of the query

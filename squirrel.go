@@ -20,6 +20,12 @@ type Sqlizer interface {
 	ToSql() (string, []interface{}, error)
 }
 
+// rawSqlizer is expected to do what Sqlizer does, but without finalizing placeholders.
+// This is useful for nested queries.
+type rawSqlizer interface {
+	toSqlRaw() (string, []interface{}, error)
+}
+
 // Execer is the interface that wraps the Exec method.
 //
 // Exec executes the given query as implemented by database/sql.Exec.
