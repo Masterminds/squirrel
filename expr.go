@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+const (
+	// Portable true/false literals.
+	sqlTrue = "(1=1)"
+	sqlFalse = "(1=0)"
+)
+
 type expr struct {
 	sql  string
 	args []interface{}
@@ -72,19 +78,25 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 type Eq map[string]interface{}
 
 func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
+	if len(eq) == 0 {
+		// Empty Sql{} evaluates to true.
+		sql = sqlTrue
+		return
+	}
+	
 	var (
 		exprs       []string
 		equalOpr    = "="
 		inOpr       = "IN"
 		nullOpr     = "IS"
-		inEmptyExpr = "(1=0)" // Portable FALSE
+		inEmptyExpr = sqlFalse
 	)
 
 	if useNotOpr {
 		equalOpr = "<>"
 		inOpr = "NOT IN"
 		nullOpr = "IS NOT"
-		inEmptyExpr = "(1=1)" // Portable TRUE
+		inEmptyExpr = sqlTrue
 	}
 
 	for key, val := range eq {
@@ -241,13 +253,13 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 type And conj
 
 func (a And) ToSql() (string, []interface{}, error) {
-	return conj(a).join(" AND ", "(1=1)")
+	return conj(a).join(" AND ", sqlTrue)
 }
 
 type Or conj
 
 func (o Or) ToSql() (string, []interface{}, error) {
-	return conj(o).join(" OR ", "(1=0)")
+	return conj(o).join(" OR ", sqlFalse)
 }
 
 func isListType(val interface{}) bool {
