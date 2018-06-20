@@ -19,6 +19,15 @@ func TestEqToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestEqEmptyToSql(t *testing.T) {
+	sql, args, err := Eq{}.ToSql()
+	assert.NoError(t, err)
+	
+	expectedSql := "(1=1)"
+	assert.Equal(t, expectedSql, sql)
+	assert.Empty(t, args)
+}
+
 func TestEqInToSql(t *testing.T) {
 	b := Eq{"id": []int{1, 2, 3}}
 	sql, args, err := b.ToSql()
