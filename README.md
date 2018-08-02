@@ -134,11 +134,11 @@ SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2]
 
 * **Some features are poorly documented!**
 
-This isn't a frequent complaints section!
+    This isn't a frequent complaints section!
 
 * **Some features are poorly documented?**
 
-Yes. The tests should be considered a part of the documentation; take a look at those for ideas on how to express more complex queries.
+    Yes. The tests should be considered a part of the documentation; take a look at those for ideas on how to express more complex queries.
 
 ## License
 
