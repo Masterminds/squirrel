@@ -23,6 +23,8 @@ type selectData struct {
 	OrderBys          []string
 	Limit             string
 	Offset            string
+	Union             []Sqlizer
+	UnionAll          []Sqlizer
 	Suffixes          exprs
 }
 
@@ -147,6 +149,21 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
 		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+	}
+
+	if len(d.Union) > 0 {
+		sql.WriteString(" UNION ")
+		args, err = appendToSql(d.Union, sql, " UNION ", args)
+		if err != nil {
+			return
+		}
+	}
+	if len(d.UnionAll) > 0 {
+		sql.WriteString(" UNION ALL ")
+		args, err = appendToSql(d.UnionAll, sql, " UNION ALL ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	sqlStr = sql.String()
@@ -329,4 +346,14 @@ func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
 // Suffix adds an expression to the end of the query
 func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(SelectBuilder)
+}
+
+// Union adds a UNION clause to the query
+func (b SelectBuilder) Union(query interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Union", newUnionPart(query, args...)).(SelectBuilder)
+}
+
+// UnionAll adds a UNION ALL clause to the query
+func (b SelectBuilder) UnionAll(query interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "UnionAll", newUnionPart(query, args...)).(SelectBuilder)
 }
