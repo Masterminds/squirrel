@@ -227,3 +227,27 @@ func TestEmptyOrToSql(t *testing.T) {
 	expectedArgs := []interface{}{}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestSqlEqOrder(t *testing.T) {
+	b := Eq{"a": 1, "b": 2, "c": 3}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "a = ? AND b = ? AND c = ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 2, 3}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestSqlLtOrder(t *testing.T) {
+	b := Lt{"a": 1, "b": 2, "c": 3}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "a < ? AND b < ? AND c < ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 2, 3}
+	assert.Equal(t, expectedArgs, args)
+}
