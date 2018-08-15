@@ -6,6 +6,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"sort"
 )
 
 const (
@@ -99,8 +100,10 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 		inEmptyExpr = sqlTrue
 	}
 
-	for key, val := range eq {
+	sortedKeys := getSortedKeys(eq)
+	for _, key := range sortedKeys {
 		expr := ""
+		val := eq[key]
 
 		switch v := val.(type) {
 		case driver.Valuer:
@@ -168,8 +171,10 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 		opr = fmt.Sprintf("%s%s", opr, "=")
 	}
 
-	for key, val := range lt {
+	sortedKeys := getSortedKeys(lt)
+	for _, key := range sortedKeys {
 		expr := ""
+		val := lt[key]
 
 		switch v := val.(type) {
 		case driver.Valuer:
@@ -260,6 +265,15 @@ type Or conj
 
 func (o Or) ToSql() (string, []interface{}, error) {
 	return conj(o).join(" OR ", sqlFalse)
+}
+
+func getSortedKeys(exp map[string]interface{}) []string {
+	sortedKeys := make([]string, 0, len(exp))
+	for k := range exp {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+	return sortedKeys
 }
 
 func isListType(val interface{}) bool {
