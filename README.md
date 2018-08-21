@@ -10,7 +10,7 @@ or if you prefer using `master` (which may be arbitrarily ahead of or behind `v1
 import "github.com/Masterminds/squirrel"
 ```
 
-[![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
+[![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.svg)](https://godoc.org/github.com/Masterminds/squirrel)
 [![Build Status](https://travis-ci.org/Masterminds/squirrel.svg?branch=v1)](https://travis-ci.org/Masterminds/squirrel)
 
 _**Note:** This project has moved from `github.com/lann/squirrel` to
