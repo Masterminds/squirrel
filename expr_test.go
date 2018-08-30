@@ -206,6 +206,25 @@ func TestNullTypeInt64(t *testing.T) {
 	assert.Equal(t, "user_id = ?", sql)
 }
 
+func TestNilPointer(t *testing.T) {
+	var name *string = nil
+	b := Eq{"name": name}
+	sql, args, err := b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "name IS NULL", sql)
+
+	c := "Name"
+	name = &c
+	b = Eq{"name": name}
+	sql, args, err = b.ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{&c}, args)
+	assert.Equal(t, "name = ?", sql)
+}
+
 func TestEmptyAndToSql(t *testing.T) {
 	sql, args, err := And{}.ToSql()
 	assert.NoError(t, err)
