@@ -208,21 +208,92 @@ func TestNullTypeInt64(t *testing.T) {
 
 func TestNilPointer(t *testing.T) {
 	var name *string = nil
-	b := Eq{"name": name}
-	sql, args, err := b.ToSql()
+	eq := Eq{"name": name}
+	sql, args, err := eq.ToSql()
 
 	assert.NoError(t, err)
 	assert.Empty(t, args)
 	assert.Equal(t, "name IS NULL", sql)
 
-	c := "Name"
-	name = &c
-	b = Eq{"name": name}
-	sql, args, err = b.ToSql()
+	neq := NotEq{"name": name}
+	sql, args, err = neq.ToSql()
 
 	assert.NoError(t, err)
-	assert.Equal(t, []interface{}{&c}, args)
+	assert.Empty(t, args)
+	assert.Equal(t, "name IS NOT NULL", sql)
+
+	var ids *[]int = nil
+	eq = Eq{"id": ids}
+	sql, args, err = eq.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "id IS NULL", sql)
+
+	neq = NotEq{"id": ids}
+	sql, args, err = neq.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "id IS NOT NULL", sql)
+
+	var ida *[3]int = nil
+	eq = Eq{"id": ida}
+	sql, args, err = eq.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "id IS NULL", sql)
+
+	neq = NotEq{"id": ida}
+	sql, args, err = neq.ToSql()
+	assert.NoError(t, err)
+	assert.Empty(t, args)
+	assert.Equal(t, "id IS NOT NULL", sql)
+
+}
+
+func TestNotNilPointer(t *testing.T) {
+	c := "Name"
+	name := &c
+	eq := Eq{"name": name}
+	sql, args, err := eq.ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{"Name"}, args)
 	assert.Equal(t, "name = ?", sql)
+
+	neq := NotEq{"name": name}
+	sql, args, err = neq.ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{"Name"}, args)
+	assert.Equal(t, "name <> ?", sql)
+
+	s := []int{1, 2, 3}
+	ids := &s
+	eq = Eq{"id": ids}
+	sql, args, err = eq.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+	assert.Equal(t, "id IN (?,?,?)", sql)
+
+	neq = NotEq{"id": ids}
+	sql, args, err = neq.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+	assert.Equal(t, "id NOT IN (?,?,?)", sql)
+
+	a := [3]int{1, 2, 3}
+	ida := &a
+	eq = Eq{"id": ida}
+	sql, args, err = eq.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+	assert.Equal(t, "id IN (?,?,?)", sql)
+
+	neq = NotEq{"id": ida}
+	sql, args, err = neq.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+	assert.Equal(t, "id NOT IN (?,?,?)", sql)
 }
 
 func TestEmptyAndToSql(t *testing.T) {
