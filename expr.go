@@ -113,12 +113,15 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 		}
 
 		r := reflect.ValueOf(val)
-		isNil := false
 		if r.Kind() == reflect.Ptr {
-			isNil = r.IsNil()
+			if r.IsNil() {
+				val = nil
+			} else {
+				val = r.Elem().Interface()
+			}
 		}
 
-		if val == nil || isNil {
+		if val == nil {
 			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
 		} else {
 			if isListType(val) {
