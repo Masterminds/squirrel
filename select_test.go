@@ -78,6 +78,9 @@ func TestSelectBuilderPlaceholders(t *testing.T) {
 
 	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
 	assert.Equal(t, "SELECT test WHERE x = $1 AND y = $2", sql)
+
+	sql, _, _ = b.PlaceholderFormat(Colon).ToSql()
+	assert.Equal(t, "SELECT test WHERE x = :1 AND y = :2", sql)
 }
 
 func TestSelectBuilderRunners(t *testing.T) {
