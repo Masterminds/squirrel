@@ -81,7 +81,7 @@ Squirrel loves PostgreSQL:
 psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 // You use question marks for placeholders...
-sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna")
+sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna").ToSql()
 
 /// ...squirrel replaces them using PlaceholderFormat.
 sql == "SELECT * FROM elephants WHERE name IN ($1,$2)"
@@ -131,6 +131,14 @@ SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2]
 * **Why doesn't `Eq{"mynumber": []uint8{1,2,3}}` turn into an `IN` query? ([#114](https://github.com/Masterminds/squirrel/issues/114))**
 
     Values of type `[]byte` are handled specially by `database/sql`. In Go, [`byte` is just an alias of `uint8`](https://golang.org/pkg/builtin/#byte), so there is no way to distinguish `[]uint8` from `[]byte`.
+
+* **Some features are poorly documented!**
+
+    This isn't a frequent complaints section!
+
+* **Some features are poorly documented?**
+
+    Yes. The tests should be considered a part of the documentation; take a look at those for ideas on how to express more complex queries.
 
 ## License
 

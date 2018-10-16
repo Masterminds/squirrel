@@ -1,6 +1,6 @@
 // Package squirrel provides a fluent SQL generator.
 //
-// See https://github.com/lann/squirrel for examples.
+// See https://github.com/Masterminds/squirrel for examples.
 package squirrel
 
 import (
@@ -18,6 +18,12 @@ import (
 // as passed to e.g. database/sql.Exec. It can also return an error.
 type Sqlizer interface {
 	ToSql() (string, []interface{}, error)
+}
+
+// rawSqlizer is expected to do what Sqlizer does, but without finalizing placeholders.
+// This is useful for nested queries.
+type rawSqlizer interface {
+	toSqlRaw() (string, []interface{}, error)
 }
 
 // Execer is the interface that wraps the Exec method.
