@@ -319,7 +319,7 @@ func TestEmptyOrToSql(t *testing.T) {
 }
 
 func TestLikeToSql(t *testing.T) {
-	b := Lk{"name": "%irrel"}
+	b := Like{"name": "%irrel"}
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
@@ -331,7 +331,7 @@ func TestLikeToSql(t *testing.T) {
 }
 
 func TestNotLikeToSql(t *testing.T) {
-	b := NotLk{"name": "%irrel"}
+	b := NotLike{"name": "%irrel"}
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
