@@ -30,19 +30,19 @@ var (
 
 type questionFormat struct{}
 
-func (_ questionFormat) ReplacePlaceholders(sql string) (string, error) {
+func (questionFormat) ReplacePlaceholders(sql string) (string, error) {
 	return sql, nil
 }
 
 type dollarFormat struct{}
 
-func (_ dollarFormat) ReplacePlaceholders(sql string) (string, error) {
+func (dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, "$")
 }
 
 type colonFormat struct{}
 
-func (_ colonFormat) ReplacePlaceholders(sql string) (string, error) {
+func (colonFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, ":")
 }
 

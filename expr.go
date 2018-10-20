@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"strings"
 	"sort"
+	"strings"
 )
 
 const (
 	// Portable true/false literals.
-	sqlTrue = "(1=1)"
+	sqlTrue  = "(1=1)"
 	sqlFalse = "(1=0)"
 )
 
@@ -84,7 +84,7 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 		sql = sqlTrue
 		return
 	}
-	
+
 	var (
 		exprs       []string
 		equalOpr    = "="
@@ -225,7 +225,7 @@ type Lt map[string]interface{}
 func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
 	var (
 		exprs []string
-		opr   string = "<"
+		opr   = "<"
 	)
 
 	if opposite {
@@ -251,15 +251,14 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 		if val == nil {
 			err = fmt.Errorf("cannot use null with less than or greater than operators")
 			return
-		} else {
-			if isListType(val) {
-				err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
-				return
-			} else {
-				expr = fmt.Sprintf("%s %s ?", key, opr)
-				args = append(args, val)
-			}
 		}
+		if isListType(val) {
+			err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
+			return
+		}
+		expr = fmt.Sprintf("%s %s ?", key, opr)
+		args = append(args, val)
+
 		exprs = append(exprs, expr)
 	}
 	sql = strings.Join(exprs, " AND ")
