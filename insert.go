@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/lann/builder"
@@ -232,15 +233,21 @@ func (b InsertBuilder) Suffix(sql string, args ...interface{}) InsertBuilder {
 // SetMap set columns and values for insert builder from a map of column name and value
 // note that it will reset all previous columns and values was set if any
 func (b InsertBuilder) SetMap(clauses map[string]interface{}) InsertBuilder {
+	// Keep the columns in a consistent order by sorting the column key string.
 	cols := make([]string, 0, len(clauses))
-	vals := make([]interface{}, 0, len(clauses))
-	for col, val := range clauses {
+	for col := range clauses {
 		cols = append(cols, col)
-		vals = append(vals, val)
+	}
+	sort.Strings(cols)
+
+	vals := make([]interface{}, 0, len(clauses))
+	for _, col := range cols {
+		vals = append(vals, clauses[col])
 	}
 
 	b = builder.Set(b, "Columns", cols).(InsertBuilder)
 	b = builder.Set(b, "Values", [][]interface{}{vals}).(InsertBuilder)
+
 	return b
 }
 
