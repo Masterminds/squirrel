@@ -5,6 +5,7 @@ package squirrel
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -60,35 +61,19 @@ type Runner interface {
 	QueryRower
 }
 
-// DBRunner wraps sql.DB to implement Runner.
-type dbRunner struct {
-	*sql.DB
-}
-
-func (r *dbRunner) QueryRow(query string, args ...interface{}) RowScanner {
-	return r.DB.QueryRow(query, args...)
-}
-
-type txRunner struct {
-	*sql.Tx
-}
-
-func (r *txRunner) QueryRow(query string, args ...interface{}) RowScanner {
-	return r.Tx.QueryRow(query, args...)
-}
-
 type stdsql interface {
-       Query(string, ...interface{}) (*sql.Rows, error)
-       QueryRow(string, ...interface{}) *sql.Row
-       Exec(string, ...interface{}) (sql.Result, error)
+	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryRow(string, ...interface{}) *sql.Row
+	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	Exec(string, ...interface{}) (sql.Result, error)
 }
 
 type stdsqlRunner struct {
-       stdsql
+	stdsql
 }
 
 func (r *stdsqlRunner) QueryRow(query string, args ...interface{}) RowScanner {
-       return r.stdsql.QueryRow(query, args...)
+	return r.stdsql.QueryRow(query, args...)
 }
 
 func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
@@ -96,11 +81,7 @@ func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
 	switch r := baseRunner.(type) {
 	case Runner:
 		runner = r
-	case *sql.DB:
-		runner = &dbRunner{r}
-	case *sql.Tx:
-		runner = &txRunner{r}
-        case sqlQueryer:
+	case stdsql:
 		runner = &stdsqlRunner{r}
 
 	}
