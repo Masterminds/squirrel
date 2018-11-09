@@ -186,5 +186,10 @@ func TestMustSql(t *testing.T) {
 		// This function should cause a panic
 		Select().From("foo").MustSql()
 	}()
+}
 
+func TestEmptyWhereClause(t *testing.T) {
+	sql, _, err := Select("*").From("users").ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM users", sql)
 }
