@@ -208,6 +208,15 @@ func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
+func (b SelectBuilder) MustSql() (string, []interface{}, error) {
+	data := builder.GetStruct(b).(selectData)
+	sql, args, err := data.ToSql()
+	if err != nil {
+		panic(err)
+	}
+	return sql, args, err
+}
+
 func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.toSqlRaw()
