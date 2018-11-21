@@ -176,8 +176,20 @@ func TestSelectBuilderNestedSelectDollar(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM foo WHERE x = $1 AND NOT EXISTS ( SELECT * FROM bar WHERE y = $2 )", outerSql)
 }
 
-func TestEmptyWhereClause(t *testing.T) {
+func TestSelectWithoutWhereClause(t *testing.T) {
 	sql, _, err := Select("*").From("users").ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM users", sql)
+}
+
+func TestSelectWithNilWhereClause(t *testing.T) {
+	sql, _, err := Select("*").From("users").Where(nil).ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM users", sql)
+}
+
+func TestSelectWithEmptyStringWhereClause(t *testing.T) {
+	sql, _, err := Select("*").From("users").Where("").ToSql()
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT * FROM users", sql)
 }
