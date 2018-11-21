@@ -32,12 +32,8 @@ type QueryRowerContext interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) RowScanner
 }
 
-func (r *dbRunner) QueryRowContext(ctx context.Context, query string, args ...interface{}) RowScanner {
-	return r.DB.QueryRowContext(ctx, query, args...)
-}
-
-func (r *txRunner) QueryRowContext(ctx context.Context, query string, args ...interface{}) RowScanner {
-	return r.Tx.QueryRowContext(ctx, query, args...)
+func (r *stdsqlRunner) QueryRowContext(ctx context.Context, query string, args ...interface{}) RowScanner {
+	return r.stdsql.QueryRowContext(ctx, query, args...)
 }
 
 // ExecContextWith ExecContexts the SQL returned by s with db.
