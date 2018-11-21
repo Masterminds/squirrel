@@ -166,7 +166,7 @@ func TestSelectWithOptions(t *testing.T) {
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)
 }
 
-func TestSelectWithLimitALL(t *testing.T) {
+func TestSelectWithRemoveLimit(t *testing.T) {
 	sql, _, err := Select("*").From("foo").Limit(10).RemoveLimit().ToSql()
 
 	assert.NoError(t, err)
