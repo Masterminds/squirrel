@@ -181,3 +181,9 @@ func TestEmptyWhereClause(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT * FROM users", sql)
 }
+
+func TestSelectBuilderWithStringer(t *testing.T) {
+	sql := Select("*").From("users").String()
+	assert.NoError(t, nil)
+	assert.Equal(t, "SELECT * FROM users", sql)
+}
