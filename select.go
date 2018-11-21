@@ -321,6 +321,11 @@ func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
 	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
 }
 
+// Limit ALL allows to access all records with limit
+func (b SelectBuilder) LimitAll() SelectBuilder {
+	return builder.Set(b, "Limit", "ALL").(SelectBuilder)
+}
+
 // Offset sets a OFFSET clause on the query.
 func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
 	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
