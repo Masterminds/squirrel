@@ -167,7 +167,7 @@ func TestSelectWithOptions(t *testing.T) {
 }
 
 func TestSelectWithLimitALL(t *testing.T) {
-	sql, _, err := Select("*").From("foo").LimitAll().ToSql()
+	sql, _, err := Select("*").From("foo").Limit(10).RemoveLimit().ToSql()
 
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT * FROM foo LIMIT ALL", sql)

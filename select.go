@@ -322,7 +322,7 @@ func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
 }
 
 // Limit ALL allows to access all records with limit
-func (b SelectBuilder) LimitAll() SelectBuilder {
+func (b SelectBuilder) RemoveLimit() SelectBuilder {
 	return builder.Set(b, "Limit", "ALL").(SelectBuilder)
 }
 
