@@ -3,6 +3,7 @@
 package squirrel
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -120,4 +121,11 @@ func TestConj(t *testing.T) {
 	s := sqrl.Select("v").From("squirrel_integration")
 	assertVals(t, s.Where(And{Gt{"k": 1}, Lt{"k": 4}}), "bar", "foo")
 	assertVals(t, s.Where(Or{Gt{"k": 3}, Lt{"k": 2}}), "foo", "baz")
+}
+
+func TestContext(t *testing.T) {
+	s := sqrl.Select("v").From("squirrel_integration")
+	ctx := context.Background()
+	_, err := s.QueryContext(ctx)
+	assert.NoError(t, err)
 }
