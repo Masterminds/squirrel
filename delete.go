@@ -150,3 +150,15 @@ func (b DeleteBuilder) Offset(offset uint64) DeleteBuilder {
 func (b DeleteBuilder) Suffix(sql string, args ...interface{}) DeleteBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(DeleteBuilder)
 }
+
+func (b DeleteBuilder) Query() (*sql.Rows, error) {
+	data := builder.GetStruct(b).(deleteData)
+	return data.Query()
+}
+
+func (d *deleteData) Query() (*sql.Rows, error) {
+	if d.RunWith == nil {
+		return nil, RunnerNotSet
+	}
+	return QueryWith(d.RunWith, d)
+}
