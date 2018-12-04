@@ -323,7 +323,7 @@ func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
 
 // Limit ALL allows to access all records with limit
 func (b SelectBuilder) RemoveLimit() SelectBuilder {
-	return builder.Set(b, "Limit", "ALL").(SelectBuilder)
+	return builder.Delete(b, "Limit").(SelectBuilder)
 }
 
 // Offset sets a OFFSET clause on the query.

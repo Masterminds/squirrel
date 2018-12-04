@@ -170,7 +170,7 @@ func TestSelectWithRemoveLimit(t *testing.T) {
 	sql, _, err := Select("*").From("foo").Limit(10).RemoveLimit().ToSql()
 
 	assert.NoError(t, err)
-	assert.Equal(t, "SELECT * FROM foo LIMIT ALL", sql)
+	assert.Equal(t, "SELECT * FROM foo", sql)
 }
 
 func TestSelectBuilderNestedSelectDollar(t *testing.T) {
