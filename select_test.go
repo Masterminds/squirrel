@@ -166,6 +166,13 @@ func TestSelectWithOptions(t *testing.T) {
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)
 }
 
+func TestSelectWithRemoveLimit(t *testing.T) {
+	sql, _, err := Select("*").From("foo").Limit(10).RemoveLimit().ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM foo", sql)
+}
+
 func TestSelectBuilderNestedSelectDollar(t *testing.T) {
 	nestedBuilder := StatementBuilder.PlaceholderFormat(Dollar).Select("*").Prefix("NOT EXISTS (").
 		From("bar").Where("y = ?", 42).Suffix(")")
