@@ -304,6 +304,9 @@ func (b SelectBuilder) RightJoin(join string, rest ...interface{}) SelectBuilder
 //
 // Where will panic if pred isn't any of the above types.
 func (b SelectBuilder) Where(pred interface{}, args ...interface{}) SelectBuilder {
+	if pred == nil || pred == "" {
+		return b
+	}
 	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(SelectBuilder)
 }
 

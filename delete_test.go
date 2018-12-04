@@ -60,3 +60,13 @@ func TestDeleteBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestDeleteWithQuery(t *testing.T) {
+	db := &DBStub{}
+	b := Delete("test").Where("id=55").Suffix("RETURNING path").RunWith(db)
+
+	expectedSql := "DELETE FROM test WHERE id=55 RETURNING path"
+	b.Query()
+
+	assert.Equal(t, expectedSql, db.LastQuerySql)
+}
