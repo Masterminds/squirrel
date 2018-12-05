@@ -66,3 +66,9 @@ func TestUpdateBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestUpdateBuilderFromClause(t *testing.T) {
+	sql, _, err := Update("employees").Set("sales_count", 100).From("accounts").Where("accounts.name = ?", "ACME").ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "UPDATE employees SET sales_count = ? WHERE accounts.name = ?", sql)
+}
