@@ -78,7 +78,7 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Eq{"id": 1})
 type Eq map[string]interface{}
 
-func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
+func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	if len(eq) == 0 {
 		// Empty Sql{} evaluates to true.
 		sql = sqlTrue
@@ -102,7 +102,7 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 
 	sortedKeys := getSortedKeys(eq)
 	for _, key := range sortedKeys {
-		expr := ""
+		var expr string
 		val := eq[key]
 
 		switch v := val.(type) {
@@ -149,7 +149,7 @@ func (eq Eq) toSql(useNotOpr bool) (sql string, args []interface{}, err error) {
 }
 
 func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
-	return eq.toSql(false)
+	return eq.toSQL(false)
 }
 
 // NotEq is syntactic sugar for use with Where/Having/Set methods.
@@ -158,7 +158,7 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 type NotEq Eq
 
 func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
-	return Eq(neq).toSql(true)
+	return Eq(neq).toSQL(true)
 }
 
 // Like is syntactic sugar for use with LIKE conditions.
@@ -238,7 +238,7 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 
 	sortedKeys := getSortedKeys(lt)
 	for _, key := range sortedKeys {
-		expr := ""
+		var expr string
 		val := lt[key]
 
 		switch v := val.(type) {
@@ -304,12 +304,12 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 	}
 	var sqlParts []string
 	for _, sqlizer := range c {
-		partSql, partArgs, err := sqlizer.ToSql()
+		partSQL, partArgs, err := sqlizer.ToSql()
 		if err != nil {
 			return "", nil, err
 		}
-		if partSql != "" {
-			sqlParts = append(sqlParts, partSql)
+		if partSQL != "" {
+			sqlParts = append(sqlParts, partSQL)
 			args = append(args, partArgs...)
 		}
 	}
@@ -319,12 +319,14 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 	return
 }
 
+// And conjunction Sqlizers
 type And conj
 
 func (a And) ToSql() (string, []interface{}, error) {
 	return conj(a).join(" AND ", sqlTrue)
 }
 
+// Or conjunction Sqlizers
 type Or conj
 
 func (o Or) ToSql() (string, []interface{}, error) {
