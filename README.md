@@ -18,7 +18,7 @@ _**Note:** This project has moved from `github.com/lann/squirrel` to
 project, but we're helping him curate.
 
 **Squirrel is not an ORM.** For an application of Squirrel, check out
-[structable, a table-struct mapper](https://github.com/technosophos/structable)
+[structable, a table-struct mapper](https://github.com/Masterminds/structable)
 
 
 Squirrel helps you build SQL queries from composable parts:
