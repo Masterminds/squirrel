@@ -25,6 +25,12 @@ func TestColon(t *testing.T) {
 	assert.Equal(t, "x = :1 AND y = :2", s)
 }
 
+func TestPosition(t *testing.T) {
+	sql := "x = ? AND y = ?"
+	s, _ := Position.ReplacePlaceholders(sql)
+	assert.Equal(t, "x = @p1 AND y = @p2", s)
+}
+
 func TestPlaceholders(t *testing.T) {
 	assert.Equal(t, Placeholders(2), "?,?")
 }

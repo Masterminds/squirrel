@@ -26,6 +26,10 @@ var (
 	// Colon is a PlaceholderFormat instance that replaces placeholders with
 	// colon-prefixed positional placeholders (e.g. :1, :2, :3).
 	Colon = colonFormat{}
+
+	// Position is a PlaceholderFormat instance that replaces placeholders with
+	// @p-prefixed positional placeholders normally used with MSSQL drivers (e.g @p1, @p2)
+	Position = positionFormat{}
 )
 
 type questionFormat struct{}
@@ -44,6 +48,12 @@ type colonFormat struct{}
 
 func (colonFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, ":")
+}
+
+type positionFormat struct{}
+
+func (positionFormat) ReplacePlaceholders(sql string) (string, error) {
+	return replacePositionalPlaceholders(sql, "@p")
 }
 
 // Placeholders returns a string with count ? placeholders joined with commas.
