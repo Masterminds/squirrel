@@ -94,6 +94,10 @@ func (sc *stmtCacher) Close() error {
 	sc.closed = true
 
 	for _, stmt := range sc.cache {
+		if stmt == nil {
+			continue
+		}
+
 		if err := stmt.Close(); err != nil {
 			return err
 		}
