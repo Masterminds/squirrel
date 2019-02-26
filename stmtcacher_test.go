@@ -19,7 +19,7 @@ func TestStmtCacherPrepare(t *testing.T) {
 	assert.Equal(t, 1, db.PrepareCount, "expected 1 Prepare, got %d", db.PrepareCount)
 
 	// clear statement cache
-	clearer, ok := sc.(DBProxyClearer)
+	clearer, ok := sc.(*StmtCacher)
 	require.True(t, ok)
 	assert.Nil(t, clearer.Clear())
 

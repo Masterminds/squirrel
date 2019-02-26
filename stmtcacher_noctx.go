@@ -10,5 +10,5 @@ import (
 //
 // Stmts are cached based on the string value of their queries.
 func NewStmtCacher(prep Preparer) DBProxy {
-	return &stmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
+	return &StmtCacher{prep: prep, cache: make(map[string]*sql.Stmt)}
 }
