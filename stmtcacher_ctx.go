@@ -5,7 +5,6 @@ package squirrel
 import (
 	"context"
 	"database/sql"
-	"io"
 )
 
 // PrepareerContext is the interface that wraps the Prepare and PrepareContext methods.
@@ -23,7 +22,6 @@ type DBProxyContext interface {
 	Queryer
 	QueryRower
 	PreparerContext
-	io.Closer
 }
 
 // NewStmtCacher returns a DBProxy wrapping prep that caches Prepared Stmts.
