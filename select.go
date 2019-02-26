@@ -20,7 +20,7 @@ type selectData struct {
 	WhereParts        []Sqlizer
 	GroupBys          []string
 	HavingParts       []Sqlizer
-	OrderBys          []string
+	OrderByParts      []Sqlizer
 	Limit             string
 	Offset            string
 	Suffixes          exprs
@@ -129,9 +129,12 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if len(d.OrderBys) > 0 {
+	if len(d.OrderByParts) > 0 {
 		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
+		args, err = appendToSql(d.OrderByParts, sql, ", ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -322,9 +325,18 @@ func (b SelectBuilder) Having(pred interface{}, rest ...interface{}) SelectBuild
 	return builder.Append(b, "HavingParts", newWherePart(pred, rest...)).(SelectBuilder)
 }
 
+// OrderByClause adds ORDER BY clause to the query.
+func (b SelectBuilder) OrderByClause(pred interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "OrderByParts", newPart(pred, args...)).(SelectBuilder)
+}
+
 // OrderBy adds ORDER BY expressions to the query.
 func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
-	return builder.Extend(b, "OrderBys", orderBys).(SelectBuilder)
+	for _, orderBy := range orderBys {
+		b = b.OrderByClause(orderBy)
+	}
+
+	return b
 }
 
 // Limit sets a LIMIT clause on the query.
