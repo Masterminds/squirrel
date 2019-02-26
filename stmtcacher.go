@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
 )
 
@@ -81,7 +82,7 @@ func (sc *stmtCacher) QueryRow(query string, args ...interface{}) RowScanner {
 	return stmt.QueryRow(args...)
 }
 
-func (sc *stmtCacher) Clear() error {
+func (sc *stmtCacher) Clear() (err error) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
@@ -92,13 +93,16 @@ func (sc *stmtCacher) Clear() error {
 			continue
 		}
 
-		if err := stmt.Close(); err != nil {
-			return err
+		if cerr := stmt.Close(); cerr != nil {
+			err = cerr
 		}
-
 	}
 
-	return nil
+	if err != nil {
+		return fmt.Errorf("one or more Stmt.Close failed; last error: %v", err)
+	}
+
+	return
 }
 
 type DBProxyBeginner interface {
