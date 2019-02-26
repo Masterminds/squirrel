@@ -112,7 +112,7 @@ type stmtCacheProxy struct {
 	db *sql.DB
 }
 
-func NewStmtCacherProxy(db *sql.DB) DBProxyBeginner {
+func NewStmtCacheProxy(db *sql.DB) DBProxyBeginner {
 	return &stmtCacheProxy{DBProxy: NewStmtCache(db), db: db}
 }
 
