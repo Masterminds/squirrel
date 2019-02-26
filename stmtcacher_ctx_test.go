@@ -10,7 +10,7 @@ import (
 
 func TestStmtCacherPrepareContext(t *testing.T) {
 	db := &DBStub{}
-	sc := NewStmtCacher(db)
+	sc := NewStmtCache(db)
 	query := "SELECT 1"
 
 	sc.PrepareContext(ctx, query)
