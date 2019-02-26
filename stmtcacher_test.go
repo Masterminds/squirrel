@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestStmtCacherPrepare(t *testing.T) {
+func TestStmtCachePrepare(t *testing.T) {
 	db := &DBStub{}
-	sc := NewStmtCacher(db)
+	sc := NewStmtCache(db)
 	query := "SELECT 1"
 
 	sc.Prepare(query)
@@ -19,9 +18,7 @@ func TestStmtCacherPrepare(t *testing.T) {
 	assert.Equal(t, 1, db.PrepareCount, "expected 1 Prepare, got %d", db.PrepareCount)
 
 	// clear statement cache
-	clearer, ok := sc.(*StmtCacher)
-	require.True(t, ok)
-	assert.Nil(t, clearer.Clear())
+	assert.Nil(t, sc.Clear())
 
 	// should prepare the query again
 	sc.Prepare(query)

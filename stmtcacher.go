@@ -21,14 +21,14 @@ type DBProxy interface {
 	Preparer
 }
 
-// NOTE: NewStmtCacher is defined in stmtcacher_ctx.go (Go >= 1.8) or stmtcacher_noctx.go (Go < 1.8).
+// NOTE: NewStmtCache is defined in stmtcacher_ctx.go (Go >= 1.8) or stmtcacher_noctx.go (Go < 1.8).
 
-// StmtCacher wraps and delegates down to a Preparer type
+// StmtCache wraps and delegates down to a Preparer type
 //
 // It also automatically prepares all statements sent to the underlying Preparer calls
 // for Exec, Query and QueryRow and caches the returns *sql.Stmt using the provided
 // query as the key. So that it can be automatically re-used.
-type StmtCacher struct {
+type StmtCache struct {
 	prep  Preparer
 	cache map[string]*sql.Stmt
 	mu    sync.Mutex
@@ -36,7 +36,7 @@ type StmtCacher struct {
 
 // Prepare delegates down to the underlying Preparer and caches the result
 // using the provided query as a key
-func (sc *StmtCacher) Prepare(query string) (*sql.Stmt, error) {
+func (sc *StmtCache) Prepare(query string) (*sql.Stmt, error) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
@@ -52,7 +52,7 @@ func (sc *StmtCacher) Prepare(query string) (*sql.Stmt, error) {
 }
 
 // Exec delegates down to the underlying Preparer using a prepared statement
-func (sc *StmtCacher) Exec(query string, args ...interface{}) (res sql.Result, err error) {
+func (sc *StmtCache) Exec(query string, args ...interface{}) (res sql.Result, err error) {
 	stmt, err := sc.Prepare(query)
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func (sc *StmtCacher) Exec(query string, args ...interface{}) (res sql.Result, e
 }
 
 // Query delegates down to the underlying Preparer using a prepared statement
-func (sc *StmtCacher) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+func (sc *StmtCache) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	stmt, err := sc.Prepare(query)
 	if err != nil {
 		return
@@ -70,7 +70,7 @@ func (sc *StmtCacher) Query(query string, args ...interface{}) (rows *sql.Rows, 
 }
 
 // QueryRow delegates down to the underlying Preparer using a prepared statement
-func (sc *StmtCacher) QueryRow(query string, args ...interface{}) RowScanner {
+func (sc *StmtCache) QueryRow(query string, args ...interface{}) RowScanner {
 	stmt, err := sc.Prepare(query)
 	if err != nil {
 		return &Row{err: err}
@@ -79,7 +79,7 @@ func (sc *StmtCacher) QueryRow(query string, args ...interface{}) RowScanner {
 }
 
 // Clear removes and closes all the currently cached prepared statements
-func (sc *StmtCacher) Clear() (err error) {
+func (sc *StmtCache) Clear() (err error) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
@@ -113,7 +113,7 @@ type stmtCacheProxy struct {
 }
 
 func NewStmtCacherProxy(db *sql.DB) DBProxyBeginner {
-	return &stmtCacheProxy{DBProxy: NewStmtCacher(db), db: db}
+	return &stmtCacheProxy{DBProxy: NewStmtCache(db), db: db}
 }
 
 func (sp *stmtCacheProxy) Begin() (*sql.Tx, error) {
