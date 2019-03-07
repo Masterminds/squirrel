@@ -22,7 +22,7 @@ func TestEqToSql(t *testing.T) {
 func TestEqEmptyToSql(t *testing.T) {
 	sql, args, err := Eq{}.ToSql()
 	assert.NoError(t, err)
-	
+
 	expectedSql := "(1=1)"
 	assert.Equal(t, expectedSql, sql)
 	assert.Empty(t, args)
@@ -145,6 +145,22 @@ func TestGtOrEqToSql(t *testing.T) {
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenToSql(t *testing.T) {
+	between := Between{
+		field: "id",
+		left:  1,
+		right: 5,
+	}
+	sql, args, err := between.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 5}
 	assert.Equal(t, expectedArgs, args)
 }
 
