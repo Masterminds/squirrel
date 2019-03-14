@@ -217,6 +217,62 @@ func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
 	return Like(nlk).toSql(true)
 }
 
+// Ilike is syntactic sugar for use with ILIKE conditions.
+// Ex:
+//     .Where(Ilike{"name": "%irrel"})
+type Ilike map[string]interface{}
+
+func (lk Ilike) toSql(opposite bool) (sql string, args []interface{}, err error) {
+	var (
+		exprs []string
+		opr   = "ILIKE"
+	)
+
+	if opposite {
+		opr = "NOT ILIKE"
+	}
+
+	for key, val := range lk {
+		expr := ""
+
+		switch v := val.(type) {
+		case driver.Valuer:
+			if val, err = v.Value(); err != nil {
+				return
+			}
+		}
+
+		if val == nil {
+			err = fmt.Errorf("cannot use null with ilike operators")
+			return
+		} else {
+			if isListType(val) {
+				err = fmt.Errorf("cannot use array or slice with ilike operators")
+				return
+			} else {
+				expr = fmt.Sprintf("%s %s ?", key, opr)
+				args = append(args, val)
+			}
+		}
+		exprs = append(exprs, expr)
+	}
+	sql = strings.Join(exprs, " AND ")
+	return
+}
+
+func (lk Ilike) ToSql() (sql string, args []interface{}, err error) {
+	return lk.toSql(false)
+}
+
+// NotIlike is syntactic sugar for use with ILIKE conditions.
+// Ex:
+//     .Where(NotIlike{"name": "%irrel"})
+type NotIlike Ilike
+
+func (nlk NotIlike) ToSql() (sql string, args []interface{}, err error) {
+	return Ilike(nlk).toSql(true)
+}
+
 // Lt is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
 //     .Where(Lt{"id": 1})

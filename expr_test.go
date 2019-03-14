@@ -22,7 +22,7 @@ func TestEqToSql(t *testing.T) {
 func TestEqEmptyToSql(t *testing.T) {
 	sql, args, err := Eq{}.ToSql()
 	assert.NoError(t, err)
-	
+
 	expectedSql := "(1=1)"
 	assert.Equal(t, expectedSql, sql)
 	assert.Empty(t, args)
@@ -336,6 +336,30 @@ func TestNotLikeToSql(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedSql := "name NOT LIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"%irrel"}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestIlikeToSql(t *testing.T) {
+	b := Ilike{"name": "%irrel"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name ILIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"%irrel"}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestNotIlikeToSql(t *testing.T) {
+	b := NotIlike{"name": "%irrel"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name NOT ILIKE ?"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{"%irrel"}
