@@ -354,6 +354,11 @@ func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
 	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
 }
 
+// RemoveOffset removes OFFSET clause.
+func (b SelectBuilder) RemoveOffset() SelectBuilder {
+	return builder.Delete(b, "Offset").(SelectBuilder)
+}
+
 // Suffix adds an expression to the end of the query
 func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(SelectBuilder)
