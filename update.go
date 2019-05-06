@@ -78,9 +78,17 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	for i, setClause := range d.SetClauses {
 		var valSql string
 		e, isExpr := setClause.value.(expr)
+		c, isCase := setClause.value.(CaseBuilder)
 		if isExpr {
 			valSql = e.sql
 			args = append(args, e.args...)
+		} else if isCase {
+			caseSql, caseArgs, err := c.ToSql()
+			if err != nil {
+				return "", nil, err
+			}
+			valSql = caseSql
+			args = append(args, caseArgs...)
 		} else {
 			valSql = "?"
 			args = append(args, setClause.value)
