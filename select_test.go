@@ -66,6 +66,25 @@ func TestSelectBuilderFromSelect(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestSelectBuilderFromSelectNestedDollarPlaceholders(t *testing.T) {
+	subQ := Select("c").
+		From("t").
+		Where(Gt{"c": 1}).
+		PlaceholderFormat(Dollar)
+	b := Select("c").
+		FromSelect(subQ, "subq").
+		Where(Lt{"c": 2}).
+		PlaceholderFormat(Dollar)
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT c FROM (SELECT c FROM t WHERE c > $1) AS subq WHERE c < $2"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 2}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestSelectBuilderToSqlErr(t *testing.T) {
 	_, _, err := Select().From("x").ToSql()
 	assert.Error(t, err)
