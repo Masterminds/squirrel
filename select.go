@@ -263,6 +263,8 @@ func (b SelectBuilder) From(from string) SelectBuilder {
 
 // FromSelect sets a subquery into the FROM clause of the query.
 func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilder {
+	// Prevent misnumbered parameters in nested selects (#183).
+	from = from.PlaceholderFormat(Question)
 	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
