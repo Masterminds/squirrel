@@ -241,7 +241,7 @@ func (b SelectBuilder) Options(options ...string) SelectBuilder {
 
 // Columns adds result columns to the query.
 func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
-	var parts []interface{}
+	parts := make([]interface{}, 0, len(columns))
 	for _, str := range columns {
 		parts = append(parts, newPart(str))
 	}
