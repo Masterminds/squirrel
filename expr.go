@@ -161,6 +161,19 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 	return Eq(neq).toSQL(true)
 }
 
+// Between is syntactic sugar for use with BETWEEN methods.
+// Ex:
+//     .Where(Between{field: "id", left: 1, right: 5}) == "id between 1 and 5"
+type Between struct {
+	field string
+	left  interface{}
+	right interface{}
+}
+
+func (between Between) ToSql() (sql string, args []interface{}, err error) {
+	return fmt.Sprintf("%s BETWEEN ? AND ?", between.field), []interface{}{between.left, between.right}, nil
+}
+
 // Like is syntactic sugar for use with LIKE conditions.
 // Ex:
 //     .Where(Like{"name": "%irrel"})
