@@ -64,6 +64,18 @@ if len(q) > 0 {
 }
 ```
 
+Or query using squirrel
+
+```go
+customers = customers.Where(sq.Or{Expr("country = ?", "US"), Sq.Expr("country = ?", "India")})
+```
+
+And querying using squirrel
+
+```go
+customers = customers.Where(sq.And{sq.Expr("country = ?", "US"), sq.Expr("country = ?", "India")})
+```
+
 Squirrel wants to make your life easier:
 
 ```go
