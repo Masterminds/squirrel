@@ -21,6 +21,7 @@ type updateData struct {
 	Limit             string
 	Offset            string
 	Suffixes          exprs
+	From              Sqlizer
 }
 
 type setClause struct {
@@ -229,4 +230,10 @@ func (b UpdateBuilder) Offset(offset uint64) UpdateBuilder {
 // Suffix adds an expression to the end of the query
 func (b UpdateBuilder) Suffix(sql string, args ...interface{}) UpdateBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(UpdateBuilder)
+}
+
+// From adds FROM clause to the query
+// FROM is valid construct in postgresql only.
+func (b UpdateBuilder) From(from string) UpdateBuilder {
+	return builder.Set(b, "From", newPart(from)).(UpdateBuilder)
 }
