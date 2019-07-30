@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInsertBuilderToSql(t *testing.T) {
+func TestInsertBuilderToSQL(t *testing.T) {
 	b := Insert("").
 		Prefix("WITH prefix AS ?", 0).
 		Into("a").
@@ -16,7 +16,7 @@ func TestInsertBuilderToSql(t *testing.T) {
 		Values(3, Expr("? + 1", 4)).
 		Suffix("RETURNING ?", 5)
 
-	sql, args, err := b.ToSql()
+	sql, args, err := b.ToSQL()
 	assert.NoError(t, err)
 
 	expectedSQL :=
@@ -29,21 +29,21 @@ func TestInsertBuilderToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestInsertBuilderToSqlErr(t *testing.T) {
-	_, _, err := Insert("").Values(1).ToSql()
+func TestInsertBuilderToSQLErr(t *testing.T) {
+	_, _, err := Insert("").Values(1).ToSQL()
 	assert.Error(t, err)
 
-	_, _, err = Insert("x").ToSql()
+	_, _, err = Insert("x").ToSQL()
 	assert.Error(t, err)
 }
 
 func TestInsertBuilderPlaceholders(t *testing.T) {
 	b := Insert("test").Values(1, 2)
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
+	sql, _, _ := b.PlaceholderFormat(Question).ToSQL()
 	assert.Equal(t, "INSERT INTO test VALUES (?,?)", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSQL()
 	assert.Equal(t, "INSERT INTO test VALUES ($1,$2)", sql)
 }
 
@@ -67,7 +67,7 @@ func TestInsertBuilderNoRunner(t *testing.T) {
 func TestInsertBuilderSetMap(t *testing.T) {
 	b := Insert("table").SetMap(Eq{"field1": 1, "field2": 2, "field3": 3})
 
-	sql, args, err := b.ToSql()
+	sql, args, err := b.ToSQL()
 	assert.NoError(t, err)
 
 	expectedSQL := "INSERT INTO table (field1,field2,field3) VALUES (?,?,?)"
@@ -81,7 +81,7 @@ func TestInsertBuilderSelect(t *testing.T) {
 	sb := Select("field1").From("table1").Where(Eq{"field1": 1})
 	ib := Insert("table2").Columns("field1").Select(sb)
 
-	sql, args, err := ib.ToSql()
+	sql, args, err := ib.ToSQL()
 	assert.NoError(t, err)
 
 	expectedSQL := "INSERT INTO table2 (field1) SELECT field1 FROM table1 WHERE field1 = ?"

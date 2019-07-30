@@ -28,13 +28,13 @@ func Expr(sql string, args ...interface{}) expr {
 	return expr{sql: sql, args: args}
 }
 
-func (e expr) ToSql() (sql string, args []interface{}, err error) {
+func (e expr) ToSQL() (sql string, args []interface{}, err error) {
 	return e.sql, e.args, nil
 }
 
 type exprs []expr
 
-func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+func (es exprs) AppendToSQL(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, e := range es {
 		if i > 0 {
 			_, err := io.WriteString(w, sep)
@@ -65,8 +65,8 @@ func Alias(expr Sqlizer, alias string) aliasExpr {
 	return aliasExpr{expr, alias}
 }
 
-func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
-	sql, args, err = e.expr.ToSql()
+func (e aliasExpr) ToSQL() (sql string, args []interface{}, err error) {
+	sql, args, err = e.expr.ToSQL()
 	if err == nil {
 		sql = fmt.Sprintf("(%s) AS %s", sql, e.alias)
 	}
@@ -148,7 +148,7 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	return
 }
 
-func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
+func (eq Eq) ToSQL() (sql string, args []interface{}, err error) {
 	return eq.toSQL(false)
 }
 
@@ -157,7 +157,7 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(NotEq{"id": 1}) == "id <> 1"
 type NotEq Eq
 
-func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
+func (neq NotEq) ToSQL() (sql string, args []interface{}, err error) {
 	return Eq(neq).toSQL(true)
 }
 
@@ -204,7 +204,7 @@ func (lk Like) toSql(opposite bool) (sql string, args []interface{}, err error) 
 	return
 }
 
-func (lk Like) ToSql() (sql string, args []interface{}, err error) {
+func (lk Like) ToSQL() (sql string, args []interface{}, err error) {
 	return lk.toSql(false)
 }
 
@@ -213,7 +213,7 @@ func (lk Like) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(NotLike{"name": "%irrel"})
 type NotLike Like
 
-func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
+func (nlk NotLike) ToSQL() (sql string, args []interface{}, err error) {
 	return Like(nlk).toSql(true)
 }
 
@@ -265,7 +265,7 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 	return
 }
 
-func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
+func (lt Lt) ToSQL() (sql string, args []interface{}, err error) {
 	return lt.toSql(false, false)
 }
 
@@ -274,7 +274,7 @@ func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(LtOrEq{"id": 1}) == "id <= 1"
 type LtOrEq Lt
 
-func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
+func (ltOrEq LtOrEq) ToSQL() (sql string, args []interface{}, err error) {
 	return Lt(ltOrEq).toSql(false, true)
 }
 
@@ -283,7 +283,7 @@ func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Gt{"id": 1}) == "id > 1"
 type Gt Lt
 
-func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
+func (gt Gt) ToSQL() (sql string, args []interface{}, err error) {
 	return Lt(gt).toSql(true, false)
 }
 
@@ -292,7 +292,7 @@ func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(GtOrEq{"id": 1}) == "id >= 1"
 type GtOrEq Lt
 
-func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {
+func (gtOrEq GtOrEq) ToSQL() (sql string, args []interface{}, err error) {
 	return Lt(gtOrEq).toSql(true, true)
 }
 
@@ -304,7 +304,7 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 	}
 	var sqlParts []string
 	for _, sqlizer := range c {
-		partSQL, partArgs, err := sqlizer.ToSql()
+		partSQL, partArgs, err := sqlizer.ToSQL()
 		if err != nil {
 			return "", nil, err
 		}
@@ -322,14 +322,14 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 // And conjunction Sqlizers
 type And conj
 
-func (a And) ToSql() (string, []interface{}, error) {
+func (a And) ToSQL() (string, []interface{}, error) {
 	return conj(a).join(" AND ", sqlTrue)
 }
 
 // Or conjunction Sqlizers
 type Or conj
 
-func (o Or) ToSql() (string, []interface{}, error) {
+func (o Or) ToSQL() (string, []interface{}, error) {
 	return conj(o).join(" OR ", sqlFalse)
 }
 

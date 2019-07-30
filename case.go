@@ -27,7 +27,7 @@ func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
 
 	var str string
 	var args []interface{}
-	str, args, b.err = item.ToSql()
+	str, args, b.err = item.ToSQL()
 
 	if b.err != nil {
 		return
@@ -38,7 +38,7 @@ func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
 	b.args = append(b.args, args...)
 }
 
-func (b *sqlizerBuffer) ToSql() (string, []interface{}, error) {
+func (b *sqlizerBuffer) ToSQL() (string, []interface{}, error) {
 	return b.String(), b.args, b.err
 }
 
@@ -59,8 +59,8 @@ type caseData struct {
 	Else      Sqlizer
 }
 
-// ToSql implements Sqlizer
-func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
+// ToSQL implements Sqlizer
+func (d *caseData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.WhenParts) == 0 {
 		err = errors.New("case expression must contain at lease one WHEN clause")
 
@@ -88,16 +88,16 @@ func (d *caseData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("END")
 
-	return sql.ToSql()
+	return sql.ToSQL()
 }
 
 // CaseBuilder builds SQL CASE construct which could be used as parts of queries.
 type CaseBuilder builder.Builder
 
-// ToSql builds the query into a SQL string and bound args.
-func (b CaseBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b CaseBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(caseData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // what sets optional value for CASE construct "CASE [value] ..."

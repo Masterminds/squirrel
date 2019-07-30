@@ -24,7 +24,7 @@ users := sq.Select("*").From("users").Join("emails USING (email_id)")
 
 active := users.Where(sq.Eq{"deleted_at": nil})
 
-sql, args, err := active.ToSql()
+sql, args, err := active.ToSQL()
 
 sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NULL"
 ```
@@ -33,7 +33,7 @@ sql == "SELECT * FROM users JOIN emails USING (email_id) WHERE deleted_at IS NUL
 sql, args, err := sq.
     Insert("users").Columns("name", "age").
     Values("moe", 13).Values("larry", sq.Expr("? + 5", 12)).
-    ToSql()
+    ToSQL()
 
 sql == "INSERT INTO users (name,age) VALUES (?,?),(?,? + 5)"
 ```
@@ -75,7 +75,7 @@ Squirrel loves PostgreSQL:
 psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 // You use question marks for placeholders...
-sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna").ToSql()
+sql, _, _ := psql.Select("*").From("elephants").Where("name IN (?,?)", "Dumbo", "Verna").ToSQL()
 
 /// ...squirrel replaces them using PlaceholderFormat.
 sql == "SELECT * FROM elephants WHERE name IN ($1,$2)"

@@ -53,7 +53,7 @@ func (d *updateData) QueryRow() RowScanner {
 	return QueryRowWith(queryRower, d)
 }
 
-func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *updateData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.Table) == 0 {
 		err = fmt.Errorf("update statements must specify a table")
 		return
@@ -66,7 +66,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -91,7 +91,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		args, err = appendToSQL(d.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -114,7 +114,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -167,10 +167,10 @@ func (b UpdateBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b UpdateBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b UpdateBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(updateData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // Prefix adds an expression to the beginning of the query

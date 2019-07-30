@@ -49,7 +49,7 @@ func (d *insertData) QueryRow() RowScanner {
 	return QueryRowWith(queryRower, d)
 }
 
-func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
+func (d *insertData) ToSQL() (sqlStr string, args []interface{}, err error) {
 	if len(d.Into) == 0 {
 		err = errors.New("insert statements must specify a table")
 		return
@@ -62,7 +62,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, _ = d.Prefixes.AppendToSQL(sql, " ", args)
 		sql.WriteString(" ")
 	}
 
@@ -94,7 +94,7 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, _ = d.Suffixes.AppendToSQL(sql, " ", args)
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -134,7 +134,7 @@ func (d *insertData) appendSelectToSQL(w io.Writer, args []interface{}) ([]inter
 		return args, errors.New("select clause for insert statements are not set")
 	}
 
-	selectClause, sArgs, err := d.Select.ToSql()
+	selectClause, sArgs, err := d.Select.ToSQL()
 	if err != nil {
 		return args, err
 	}
@@ -194,10 +194,10 @@ func (b InsertBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
-func (b InsertBuilder) ToSql() (string, []interface{}, error) {
+// ToSQL builds the query into a SQL string and bound args.
+func (b InsertBuilder) ToSQL() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(insertData)
-	return data.ToSql()
+	return data.ToSQL()
 }
 
 // Prefix adds an expression to the beginning of the query

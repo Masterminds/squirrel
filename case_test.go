@@ -15,7 +15,7 @@ func TestCaseWithVal(t *testing.T) {
 	qb := Select().
 		Column(caseStmt).
 		From("table")
-	sql, args, err := qb.ToSql()
+	sql, args, err := qb.ToSQL()
 
 	assert.NoError(t, err)
 
@@ -38,7 +38,7 @@ func TestCaseWithComplexVal(t *testing.T) {
 	qb := Select().
 		Column(Alias(caseStmt, "complexCase")).
 		From("table")
-	sql, args, err := qb.ToSql()
+	sql, args, err := qb.ToSQL()
 
 	assert.NoError(t, err)
 
@@ -58,7 +58,7 @@ func TestCaseWithNoVal(t *testing.T) {
 		When(Expr("x > ?", 1), Expr("CONCAT('x is greater than ', ?)", 2))
 
 	qb := Select().Column(caseStmt).From("table")
-	sql, args, err := qb.ToSql()
+	sql, args, err := qb.ToSQL()
 
 	assert.NoError(t, err)
 
@@ -80,7 +80,7 @@ func TestCaseWithExpr(t *testing.T) {
 		Else("42")
 
 	qb := Select().Column(caseStmt).From("table")
-	sql, args, err := qb.ToSql()
+	sql, args, err := qb.ToSQL()
 
 	assert.NoError(t, err)
 
@@ -109,7 +109,7 @@ func TestMultipleCase(t *testing.T) {
 		Column(Alias(caseStmtExpr, "case_expr")).
 		From("table")
 
-	sql, args, err := qb.ToSql()
+	sql, args, err := qb.ToSQL()
 
 	assert.NoError(t, err)
 
@@ -133,7 +133,7 @@ func TestCaseWithNoWhenClause(t *testing.T) {
 
 	qb := Select().Column(caseStmt).From("table")
 
-	_, _, err := qb.ToSql()
+	_, _, err := qb.ToSQL()
 
 	assert.Error(t, err)
 

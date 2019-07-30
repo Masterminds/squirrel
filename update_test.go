@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUpdateBuilderToSql(t *testing.T) {
+func TestUpdateBuilderToSQL(t *testing.T) {
 	b := Update("").
 		Prefix("WITH prefix AS ?", 0).
 		Table("a").
@@ -18,7 +18,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		Offset(5).
 		Suffix("RETURNING ?", 6)
 
-	sql, args, err := b.ToSql()
+	sql, args, err := b.ToSQL()
 	assert.NoError(t, err)
 
 	expectedSql :=
@@ -32,21 +32,21 @@ func TestUpdateBuilderToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
-func TestUpdateBuilderToSqlErr(t *testing.T) {
-	_, _, err := Update("").Set("x", 1).ToSql()
+func TestUpdateBuilderToSQLErr(t *testing.T) {
+	_, _, err := Update("").Set("x", 1).ToSQL()
 	assert.Error(t, err)
 
-	_, _, err = Update("x").ToSql()
+	_, _, err = Update("x").ToSQL()
 	assert.Error(t, err)
 }
 
 func TestUpdateBuilderPlaceholders(t *testing.T) {
 	b := Update("test").SetMap(Eq{"x": 1, "y": 2})
 
-	sql, _, _ := b.PlaceholderFormat(Question).ToSql()
+	sql, _, _ := b.PlaceholderFormat(Question).ToSQL()
 	assert.Equal(t, "UPDATE test SET x = ?, y = ?", sql)
 
-	sql, _, _ = b.PlaceholderFormat(Dollar).ToSql()
+	sql, _, _ = b.PlaceholderFormat(Dollar).ToSQL()
 	assert.Equal(t, "UPDATE test SET x = $1, y = $2", sql)
 }
 

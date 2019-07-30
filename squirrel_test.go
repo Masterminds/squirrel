@@ -72,7 +72,7 @@ func TestQueryRowWith(t *testing.T) {
 	assert.Equal(t, sqlStr, db.LastQueryRowSql)
 }
 
-func TestWithToSqlErr(t *testing.T) {
+func TestWithToSQLErr(t *testing.T) {
 	db := &DBStub{}
 	sqlizer := Select()
 
@@ -100,5 +100,5 @@ func TestDebugSqlizerErrors(t *testing.T) {
 	assert.True(t, strings.HasPrefix(errorMsg, "[DebugSqlizer error: "))
 
 	errorMsg = DebugSqlizer(Lt{"x": nil}) // Cannot use nil values with Lt
-	assert.True(t, strings.HasPrefix(errorMsg, "[ToSql error: "))
+	assert.True(t, strings.HasPrefix(errorMsg, "[ToSQL error: "))
 }
