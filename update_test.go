@@ -12,6 +12,8 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		Table("a").
 		Set("b", Expr("? + 1", 1)).
 		SetMap(Eq{"c": 2}).
+		Set("c1", Case("status").When("1", "2").When("2", "1")).
+		Set("c2", Case().When("a = 2", Expr("?", "foo")).When("a = 3", Expr("?", "bar"))).
 		Where("d = ?", 3).
 		OrderBy("e").
 		Limit(4).
@@ -23,12 +25,15 @@ func TestUpdateBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"UPDATE a SET b = ? + 1, c = ? WHERE d = ? " +
+			"UPDATE a SET b = ? + 1, c = ?, " +
+			"c1 = CASE status WHEN 1 THEN 2 WHEN 2 THEN 1 END, " +
+			"c2 = CASE WHEN a = 2 THEN ? WHEN a = 3 THEN ? END " +
+			"WHERE d = ? " +
 			"ORDER BY e LIMIT 4 OFFSET 5 " +
 			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 6}
+	expectedArgs := []interface{}{0, 1, 2, "foo", "bar", 3, 6}
 	assert.Equal(t, expectedArgs, args)
 }
 
