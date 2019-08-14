@@ -1,6 +1,7 @@
 package squirrel
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"fmt"
 	"reflect"
@@ -28,7 +29,56 @@ func Expr(sql string, args ...interface{}) expr {
 }
 
 func (e expr) ToSql() (sql string, args []interface{}, err error) {
-	return e.sql, e.args, nil
+	simple := true
+	for _, arg := range e.args {
+		if _, ok := arg.(Sqlizer); ok {
+			simple = false
+		}
+	}
+	if simple {
+		return e.sql, e.args, nil
+	}
+
+	buf := &bytes.Buffer{}
+	ap := e.args
+	sp := e.sql
+
+	var isql string
+	var iargs []interface{}
+
+	for err == nil && len(ap) > 0 && len(sp) > 0 {
+		i := strings.Index(sp, "?")
+		if i < 0 {
+			// no more placeholders
+			break
+		}
+		if len(sp) > i+1 && sp[i+1:i+2] == "?" {
+			// escaped "??"; append it and step past
+			buf.WriteString(sp[:i+2])
+			sp = sp[i+2:]
+			continue
+		}
+
+		if as, ok := ap[0].(Sqlizer); ok {
+			// sqlizer argument; expand it and append the result
+			isql, iargs, err = as.ToSql()
+			buf.WriteString(sp[:i])
+			buf.WriteString(isql)
+			args = append(args, iargs...)
+		} else {
+			// normal argument; append it and the placeholder
+			buf.WriteString(sp[:i+1])
+			args = append(args, ap[0])
+		}
+
+		// step past the argument and placeholder
+		ap = ap[1:]
+		sp = sp[i+1:]
+	}
+
+	// append the remaining sql and arguments
+	buf.WriteString(sp)
+	return buf.String(), append(args, ap...), err
 }
 
 type concatExpr []interface{}

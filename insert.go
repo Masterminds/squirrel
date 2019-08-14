@@ -125,10 +125,13 @@ func (d *insertData) appendValuesToSQL(w io.Writer, args []interface{}) ([]inter
 	for r, row := range d.Values {
 		valueStrings := make([]string, len(row))
 		for v, val := range row {
-			e, isExpr := val.(expr)
-			if isExpr {
-				valueStrings[v] = e.sql
-				args = append(args, e.args...)
+			if vs, ok := val.(Sqlizer); ok {
+				vsql, vargs, err := vs.ToSql()
+				if err != nil {
+					return nil, err
+				}
+				valueStrings[v] = vsql
+				args = append(args, vargs...)
 			} else {
 				valueStrings[v] = "?"
 				args = append(args, val)
