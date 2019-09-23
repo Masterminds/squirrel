@@ -136,11 +136,11 @@ func DebugSqlizer(s Sqlizer) string {
 	}
 
 	var placeholder string
-	downCast, ok := s.(PlaceholderHolder)
+	downCast, ok := s.(placeholderDebugger)
 	if !ok {
 		placeholder = "?"
 	} else {
-		placeholder = downCast.GetPlaceholder()
+		placeholder = downCast.debugPlaceholder()
 	}
 	// TODO: dedupe this with placeholder.go
 	buf := &bytes.Buffer{}

@@ -12,61 +12,54 @@ import (
 // placeholder with a (possibly different) SQL placeholder.
 type PlaceholderFormat interface {
 	ReplacePlaceholders(sql string) (string, error)
-	PlaceholderHolder
 }
 
-type PlaceholderHolder interface {
-	GetPlaceholder() string
+type placeholderDebugger interface {
+	debugPlaceholder() string
 }
 
 var (
 	// Question is a PlaceholderFormat instance that leaves placeholders as
 	// question marks.
-	Question = questionFormat{"?"}
+	Question = questionFormat{}
 
 	// Dollar is a PlaceholderFormat instance that replaces placeholders with
 	// dollar-prefixed positional placeholders (e.g. $1, $2, $3).
-	Dollar = dollarFormat{"$"}
+	Dollar = dollarFormat{}
 
 	// Colon is a PlaceholderFormat instance that replaces placeholders with
 	// colon-prefixed positional placeholders (e.g. :1, :2, :3).
-	Colon = colonFormat{":"}
+	Colon = colonFormat{}
 )
 
-type questionFormat struct {
-	value string
-}
+type questionFormat struct{}
 
 func (questionFormat) ReplacePlaceholders(sql string) (string, error) {
 	return sql, nil
 }
 
-func (questionFormat) GetPlaceholder() string {
-	return Question.value
+func (questionFormat) debugPlaceholder() string {
+	return "?"
 }
 
-type dollarFormat struct {
-	value string
-}
+type dollarFormat struct{}
 
 func (dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, "$")
 }
 
-func (dollarFormat) GetPlaceholder() string {
-	return Dollar.value
+func (dollarFormat) debugPlaceholder() string {
+	return "$"
 }
 
-type colonFormat struct {
-	value string
-}
+type colonFormat struct{}
 
 func (colonFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, ":")
 }
 
-func (colonFormat) GetPlaceholder() string {
-	return Colon.value
+func (colonFormat) debugPlaceholder() string {
+	return ":"
 }
 
 // Placeholders returns a string with count ? placeholders joined with commas.
