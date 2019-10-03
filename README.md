@@ -5,7 +5,7 @@ import "github.com/Masterminds/squirrel"
 ```
 
 [![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
-[![Build Status](https://travis-ci.org/Masterminds/squirrel.svg)](https://travis-ci.org/Masterminds/squirrel)
+[![Build Status](https://api.travis-ci.org/Masterminds/squirrel.svg?branch=master)](https://travis-ci.org/Masterminds/squirrel)
 
 _**Note:** This project has moved from `github.com/lann/squirrel` to
 `github.com/Masterminds/squirrel`. Lann remains the architect of the
