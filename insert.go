@@ -16,6 +16,7 @@ type insertData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
 	Prefixes          exprs
+	StatementKeyword  string
 	Options           []string
 	Into              string
 	Columns           []string
@@ -66,7 +67,12 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" ")
 	}
 
-	sql.WriteString("INSERT ")
+	if d.StatementKeyword == "" {
+		sql.WriteString("INSERT ")
+	} else {
+		sql.WriteString(d.StatementKeyword)
+		sql.WriteString(" ")
+	}
 
 	if len(d.Options) > 0 {
 		sql.WriteString(strings.Join(d.Options, " "))
@@ -255,4 +261,8 @@ func (b InsertBuilder) SetMap(clauses map[string]interface{}) InsertBuilder {
 // If Values and Select are used, then Select has higher priority
 func (b InsertBuilder) Select(sb SelectBuilder) InsertBuilder {
 	return builder.Set(b, "Select", &sb).(InsertBuilder)
+}
+
+func (b InsertBuilder) statementKeyword(keyword string) InsertBuilder {
+	return builder.Set(b, "StatementKeyword", keyword).(InsertBuilder)
 }

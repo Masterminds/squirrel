@@ -90,3 +90,14 @@ func TestInsertBuilderSelect(t *testing.T) {
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestInsertBuilderReplace(t *testing.T) {
+	b := Replace("table").Values(1)
+
+	expectedSQL := "REPLACE INTO table VALUES (?)"
+
+	sql, _, err := b.ToSql()
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedSQL, sql)
+}
