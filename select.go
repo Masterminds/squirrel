@@ -137,12 +137,12 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if len(d.Limit) > 0 {
+	if len(d.Limit) > 0 && d.Limit != "0" {
 		sql.WriteString(" LIMIT ")
 		sql.WriteString(d.Limit)
 	}
 
-	if len(d.Offset) > 0 {
+	if len(d.Offset) > 0 && d.Offset != "0" {
 		sql.WriteString(" OFFSET ")
 		sql.WriteString(d.Offset)
 	}
