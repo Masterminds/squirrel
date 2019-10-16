@@ -22,7 +22,7 @@ func TestEqToSql(t *testing.T) {
 func TestEqEmptyToSql(t *testing.T) {
 	sql, args, err := Eq{}.ToSql()
 	assert.NoError(t, err)
-	
+
 	expectedSql := "(1=1)"
 	assert.Equal(t, expectedSql, sql)
 	assert.Empty(t, args)
@@ -363,5 +363,28 @@ func TestSqlLtOrder(t *testing.T) {
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1, 2, 3}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestFn(t *testing.T) {
+	b := Fn("IF", Expr("1 > 2"), Expr("2"), Expr("1"))
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "IF(1 > 2, 2, 1)"
+	assert.Equal(t, expectedSql, sql)
+
+	assert.Empty(t, args)
+}
+
+func TestFnWithArgs(t *testing.T) {
+	b := Fn("COALESCE", Expr("foo + ?", 42), Expr("?", 42))
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "COALESCE(foo + ?, ?)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{42, 42}
 	assert.Equal(t, expectedArgs, args)
 }

@@ -349,3 +349,38 @@ func isListType(val interface{}) bool {
 	valVal := reflect.ValueOf(val)
 	return valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
 }
+
+type fn struct {
+	name  string
+	fargs conj
+}
+
+func Fn(name string, args ...Sqlizer) *fn {
+	return &fn{name: name, fargs: args}
+}
+
+func (fn fn) ToSql() (sql string, args []interface{}, err error) {
+	var (
+		aSql  string
+		aArgs []interface{}
+	)
+
+	sql = fn.name + "("
+	args = make([]interface{}, 0)
+	for a := 0; a < len(fn.fargs); a++ {
+		if a > 0 {
+			sql += ", "
+		}
+
+		aSql, aArgs, err = fn.fargs[a].ToSql()
+		if err != nil {
+			return
+		}
+
+		sql += aSql
+		args = append(args, aArgs...)
+	}
+	sql += ")"
+
+	return
+}
