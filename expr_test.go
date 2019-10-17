@@ -7,6 +7,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConcatExpr(t *testing.T) {
+	b := ConcatExpr("COALESCE(name,", Expr("CONCAT(?,' ',?)", "f", "l"), ")")
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "COALESCE(name,CONCAT(?,' ',?))"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"f", "l"}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestConcatExprBadType(t *testing.T) {
+	b := ConcatExpr("prefix", 123, "suffix")
+	_, _, err := b.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "123 is not")
+}
+
 func TestEqToSql(t *testing.T) {
 	b := Eq{"id": 1}
 	sql, args, err := b.ToSql()
@@ -22,7 +41,7 @@ func TestEqToSql(t *testing.T) {
 func TestEqEmptyToSql(t *testing.T) {
 	sql, args, err := Eq{}.ToSql()
 	assert.NoError(t, err)
-	
+
 	expectedSql := "(1=1)"
 	assert.Equal(t, expectedSql, sql)
 	assert.Empty(t, args)

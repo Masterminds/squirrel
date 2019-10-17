@@ -20,16 +20,46 @@ type expr struct {
 	args []interface{}
 }
 
-// Expr builds value expressions for InsertBuilder and UpdateBuilder.
+// Expr builds an expression from a SQL fragment and arguments.
 //
 // Ex:
-//     .Values(Expr("FROM_UNIXTIME(?)", t))
+//     Expr("FROM_UNIXTIME(?)", t)
 func Expr(sql string, args ...interface{}) expr {
 	return expr{sql: sql, args: args}
 }
 
 func (e expr) ToSql() (sql string, args []interface{}, err error) {
 	return e.sql, e.args, nil
+}
+
+type concatExpr []interface{}
+
+func (ce concatExpr) ToSql() (sql string, args []interface{}, err error) {
+	for _, part := range ce {
+		switch p := part.(type) {
+		case string:
+			sql += p
+		case Sqlizer:
+			pSql, pArgs, err := p.ToSql()
+			if err != nil {
+				return "", nil, err
+			}
+			sql += pSql
+			args = append(args, pArgs...)
+		default:
+			return "", nil, fmt.Errorf("%#v is not a string or Sqlizer", part)
+		}
+	}
+	return
+}
+
+// ConcatExpr builds an expression by concatenating strings and other expressions.
+//
+// Ex:
+//     name_expr := Expr("CONCAT(?, ' ', ?)", firstName, lastName)
+//     ConcatExpr("COALESCE(full_name,", name_expr, ")")
+func ConcatExpr(parts ...interface{}) concatExpr {
+	return concatExpr(parts)
 }
 
 type exprs []expr
