@@ -196,16 +196,8 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 //     .Where(Like{"name": "%irrel"})
 type Like map[string]interface{}
 
-func (lk Like) toSql(opposite bool) (sql string, args []interface{}, err error) {
-	var (
-		exprs []string
-		opr   = "LIKE"
-	)
-
-	if opposite {
-		opr = "NOT LIKE"
-	}
-
+func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
+	var exprs []string
 	for key, val := range lk {
 		expr := ""
 
@@ -235,7 +227,7 @@ func (lk Like) toSql(opposite bool) (sql string, args []interface{}, err error) 
 }
 
 func (lk Like) ToSql() (sql string, args []interface{}, err error) {
-	return lk.toSql(false)
+	return lk.toSql("LIKE")
 }
 
 // NotLike is syntactic sugar for use with LIKE conditions.
@@ -244,7 +236,25 @@ func (lk Like) ToSql() (sql string, args []interface{}, err error) {
 type NotLike Like
 
 func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
-	return Like(nlk).toSql(true)
+	return Like(nlk).toSql("NOT LIKE")
+}
+
+// ILike is syntactic sugar for use with ILIKE conditions.
+// Ex:
+//    .Where(ILike{"name": "sq%"})
+type ILike Like
+
+func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
+	return Like(ilk).toSql("ILIKE")
+}
+
+// NotILike is syntactic sugar for use with ILIKE conditions.
+// Ex:
+//    .Where(NotILike{"name": "sq%"})
+type NotILike Like
+
+func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
+	return Like(nilk).toSql("NOT ILIKE")
 }
 
 // Lt is syntactic sugar for use with Where/Having/Set methods.

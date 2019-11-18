@@ -361,6 +361,30 @@ func TestNotLikeToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestILikeToSql(t *testing.T) {
+	b := ILike{"name": "sq%"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name ILIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"sq%"}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestNotILikeToSql(t *testing.T) {
+	b := NotILike{"name": "sq%"}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "name NOT ILIKE ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"sq%"}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestSqlEqOrder(t *testing.T) {
 	b := Eq{"a": 1, "b": 2, "c": 3}
 	sql, args, err := b.ToSql()
