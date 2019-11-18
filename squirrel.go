@@ -78,14 +78,10 @@ func (r *stdsqlRunner) QueryRow(query string, args ...interface{}) RowScanner {
 	return r.stdsql.QueryRow(query, args...)
 }
 
-func setRunWith(b interface{}, baseRunner BaseRunner) interface{} {
-	var runner Runner
-	switch r := baseRunner.(type) {
-	case Runner:
-		runner = r
+func setRunWith(b interface{}, runner BaseRunner) interface{} {
+	switch r := runner.(type) {
 	case stdsql:
 		runner = &stdsqlRunner{r}
-
 	}
 	return builder.Set(b, "RunWith", runner)
 }

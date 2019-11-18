@@ -44,3 +44,25 @@ func TestRunWithTx(t *testing.T) {
 		builder.GetStruct(Delete("t").RunWith(tx))
 	}, "RunWith(*sql.Tx) should not panic")
 }
+
+type fakeBaseRunner struct{}
+
+func (fakeBaseRunner) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return nil, nil
+}
+
+func (fakeBaseRunner) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return nil, nil
+}
+
+func TestRunWithBaseRunner(t *testing.T) {
+	sb := StatementBuilder.RunWith(fakeBaseRunner{})
+	_, err := sb.Select("test").Exec()
+	assert.NoError(t, err)
+}
+
+func TestRunWithBaseRunnerQueryRowError(t *testing.T) {
+	sb := StatementBuilder.RunWith(fakeBaseRunner{})
+	assert.Error(t, RunnerNotQueryRunner, sb.Select("test").QueryRow().Scan(nil))
+
+}
