@@ -193,6 +193,20 @@ func TestSelectWithRemoveLimit(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM foo", sql)
 }
 
+func TestSelectWithLimitSelect(t *testing.T) {
+	sql, _, err := Select("*").From("foo").LimitSelect(Select("1").From("bar")).ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM foo LIMIT (SELECT 1 FROM bar)", sql)
+}
+
+func TestSelectWithRemoveLimitSelect(t *testing.T) {
+	sql, _, err := Select("*").From("foo").LimitSelect(Select("1").From("bar")).RemoveLimit().ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM foo", sql)
+}
+
 func TestSelectWithRemoveOffset(t *testing.T) {
 	sql, _, err := Select("*").From("foo").Offset(10).RemoveOffset().ToSql()
 

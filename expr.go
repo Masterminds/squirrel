@@ -81,6 +81,26 @@ func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]inte
 	return args, nil
 }
 
+type parenExpr struct {
+	expr Sqlizer
+}
+
+// Parenthesized adds parentheses around the given expression
+//
+// Ex.
+//     Parenthesized(Select("*").From("foo)"))
+func Parenthesized(expr Sqlizer) parenExpr {
+	return parenExpr{expr: expr}
+}
+
+func (p parenExpr) ToSql() (sql string, args []interface{}, err error) {
+	sql, args, err = p.expr.ToSql()
+	if err == nil {
+		sql = fmt.Sprintf("(%s)", sql)
+	}
+	return
+}
+
 // aliasExpr helps to alias part of SQL query generated with underlying "expr"
 type aliasExpr struct {
 	expr  Sqlizer

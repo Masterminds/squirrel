@@ -21,7 +21,7 @@ type selectData struct {
 	GroupBys          []string
 	HavingParts       []Sqlizer
 	OrderByParts      []Sqlizer
-	Limit             string
+	Limit             Sqlizer
 	Offset            string
 	Suffixes          exprs
 }
@@ -137,9 +137,12 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if len(d.Limit) > 0 {
+	if d.Limit != nil {
 		sql.WriteString(" LIMIT ")
-		sql.WriteString(d.Limit)
+		args, err = appendToSql([]Sqlizer{d.Limit}, sql, "", args)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(d.Offset) > 0 {
@@ -343,7 +346,12 @@ func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
 
 // Limit sets a LIMIT clause on the query.
 func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
+	return builder.Set(b, "Limit", Expr(fmt.Sprintf("%d", limit))).(SelectBuilder)
+}
+
+// LimitSelect sets a LIMIT clause on the query.
+func (b SelectBuilder) LimitSelect(limit SelectBuilder) SelectBuilder {
+	return builder.Set(b, "Limit", Parenthesized(limit)).(SelectBuilder)
 }
 
 // Limit ALL allows to access all records with limit
