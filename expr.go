@@ -3,7 +3,6 @@ package squirrel
 import (
 	"database/sql/driver"
 	"fmt"
-	"io"
 	"reflect"
 	"sort"
 	"strings"
@@ -60,25 +59,6 @@ func (ce concatExpr) ToSql() (sql string, args []interface{}, err error) {
 //     ConcatExpr("COALESCE(full_name,", name_expr, ")")
 func ConcatExpr(parts ...interface{}) concatExpr {
 	return concatExpr(parts)
-}
-
-type exprs []expr
-
-func (es exprs) AppendToSql(w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
-	for i, e := range es {
-		if i > 0 {
-			_, err := io.WriteString(w, sep)
-			if err != nil {
-				return nil, err
-			}
-		}
-		_, err := io.WriteString(w, e.sql)
-		if err != nil {
-			return nil, err
-		}
-		args = append(args, e.args...)
-	}
-	return args, nil
 }
 
 // aliasExpr helps to alias part of SQL query generated with underlying "expr"
