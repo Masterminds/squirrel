@@ -12,7 +12,7 @@ import (
 type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
-	Prefixes          exprs
+	Prefixes          []Sqlizer
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
@@ -23,7 +23,7 @@ type selectData struct {
 	OrderByParts      []Sqlizer
 	Limit             string
 	Offset            string
-	Suffixes          exprs
+	Suffixes          []Sqlizer
 }
 
 func (d *selectData) Exec() (sql.Result, error) {
@@ -74,7 +74,11 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, err = appendToSql(d.Prefixes, sql, " ", args)
+		if err != nil {
+			return
+		}
+
 		sql.WriteString(" ")
 	}
 
@@ -149,7 +153,11 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+
+		args, err = appendToSql(d.Suffixes, sql, " ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	sqlStr = sql.String()
@@ -226,7 +234,12 @@ func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
 
 // Prefix adds an expression to the beginning of the query
 func (b SelectBuilder) Prefix(sql string, args ...interface{}) SelectBuilder {
-	return builder.Append(b, "Prefixes", Expr(sql, args...)).(SelectBuilder)
+	return b.PrefixExpr(Expr(sql, args...))
+}
+
+// PrefixExpr adds an expression to the very beginning of the query
+func (b SelectBuilder) PrefixExpr(expr Sqlizer) SelectBuilder {
+	return builder.Append(b, "Prefixes", expr).(SelectBuilder)
 }
 
 // Distinct adds a DISTINCT clause to the query.
@@ -363,5 +376,10 @@ func (b SelectBuilder) RemoveOffset() SelectBuilder {
 
 // Suffix adds an expression to the end of the query
 func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
-	return builder.Append(b, "Suffixes", Expr(sql, args...)).(SelectBuilder)
+	return b.SuffixExpr(Expr(sql, args...))
+}
+
+// SuffixExpr adds an expression to the end of the query
+func (b SelectBuilder) SuffixExpr(expr Sqlizer) SelectBuilder {
+	return builder.Append(b, "Suffixes", expr).(SelectBuilder)
 }

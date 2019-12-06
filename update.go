@@ -13,14 +13,14 @@ import (
 type updateData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
-	Prefixes          exprs
+	Prefixes          []Sqlizer
 	Table             string
 	SetClauses        []setClause
 	WhereParts        []Sqlizer
 	OrderBys          []string
 	Limit             string
 	Offset            string
-	Suffixes          exprs
+	Suffixes          []Sqlizer
 }
 
 type setClause struct {
@@ -66,7 +66,11 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, err = appendToSql(d.Prefixes, sql, " ", args)
+		if err != nil {
+			return
+		}
+
 		sql.WriteString(" ")
 	}
 
@@ -121,7 +125,10 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, err = appendToSql(d.Suffixes, sql, " ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -182,7 +189,12 @@ func (b UpdateBuilder) ToSql() (string, []interface{}, error) {
 
 // Prefix adds an expression to the beginning of the query
 func (b UpdateBuilder) Prefix(sql string, args ...interface{}) UpdateBuilder {
-	return builder.Append(b, "Prefixes", Expr(sql, args...)).(UpdateBuilder)
+	return b.PrefixExpr(Expr(sql, args...))
+}
+
+// PrefixExpr adds an expression to the very beginning of the query
+func (b UpdateBuilder) PrefixExpr(expr Sqlizer) UpdateBuilder {
+	return builder.Append(b, "Prefixes", expr).(UpdateBuilder)
 }
 
 // Table sets the table to be updated.
@@ -235,5 +247,10 @@ func (b UpdateBuilder) Offset(offset uint64) UpdateBuilder {
 
 // Suffix adds an expression to the end of the query
 func (b UpdateBuilder) Suffix(sql string, args ...interface{}) UpdateBuilder {
-	return builder.Append(b, "Suffixes", Expr(sql, args...)).(UpdateBuilder)
+	return b.SuffixExpr(Expr(sql, args...))
+}
+
+// SuffixExpr adds an expression to the end of the query
+func (b UpdateBuilder) SuffixExpr(expr Sqlizer) UpdateBuilder {
+	return builder.Append(b, "Suffixes", expr).(UpdateBuilder)
 }

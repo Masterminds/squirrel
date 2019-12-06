@@ -15,13 +15,13 @@ import (
 type insertData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
-	Prefixes          exprs
+	Prefixes          []Sqlizer
 	StatementKeyword  string
 	Options           []string
 	Into              string
 	Columns           []string
 	Values            [][]interface{}
-	Suffixes          exprs
+	Suffixes          []Sqlizer
 	Select            *SelectBuilder
 }
 
@@ -63,7 +63,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, _ = d.Prefixes.AppendToSql(sql, " ", args)
+		args, err = appendToSql(d.Prefixes, sql, " ", args)
+		if err != nil {
+			return
+		}
+
 		sql.WriteString(" ")
 	}
 
@@ -100,7 +104,10 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
-		args, _ = d.Suffixes.AppendToSql(sql, " ", args)
+		args, err = appendToSql(d.Suffixes, sql, " ", args)
+		if err != nil {
+			return
+		}
 	}
 
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
@@ -208,7 +215,12 @@ func (b InsertBuilder) ToSql() (string, []interface{}, error) {
 
 // Prefix adds an expression to the beginning of the query
 func (b InsertBuilder) Prefix(sql string, args ...interface{}) InsertBuilder {
-	return builder.Append(b, "Prefixes", Expr(sql, args...)).(InsertBuilder)
+	return b.PrefixExpr(Expr(sql, args...))
+}
+
+// PrefixExpr adds an expression to the very beginning of the query
+func (b InsertBuilder) PrefixExpr(expr Sqlizer) InsertBuilder {
+	return builder.Append(b, "Prefixes", expr).(InsertBuilder)
 }
 
 // Options adds keyword options before the INTO clause of the query.
@@ -233,7 +245,12 @@ func (b InsertBuilder) Values(values ...interface{}) InsertBuilder {
 
 // Suffix adds an expression to the end of the query
 func (b InsertBuilder) Suffix(sql string, args ...interface{}) InsertBuilder {
-	return builder.Append(b, "Suffixes", Expr(sql, args...)).(InsertBuilder)
+	return b.SuffixExpr(Expr(sql, args...))
+}
+
+// SuffixExpr adds an expression to the end of the query
+func (b InsertBuilder) SuffixExpr(expr Sqlizer) InsertBuilder {
+	return builder.Append(b, "Suffixes", expr).(InsertBuilder)
 }
 
 // SetMap set columns and values for insert builder from a map of column name and value
