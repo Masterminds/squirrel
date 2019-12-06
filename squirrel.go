@@ -60,25 +60,33 @@ type Runner interface {
 	QueryRower
 }
 
-type stdsql interface {
+// WrapStdSql wraps a type implementing the standard SQL interface with methods that
+// squirrel expects.
+func WrapStdSql(stdSql StdSql) Runner {
+	return &stdsqlRunner{stdSql}
+}
+
+// StdSql encompasses the standard methods of the *sql.DB type, and other types that
+// wrap these methods.
+type StdSql interface {
 	Query(string, ...interface{}) (*sql.Rows, error)
 	QueryRow(string, ...interface{}) *sql.Row
 	Exec(string, ...interface{}) (sql.Result, error)
 }
 
 type stdsqlRunner struct {
-	stdsql
+	StdSql
 }
 
 func (r *stdsqlRunner) QueryRow(query string, args ...interface{}) RowScanner {
-	return r.stdsql.QueryRow(query, args...)
+	return r.StdSql.QueryRow(query, args...)
 }
 
 func setRunWith(b interface{}, runner BaseRunner) interface{} {
 	switch r := runner.(type) {
-	case stdsql:
-		runner = &stdsqlRunner{r}
-	case stdsqlCtx:
+	case StdSql:
+		runner = WrapStdSql(r)
+	case StdSqlCtx:
 		runner = &stdsqlCtxRunner{r}
 	}
 	return builder.Set(b, "RunWith", runner)
