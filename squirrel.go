@@ -5,7 +5,6 @@ package squirrel
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -63,11 +62,8 @@ type Runner interface {
 
 type stdsql interface {
 	Query(string, ...interface{}) (*sql.Rows, error)
-	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRow(string, ...interface{}) *sql.Row
-	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 	Exec(string, ...interface{}) (sql.Result, error)
-	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 }
 
 type stdsqlRunner struct {
@@ -82,6 +78,8 @@ func setRunWith(b interface{}, runner BaseRunner) interface{} {
 	switch r := runner.(type) {
 	case stdsql:
 		runner = &stdsqlRunner{r}
+	case stdsqlCtx:
+		runner = &stdsqlCtxRunner{r}
 	}
 	return builder.Set(b, "RunWith", runner)
 }
