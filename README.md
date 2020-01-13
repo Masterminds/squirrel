@@ -1,15 +1,17 @@
+[![Project Status: Inactive – The project has reached a stable, usable state but is no longer being actively developed; support/maintenance will be provided as time allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
+### Squirrel is "complete".
+Bug fixes will still be merged (slowly). Bug reports are welcome, but I will not necessarily respond to them. If another fork (or substantially similar project) actively improves on what Squirrel does, let me know and I may link to it here.
+
+
 # Squirrel - fluent SQL generator for Go
 
 ```go
 import "github.com/Masterminds/squirrel"
 ```
 
+
 [![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
 [![Build Status](https://api.travis-ci.org/Masterminds/squirrel.svg?branch=master)](https://travis-ci.org/Masterminds/squirrel)
-
-_**Note:** This project has moved from `github.com/lann/squirrel` to
-`github.com/Masterminds/squirrel`. Lann remains the architect of the
-project, but we're helping him curate.
 
 **Squirrel is not an ORM.** For an application of Squirrel, check out
 [structable, a table-struct mapper](https://github.com/Masterminds/structable)
