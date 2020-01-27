@@ -10,6 +10,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 	b := Update("").
 		Prefix("WITH prefix AS ?", 0).
 		Table("a").
+		Join("b ON (a.id = b.id)").
 		Set("b", Expr("? + 1", 1)).
 		SetMap(Eq{"c": 2}).
 		Set("c1", Case("status").When("1", "2").When("2", "1")).
@@ -25,7 +26,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"UPDATE a SET b = ? + 1, c = ?, " +
+			"UPDATE a JOIN b ON (a.id = b.id) SET b = ? + 1, c = ?, " +
 			"c1 = CASE status WHEN 1 THEN 2 WHEN 2 THEN 1 END, " +
 			"c2 = CASE WHEN a = 2 THEN ? WHEN a = 3 THEN ? END " +
 			"WHERE d = ? " +

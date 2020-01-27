@@ -15,6 +15,7 @@ type updateData struct {
 	RunWith           BaseRunner
 	Prefixes          []Sqlizer
 	Table             string
+	Joins             []Sqlizer
 	SetClauses        []setClause
 	WhereParts        []Sqlizer
 	OrderBys          []string
@@ -76,6 +77,14 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("UPDATE ")
 	sql.WriteString(d.Table)
+
+	if len(d.Joins) > 0 {
+		sql.WriteString(" ")
+		args, err = appendToSql(d.Joins, sql, " ", args)
+		if err != nil {
+			return
+		}
+	}
 
 	sql.WriteString(" SET ")
 	setSqls := make([]string, len(d.SetClauses))
@@ -196,6 +205,26 @@ func (b UpdateBuilder) PrefixExpr(expr Sqlizer) UpdateBuilder {
 // Table sets the table to be updated.
 func (b UpdateBuilder) Table(table string) UpdateBuilder {
 	return builder.Set(b, "Table", table).(UpdateBuilder)
+}
+
+// JoinClause adds a join clause to the query.
+func (b UpdateBuilder) JoinClause(pred interface{}, args ...interface{}) UpdateBuilder {
+	return builder.Append(b, "Joins", newPart(pred, args...)).(UpdateBuilder)
+}
+
+// Join adds a JOIN clause to the query.
+func (b UpdateBuilder) Join(join string, rest ...interface{}) UpdateBuilder {
+	return b.JoinClause("JOIN "+join, rest...)
+}
+
+// LeftJoin adds a LEFT JOIN clause to the query.
+func (b UpdateBuilder) LeftJoin(join string, rest ...interface{}) UpdateBuilder {
+	return b.JoinClause("LEFT JOIN "+join, rest...)
+}
+
+// RightJoin adds a RIGHT JOIN clause to the query.
+func (b UpdateBuilder) RightJoin(join string, rest ...interface{}) UpdateBuilder {
+	return b.JoinClause("RIGHT JOIN "+join, rest...)
 }
 
 // Set adds SET clauses to the query.
