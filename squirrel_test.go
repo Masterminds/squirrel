@@ -181,9 +181,13 @@ func TestDebugSqlizerErrors(t *testing.T) {
 	assert.True(t, strings.HasPrefix(errorMsg, "[ToSql error: "))
 }
 
-func TestSomething(t *testing.T) {
+func TestOptional(t *testing.T) {
 	sql, args, err := Select("a, b, c").From("tbl").
-		Where(And{OptionalLt{"a": 0}, OptionalLt{"a1": ""}, OptionalEq{"b": "xx"}}).
+		Where("a LIKE", "").
+		Where("b = ?", "").
+		Where("c = ?", "xx").
+		Where(OptionalEq{"d": ""}).
+		Where(OptionalEq{"e": "abx"}).
 		ToSql()
 	if err != nil {
 		t.Error(err)

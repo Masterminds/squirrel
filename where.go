@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"fmt"
+	"reflect"
 )
 
 type wherePart part
@@ -21,8 +22,10 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	case map[string]interface{}:
 		return Eq(pred).ToSql()
 	case string:
-		sql = pred
-		args = p.args
+		if !isZero(reflect.ValueOf(p.args[0])) {
+			sql = pred
+			args = p.args
+		}
 	default:
 		err = fmt.Errorf("expected string-keyed map or string, not %T", pred)
 	}
