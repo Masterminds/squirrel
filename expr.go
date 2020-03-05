@@ -266,7 +266,7 @@ func likeToSQL(lk map[string]interface{}, opr string, optional bool) (sql string
 				err = fmt.Errorf("cannot use array or slice with like operators")
 				return
 			} else {
-				if optional && val == "" {
+				if optional && (val == "" || val == "%" || val == "%%") {
 					continue
 				}
 				expr = fmt.Sprintf("%s %s ?", key, opr)
