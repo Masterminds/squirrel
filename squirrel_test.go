@@ -183,7 +183,7 @@ func TestDebugSqlizerErrors(t *testing.T) {
 
 func TestOptional(t *testing.T) {
 	sql, args, err := Select("a, b, c").From("tbl").
-		Where("a LIKE", "").
+		Where("a LIKE ?", "").
 		Where("b = ?", "").
 		Where("c = ?", "xx").
 		Where(OptionalEq{"d": ""}).

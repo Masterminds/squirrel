@@ -22,7 +22,10 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	case map[string]interface{}:
 		return Eq(pred).ToSql()
 	case string:
-		if !isZero(reflect.ValueOf(p.args[0])) {
+		if len(p.args) == 0 {
+			sql = pred
+			args = p.args
+		} else if !isZero(reflect.ValueOf(p.args[0])) {
 			sql = pred
 			args = p.args
 		}
