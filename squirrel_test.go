@@ -180,3 +180,14 @@ func TestDebugSqlizerErrors(t *testing.T) {
 	errorMsg = DebugSqlizer(Lt{"x": nil}) // Cannot use nil values with Lt
 	assert.True(t, strings.HasPrefix(errorMsg, "[ToSql error: "))
 }
+
+func TestSomething(t *testing.T) {
+	sql, args, err := Select("a, b, c").From("tbl").
+		Where(And{OptionalLt{"a": 0}, OptionalLt{"a1": ""}, OptionalEq{"b": "xx"}}).
+		ToSql()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(sql, args)
+}

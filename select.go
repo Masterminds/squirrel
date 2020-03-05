@@ -113,8 +113,12 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 	}
 
 	if len(d.WhereParts) > 0 {
-		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		w := &bytes.Buffer{}
+		args, err = appendToSql(d.WhereParts, w, " AND ", args)
+		if w.Len() > 0 {
+			sql.WriteString(" WHERE ")
+			sql.WriteString(w.String())
+		}
 		if err != nil {
 			return
 		}

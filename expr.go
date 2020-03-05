@@ -133,12 +133,23 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
-// Eq is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(Eq{"id": 1})
-type Eq map[string]interface{}
+type (
+	// Eq is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(Eq{"id": 1})
+	Eq         map[string]interface{}
+	OptionalEq Eq
+)
 
-func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
+func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
+	return eqToSQL(eq, false, false)
+}
+
+func (eq OptionalEq) ToSql() (sql string, args []interface{}, err error) {
+	return eqToSQL(eq, false, true)
+}
+
+func eqToSQL(eq map[string]interface{}, useNotOpr, optional bool) (sql string, args []interface{}, err error) {
 	if len(eq) == 0 {
 		// Empty Sql{} evaluates to true.
 		sql = sqlTrue
@@ -198,6 +209,9 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 					expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
 				}
 			} else {
+				if optional && isZero(r) {
+					continue
+				}
 				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
 				args = append(args, val)
 			}
@@ -208,25 +222,31 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	return
 }
 
-func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
-	return eq.toSQL(false)
-}
-
-// NotEq is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(NotEq{"id": 1}) == "id <> 1"
-type NotEq Eq
+type (
+	// NotEq is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(NotEq{"id": 1}) == "id <> 1"
+	NotEq         Eq
+	OptionalNotEq NotEq
+)
 
 func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
-	return Eq(neq).toSQL(true)
+	return eqToSQL(neq, true, false)
 }
 
-// Like is syntactic sugar for use with LIKE conditions.
-// Ex:
-//     .Where(Like{"name": "%irrel"})
-type Like map[string]interface{}
+func (neq OptionalNotEq) ToSql() (sql string, args []interface{}, err error) {
+	return eqToSQL(neq, true, true)
+}
 
-func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
+type (
+	// Like is syntactic sugar for use with LIKE conditions.
+	// Ex:
+	//     .Where(Like{"name": "%irrel"})
+	Like         map[string]interface{}
+	OptionalLike Like
+)
+
+func likeToSQL(lk map[string]interface{}, opr string, optional bool) (sql string, args []interface{}, err error) {
 	var exprs []string
 	for key, val := range lk {
 		expr := ""
@@ -246,6 +266,9 @@ func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
 				err = fmt.Errorf("cannot use array or slice with like operators")
 				return
 			} else {
+				if optional && val == "" {
+					continue
+				}
 				expr = fmt.Sprintf("%s %s ?", key, opr)
 				args = append(args, val)
 			}
@@ -257,42 +280,70 @@ func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
 }
 
 func (lk Like) ToSql() (sql string, args []interface{}, err error) {
-	return lk.toSql("LIKE")
+	return likeToSQL(lk, "LIKE", false)
 }
 
-// NotLike is syntactic sugar for use with LIKE conditions.
-// Ex:
-//     .Where(NotLike{"name": "%irrel"})
-type NotLike Like
+func (lk OptionalLike) ToSql() (sql string, args []interface{}, err error) {
+	return likeToSQL(lk, "LIKE", true)
+}
+
+type (
+	// NotLike is syntactic sugar for use with LIKE conditions.
+	// Ex:
+	//     .Where(NotLike{"name": "%irrel"})
+	NotLike         Like
+	OptionalNotLike NotLike
+)
 
 func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
-	return Like(nlk).toSql("NOT LIKE")
+	return likeToSQL(nlk, "NOT LIKE", false)
 }
 
-// ILike is syntactic sugar for use with ILIKE conditions.
-// Ex:
-//    .Where(ILike{"name": "sq%"})
-type ILike Like
+func (nlk OptionalNotLike) ToSql() (sql string, args []interface{}, err error) {
+	return likeToSQL(nlk, "NOT LIKE", true)
+}
+
+type (
+	// ILike is syntactic sugar for use with ILIKE conditions.
+	// Ex:
+	//    .Where(ILike{"name": "sq%"})
+	ILike         Like
+	OptionalILike ILike
+)
 
 func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
-	return Like(ilk).toSql("ILIKE")
+	return likeToSQL(ilk, "ILIKE", false)
 }
 
-// NotILike is syntactic sugar for use with ILIKE conditions.
-// Ex:
-//    .Where(NotILike{"name": "sq%"})
-type NotILike Like
+func (ilk OptionalILike) ToSql() (sql string, args []interface{}, err error) {
+	return likeToSQL(ilk, "ILIKE", true)
+}
+
+type (
+	// NotILike is syntactic sugar for use with ILIKE conditions.
+	// Ex:
+	//    .Where(NotILike{"name": "sq%"})
+	NotILike         Like
+	OptionalNotILike NotILike
+)
 
 func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
-	return Like(nilk).toSql("NOT ILIKE")
+	return likeToSQL(nilk, "NOT ILIKE", false)
 }
 
-// Lt is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(Lt{"id": 1})
-type Lt map[string]interface{}
+func (nilk OptionalNotILike) ToSql() (sql string, args []interface{}, err error) {
+	return likeToSQL(nilk, "NOT ILIKE", true)
+}
 
-func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
+type (
+	// Lt is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(Lt{"id": 1})
+	Lt         map[string]interface{}
+	OptionalLt Lt
+)
+
+func ltToSql(lt map[string]interface{}, opposite, orEq, optional bool) (sql string, args []interface{}, err error) {
 	var (
 		exprs []string
 		opr   = "<"
@@ -326,6 +377,11 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 			err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
 			return
 		}
+		if optional {
+			if isZero(reflect.ValueOf(val)) {
+				continue
+			}
+		}
 		expr = fmt.Sprintf("%s %s ?", key, opr)
 		args = append(args, val)
 
@@ -336,34 +392,59 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 }
 
 func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
-	return lt.toSql(false, false)
+	return ltToSql(lt, false, false, false)
 }
 
-// LtOrEq is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(LtOrEq{"id": 1}) == "id <= 1"
-type LtOrEq Lt
+func (lt OptionalLt) ToSql() (sql string, args []interface{}, err error) {
+	return ltToSql(lt, false, false, true)
+}
+
+type (
+	// LtOrEq is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(LtOrEq{"id": 1}) == "id <= 1"
+	LtOrEq         Lt
+	OptionalLtOrEq LtOrEq
+)
 
 func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(ltOrEq).toSql(false, true)
+	return ltToSql(ltOrEq, false, true, false)
 }
 
-// Gt is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(Gt{"id": 1}) == "id > 1"
-type Gt Lt
+func (ltOrEq OptionalLtOrEq) ToSql() (sql string, args []interface{}, err error) {
+	return ltToSql(ltOrEq, false, true, true)
+}
+
+type (
+	// Gt is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(Gt{"id": 1}) == "id > 1"
+	Gt         Lt
+	OptionalGt Gt
+)
 
 func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(gt).toSql(true, false)
+	return ltToSql(gt, true, false, false)
 }
 
-// GtOrEq is syntactic sugar for use with Where/Having/Set methods.
-// Ex:
-//     .Where(GtOrEq{"id": 1}) == "id >= 1"
-type GtOrEq Lt
+func (gt OptionalGt) ToSql() (sql string, args []interface{}, err error) {
+	return ltToSql(gt, true, false, true)
+}
+
+type (
+	// GtOrEq is syntactic sugar for use with Where/Having/Set methods.
+	// Ex:
+	//     .Where(GtOrEq{"id": 1}) == "id >= 1"
+	GtOrEq         Lt
+	OptionalGtOrEq GtOrEq
+)
 
 func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {
-	return Lt(gtOrEq).toSql(true, true)
+	return ltToSql(gtOrEq, true, true, false)
+}
+
+func (gtOrEq OptionalGtOrEq) ToSql() (sql string, args []interface{}, err error) {
+	return ltToSql(gtOrEq, true, true, true)
 }
 
 type conj []Sqlizer
@@ -418,4 +499,43 @@ func isListType(val interface{}) bool {
 	}
 	valVal := reflect.ValueOf(val)
 	return valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
+}
+
+// isZero reports whether a value is a zero value
+// Including support: Bool, Array, String, Float32, Float64, Int, Int8, Int16, Int32, Int64, Uint, Uint8, Uint16, Uint32, Uint64, Uintptr
+// Map, Slice, Interface, Struct
+func isZero(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Array, reflect.String:
+		return v.Len() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Map, reflect.Slice:
+		return v.IsNil() || v.Len() == 0
+	case reflect.Interface:
+		return v.IsNil()
+	case reflect.Invalid:
+		return true
+	}
+
+	if v.Kind() != reflect.Struct {
+		return false
+	}
+
+	// Traverse the Struct and only return true
+	// if all of its fields return IsZero == true
+	n := v.NumField()
+	for i := 0; i < n; i++ {
+		vf := v.Field(i)
+		if !isZero(vf) {
+			return false
+		}
+	}
+	return true
 }
