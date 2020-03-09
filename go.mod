@@ -1,4 +1,4 @@
-module github.com/Masterminds/squirrel
+module github.com/coolyrat/squirrel
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -10,4 +10,4 @@ require (
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 )
 
-go 1.13
+go 1.14
