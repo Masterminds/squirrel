@@ -24,7 +24,7 @@ type expr struct {
 //
 // Ex:
 //     Expr("FROM_UNIXTIME(?)", t)
-func Expr(sql string, args ...interface{}) expr {
+func Expr(sql string, args ...interface{}) Sqlizer {
 	return expr{sql: sql, args: args}
 }
 
