@@ -15,7 +15,7 @@ const (
 	sqlFalse = "(1=0)"
 )
 
-type Expression struct {
+type expr struct {
 	sql  string
 	args []interface{}
 }
@@ -24,11 +24,11 @@ type Expression struct {
 //
 // Ex:
 //     Expr("FROM_UNIXTIME(?)", t)
-func Expr(sql string, args ...interface{}) Expression {
-	return Expression{sql: sql, args: args}
+func Expr(sql string, args ...interface{}) expr {
+	return expr{sql: sql, args: args}
 }
 
-func (e Expression) ToSql() (sql string, args []interface{}, err error) {
+func (e expr) ToSql() (sql string, args []interface{}, err error) {
 	simple := true
 	for _, arg := range e.args {
 		if _, ok := arg.(Sqlizer); ok {
