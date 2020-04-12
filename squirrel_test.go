@@ -95,7 +95,7 @@ func TestDebugSqlizerUpdateColon(t *testing.T) {
 }
 
 func TestDebugSqlizerUpdateAtp(t *testing.T) {
-	testDebugUpdateSQL.PlaceholderFormat(Atp)
+	testDebugUpdateSQL.PlaceholderFormat(AtP)
 	assert.Equal(t, expectedDebugUpateSQL, DebugSqlizer(testDebugUpdateSQL))
 }
 
@@ -121,7 +121,7 @@ func TestDebugSqlizerDeleteColon(t *testing.T) {
 }
 
 func TestDebugSqlizerDeleteAtp(t *testing.T) {
-	testDebugDeleteSQL.PlaceholderFormat(Atp)
+	testDebugDeleteSQL.PlaceholderFormat(AtP)
 	assert.Equal(t, expectedDebugDeleteSQL, DebugSqlizer(testDebugDeleteSQL))
 }
 
@@ -144,7 +144,7 @@ func TestDebugSqlizerInsertColon(t *testing.T) {
 }
 
 func TestDebugSqlizerInsertAtp(t *testing.T) {
-	testDebugInsertSQL.PlaceholderFormat(Atp)
+	testDebugInsertSQL.PlaceholderFormat(AtP)
 	assert.Equal(t, expectedDebugInsertSQL, DebugSqlizer(testDebugInsertSQL))
 }
 
@@ -170,7 +170,7 @@ func TestDebugSqlizerSelectColon(t *testing.T) {
 }
 
 func TestDebugSqlizerSelectAtp(t *testing.T) {
-	testDebugSelectSQL.PlaceholderFormat(Atp)
+	testDebugSelectSQL.PlaceholderFormat(AtP)
 	assert.Equal(t, expectedDebugSelectSQL, DebugSqlizer(testDebugSelectSQL))
 }
 

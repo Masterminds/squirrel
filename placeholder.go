@@ -31,9 +31,9 @@ var (
 	// colon-prefixed positional placeholders (e.g. :1, :2, :3).
 	Colon = colonFormat{}
 
-	// Atp is a PlaceholderFormat instance that replaces placeholders with
+	// AtP is a PlaceholderFormat instance that replaces placeholders with
 	// "@p"-prefixed positional placeholders (e.g. @p1, @p2, @p3).
-	Atp = atpFormat{}
+	AtP = atpFormat{}
 )
 
 type questionFormat struct{}
