@@ -73,7 +73,7 @@ func (atpFormat) ReplacePlaceholders(sql string) (string, error) {
 }
 
 func (atpFormat) debugPlaceholder() string {
-	return ":"
+	return "@p"
 }
 
 // Placeholders returns a string with count ? placeholders joined with commas.
