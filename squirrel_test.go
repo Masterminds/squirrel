@@ -94,6 +94,11 @@ func TestDebugSqlizerUpdateColon(t *testing.T) {
 	assert.Equal(t, expectedDebugUpateSQL, DebugSqlizer(testDebugUpdateSQL))
 }
 
+func TestDebugSqlizerUpdateAtp(t *testing.T) {
+	testDebugUpdateSQL.PlaceholderFormat(Atp)
+	assert.Equal(t, expectedDebugUpateSQL, DebugSqlizer(testDebugUpdateSQL))
+}
+
 func TestDebugSqlizerUpdateDollar(t *testing.T) {
 	testDebugUpdateSQL.PlaceholderFormat(Dollar)
 	assert.Equal(t, expectedDebugUpateSQL, DebugSqlizer(testDebugUpdateSQL))
@@ -115,6 +120,11 @@ func TestDebugSqlizerDeleteColon(t *testing.T) {
 	assert.Equal(t, expectedDebugDeleteSQL, DebugSqlizer(testDebugDeleteSQL))
 }
 
+func TestDebugSqlizerDeleteAtp(t *testing.T) {
+	testDebugDeleteSQL.PlaceholderFormat(Atp)
+	assert.Equal(t, expectedDebugDeleteSQL, DebugSqlizer(testDebugDeleteSQL))
+}
+
 func TestDebugSqlizerDeleteDollar(t *testing.T) {
 	testDebugDeleteSQL.PlaceholderFormat(Dollar)
 	assert.Equal(t, expectedDebugDeleteSQL, DebugSqlizer(testDebugDeleteSQL))
@@ -130,6 +140,11 @@ var expectedDebugInsertSQL = "INSERT INTO table VALUES ('1','test')"
 
 func TestDebugSqlizerInsertColon(t *testing.T) {
 	testDebugInsertSQL.PlaceholderFormat(Colon)
+	assert.Equal(t, expectedDebugInsertSQL, DebugSqlizer(testDebugInsertSQL))
+}
+
+func TestDebugSqlizerInsertAtp(t *testing.T) {
+	testDebugInsertSQL.PlaceholderFormat(Atp)
 	assert.Equal(t, expectedDebugInsertSQL, DebugSqlizer(testDebugInsertSQL))
 }
 
@@ -151,6 +166,11 @@ var expectedDebugSelectSQL = "SELECT * FROM table WHERE (column = 'val' AND othe
 
 func TestDebugSqlizerSelectColon(t *testing.T) {
 	testDebugSelectSQL.PlaceholderFormat(Colon)
+	assert.Equal(t, expectedDebugSelectSQL, DebugSqlizer(testDebugSelectSQL))
+}
+
+func TestDebugSqlizerSelectAtp(t *testing.T) {
+	testDebugSelectSQL.PlaceholderFormat(Atp)
 	assert.Equal(t, expectedDebugSelectSQL, DebugSqlizer(testDebugSelectSQL))
 }
 
