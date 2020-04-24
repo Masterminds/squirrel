@@ -16,11 +16,26 @@ func TestDeleteBuilderContextRunners(t *testing.T) {
 
 	b.ExecContext(ctx)
 	assert.Equal(t, expectedSql, db.LastExecSql)
+
+	b.QueryContext(ctx)
+	assert.Equal(t, expectedSql, db.LastQuerySql)
+
+	b.QueryRowContext(ctx)
+	assert.Equal(t, expectedSql, db.LastQueryRowSql)
+
+	err := b.ScanContext(ctx)
+	assert.NoError(t, err)
 }
 
 func TestDeleteBuilderContextNoRunner(t *testing.T) {
-	b := Delete("test")
+	b := Delete("test").Where("x != ?", 0).Suffix("RETURNING x")
 
 	_, err := b.ExecContext(ctx)
+	assert.Equal(t, RunnerNotSet, err)
+
+	_, err = b.QueryContext(ctx)
+	assert.Equal(t, RunnerNotSet, err)
+
+	err = b.ScanContext(ctx)
 	assert.Equal(t, RunnerNotSet, err)
 }
