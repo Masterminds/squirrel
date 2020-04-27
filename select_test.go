@@ -1,7 +1,11 @@
 package squirrel
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -241,4 +245,166 @@ func TestSelectWithEmptyStringWhereClause(t *testing.T) {
 	sql, _, err := Select("*").From("users").Where("").ToSql()
 	assert.NoError(t, err)
 	assert.Equal(t, "SELECT * FROM users", sql)
+}
+
+func ExampleSelect() {
+	Select("id", "created", "first_name").From("users") // ... continue building up your query
+
+	// sql methods in select columns are ok
+	Select("first_name", "count(*)").From("users")
+
+	// column aliases are ok too
+	Select("first_name", "count(*) as n_users").From("users")
+}
+
+func ExampleSelectBuilder_From() {
+	Select("id", "created", "first_name").From("users") // ... continue building up your query
+}
+
+func ExampleSelectBuilder_Where() {
+	companyId := 20
+	Select("id", "created", "first_name").From("users").Where("company = ?", companyId)
+}
+
+func ExampleSelectBuilder_Where_helpers() {
+	companyId := 20
+
+	Select("id", "created", "first_name").From("users").Where(Eq{
+		"company": companyId,
+	})
+
+	Select("id", "created", "first_name").From("users").Where(GtOrEq{
+		"created": time.Now().AddDate(0, 0, -7),
+	})
+
+	Select("id", "created", "first_name").From("users").Where(And{
+		GtOrEq{
+			"created": time.Now().AddDate(0, 0, -7),
+		},
+		Eq{
+			"company": companyId,
+		},
+	})
+}
+
+func ExampleSelectBuilder_Where_multiple() {
+	companyId := 20
+
+	// multiple where's are ok
+
+	Select("id", "created", "first_name").
+		From("users").
+		Where("company = ?", companyId).
+		Where(GtOrEq{
+			"created": time.Now().AddDate(0, 0, -7),
+		})
+}
+
+func ExampleSelectBuilder_FromSelect() {
+	usersByCompany := Select("company", "count(*) as n_users").From("users").GroupBy("company")
+	query := Select("company.id", "company.name", "users_by_company.n_users").
+		FromSelect(usersByCompany, "users_by_company").
+		Join("company on company.id = users_by_company.company")
+
+	sql, _, _ := query.ToSql()
+	fmt.Println(sql)
+
+	// Output: SELECT company.id, company.name, users_by_company.n_users
+	// FROM (
+	//    SELECT company, count(*) as n_users
+	//    FROM users GROUP BY company
+	// ) AS users_by_company
+	// JOIN company on company.id = users_by_company.company
+}
+
+func ExampleSelectBuilder_Columns() {
+	query := Select("id").Columns("created", "first_name").From("users")
+
+	sql, _, _ := query.ToSql()
+	fmt.Println(sql)
+	// Output: SELECT id, created, first_name FROM users
+}
+
+func ExampleSelectBuilder_Columns_order() {
+	// out of order is ok too
+	query := Select("id").Columns("created").From("users").Columns("first_name")
+
+	sql, _, _ := query.ToSql()
+	fmt.Println(sql)
+	// Output: SELECT id, created, first_name FROM users
+}
+
+func ExampleSelectBuilder_Scan() {
+
+	var db *sql.DB
+
+	query := Select("id", "created", "first_name").From("users")
+	query = query.RunWith(db)
+
+	var id int
+	var created time.Time
+	var firstName string
+
+	if err := query.Scan(&id, &created, &firstName); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func ExampleSelectBuilder_ScanContext() {
+
+	var db *sql.DB
+
+	query := Select("id", "created", "first_name").From("users")
+	query = query.RunWith(db)
+
+	var id int
+	var created time.Time
+	var firstName string
+
+	if err := query.ScanContext(ctx, &id, &created, &firstName); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func ExampleSelectBuilder_RunWith() {
+
+	var db *sql.DB
+
+	query := Select("id", "created", "first_name").From("users").RunWith(db)
+
+	var id int
+	var created time.Time
+	var firstName string
+
+	if err := query.Scan(&id, &created, &firstName); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func ExampleSelectBuilder_ToSql() {
+
+	var db *sql.DB
+
+	query := Select("id", "created", "first_name").From("users")
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	rows, err := db.Query(sql, args...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		// scan...
+	}
 }

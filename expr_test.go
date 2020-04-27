@@ -456,3 +456,9 @@ func TestExprRecursion(t *testing.T) {
 		assert.Equal(t, expectedArgs, args)
 	}
 }
+
+func ExampleEq() {
+	Select("id", "created", "first_name").From("users").Where(Eq{
+		"company": 20,
+	})
+}
