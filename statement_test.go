@@ -66,3 +66,16 @@ func TestRunWithBaseRunnerQueryRowError(t *testing.T) {
 	assert.Error(t, RunnerNotQueryRunner, sb.Select("test").QueryRow().Scan(nil))
 
 }
+
+func TestStatementBuilderWhere(t *testing.T) {
+	sb := StatementBuilder.Where("x = ?", 1)
+
+	sql, args, err := sb.Select("test").Where("y = ?", 2).ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT test WHERE x = ? AND y = ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 2}
+	assert.Equal(t, expectedArgs, args)
+}
