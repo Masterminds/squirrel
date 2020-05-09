@@ -309,12 +309,7 @@ func ExampleSelectBuilder_FromSelect() {
 	sql, _, _ := query.ToSql()
 	fmt.Println(sql)
 
-	// Output: SELECT company.id, company.name, users_by_company.n_users
-	// FROM (
-	//    SELECT company, count(*) as n_users
-	//    FROM users GROUP BY company
-	// ) AS users_by_company
-	// JOIN company on company.id = users_by_company.company
+	// Output: SELECT company.id, company.name, users_by_company.n_users FROM (SELECT company, count(*) as n_users FROM users GROUP BY company) AS users_by_company JOIN company on company.id = users_by_company.company
 }
 
 func ExampleSelectBuilder_Columns() {
