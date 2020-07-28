@@ -71,3 +71,26 @@ func TestUpdateBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestUpdateBuilderFrom(t *testing.T) {
+	sql, _, err := Update("employees").Set("sales_count", 100).From("accounts").Where("accounts.name = ?", "ACME").ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "UPDATE employees SET sales_count = ? FROM accounts WHERE accounts.name = ?", sql)
+}
+
+func TestUpdateBuilderFromSelect(t *testing.T) {
+	sql, _, err := Update("employees").
+		Set("sales_count", 100).
+		FromSelect(Select("id").
+			From("accounts").
+			Where("accounts.name = ?", "ACME"), "subquery").
+		Where("employees.account_id = subquery.id").ToSql()
+	assert.NoError(t, err)
+
+	expectedSql :=
+		"UPDATE employees " +
+			"SET sales_count = ? " +
+			"FROM (SELECT id FROM accounts WHERE accounts.name = ?) AS subquery " +
+			"WHERE employees.account_id = subquery.id"
+	assert.Equal(t, expectedSql, sql)
+}
