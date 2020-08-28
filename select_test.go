@@ -25,6 +25,8 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Join("j2").
 		LeftJoin("j3").
 		RightJoin("j4").
+		InnerJoin("j5").
+		CrossJoin("j6").
 		Where("f = ?", 4).
 		Where(Eq{"g": 5}).
 		Where(map[string]interface{}{"h": 6}).
@@ -47,7 +49,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 			"(b IN (?,?,?)) AS b_alias, " +
 			"(SELECT aa, bb FROM dd) AS subq " +
 			"FROM e " +
-			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 " +
+			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 INNER JOIN j5 CROSS JOIN j6" +
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +
 			"GROUP BY l HAVING m = n ORDER BY ? DESC, o ASC, p DESC LIMIT 12 OFFSET 13 " +
 			"FETCH FIRST ? ROWS ONLY"
