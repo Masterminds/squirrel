@@ -14,6 +14,7 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		SetMap(Eq{"c": 2}).
 		Set("c1", Case("status").When("1", "2").When("2", "1")).
 		Set("c2", Case().When("a = 2", Expr("?", "foo")).When("a = 3", Expr("?", "bar"))).
+		Set("c3", Select("a").From("b")).
 		Where("d = ?", 3).
 		OrderBy("e").
 		Limit(4).
@@ -27,7 +28,8 @@ func TestUpdateBuilderToSql(t *testing.T) {
 		"WITH prefix AS ? " +
 			"UPDATE a SET b = ? + 1, c = ?, " +
 			"c1 = CASE status WHEN 1 THEN 2 WHEN 2 THEN 1 END, " +
-			"c2 = CASE WHEN a = 2 THEN ? WHEN a = 3 THEN ? END " +
+			"c2 = CASE WHEN a = 2 THEN ? WHEN a = 3 THEN ? END, " +
+			"c3 = (SELECT a FROM b) " +
 			"WHERE d = ? " +
 			"ORDER BY e LIMIT 4 OFFSET 5 " +
 			"RETURNING ?"
