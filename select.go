@@ -13,6 +13,7 @@ type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
 	Prefixes          []Sqlizer
+	CTEs              []Sqlizer
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
@@ -75,6 +76,15 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 			return
 		}
 
+		sql.WriteString(" ")
+	}
+
+	if len(d.CTEs) > 0 {
+		sql.WriteString("WITH ")
+		args, err = appendToSql(d.CTEs, sql, ", ", args)
+		if err != nil {
+			return
+		}
 		sql.WriteString(" ")
 	}
 
@@ -251,6 +261,22 @@ func (b SelectBuilder) Distinct() SelectBuilder {
 // Options adds select option to the query
 func (b SelectBuilder) Options(options ...string) SelectBuilder {
 	return builder.Extend(b, "Options", options).(SelectBuilder)
+}
+
+// With adds a non-recursive CTE to the query.
+func (b SelectBuilder) With(alias string, expr Sqlizer) SelectBuilder {
+	return b.WithCTE(CTE{Alias: alias, ColumnList: []string{}, Recursive: false, Expression: expr})
+}
+
+// WithRecursive adds a recursive CTE to the query.
+func (b SelectBuilder) WithRecursive(alias string, expr Sqlizer) SelectBuilder {
+	return b.WithCTE(CTE{Alias: alias, ColumnList: []string{}, Recursive: true, Expression: expr})
+}
+
+// WithCTE adds an arbitrary Sqlizer to the query.
+// The sqlizer will be sandwiched between the keyword WITH and, if there's more than one CTE, a comma.
+func (b SelectBuilder) WithCTE(cte Sqlizer) SelectBuilder {
+	return builder.Append(b, "CTEs", cte).(SelectBuilder)
 }
 
 // Columns adds result columns to the query.
