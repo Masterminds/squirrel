@@ -152,7 +152,7 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	)
 
 	if useNotOpr {
-		equalOpr = "<>"
+		equalOpr = "!="
 		inOpr = "NOT IN"
 		nullOpr = "IS NOT"
 		inEmptyExpr = sqlTrue
@@ -212,7 +212,7 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 
 // NotEq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//     .Where(NotEq{"id": 1}) == "id <> 1"
+//     .Where(NotEq{"id": 1}) == "id != 1"
 type NotEq Eq
 
 func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {

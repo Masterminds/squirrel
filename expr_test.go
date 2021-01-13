@@ -64,7 +64,7 @@ func TestNotEqToSql(t *testing.T) {
 	sql, args, err := b.ToSql()
 	assert.NoError(t, err)
 
-	expectedSql := "id <> ?"
+	expectedSql := "id != ?"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{1}
@@ -284,7 +284,7 @@ func TestNotNilPointer(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{"Name"}, args)
-	assert.Equal(t, "name <> ?", sql)
+	assert.Equal(t, "name != ?", sql)
 
 	s := []int{1, 2, 3}
 	ids := &s
