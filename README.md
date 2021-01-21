@@ -64,7 +64,7 @@ Squirrel wants to make your life easier:
 
 ```go
 // StmtCache caches Prepared Stmts for you
-dbCache := sq.NewStmtCacher(db)
+dbCache := sq.NewStmtCache(db)
 
 // StatementBuilder keeps your syntax neat
 mydb := sq.StatementBuilder.RunWith(dbCache)
