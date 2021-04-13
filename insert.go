@@ -78,8 +78,16 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" ")
 	}
 
-	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
+	options := make([]string, 0)
+	optionsMap := make(map[string]bool)
+	for _, opt := range d.Options {
+		if _, ok := optionsMap[opt]; !ok {
+			options = append(options, opt)
+			optionsMap[opt] = true
+		}
+	}
+	if len(options) > 0 {
+		sql.WriteString(strings.Join(options, " "))
 		sql.WriteString(" ")
 	}
 
