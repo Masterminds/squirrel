@@ -34,6 +34,15 @@ func TestDeleteBuilderToSqlErr(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestDeleteBuilderMustSql(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("TestDeleteBuilderMustSql should have panicked!")
+		}
+	}()
+	Delete("").MustSql()
+}
+
 func TestDeleteBuilderPlaceholders(t *testing.T) {
 	b := Delete("test").Where("x = ? AND y = ?", 1, 2)
 

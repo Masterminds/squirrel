@@ -222,6 +222,8 @@ func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
+// MustSql builds the query into a SQL string and bound args.
+// It panics if there are any errors.
 func (b SelectBuilder) MustSql() (string, []interface{}) {
 	sql, args, err := b.ToSql()
 	if err != nil {

@@ -37,6 +37,15 @@ func TestInsertBuilderToSqlErr(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestInsertBuilderMustSql(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("TestInsertBuilderMustSql should have panicked!")
+		}
+	}()
+	Insert("").MustSql()
+}
+
 func TestInsertBuilderPlaceholders(t *testing.T) {
 	b := Insert("test").Values(1, 2)
 

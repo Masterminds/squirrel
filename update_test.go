@@ -47,6 +47,15 @@ func TestUpdateBuilderToSqlErr(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestUpdateBuilderMustSql(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("TestUpdateBuilderMustSql should have panicked!")
+		}
+	}()
+	Update("").MustSql()
+}
+
 func TestUpdateBuilderPlaceholders(t *testing.T) {
 	b := Update("test").SetMap(Eq{"x": 1, "y": 2})
 

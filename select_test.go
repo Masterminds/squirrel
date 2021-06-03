@@ -219,16 +219,14 @@ func TestSelectBuilderNestedSelectDollar(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM foo WHERE x = $1 AND NOT EXISTS ( SELECT * FROM bar WHERE y = $2 )", outerSql)
 }
 
-func TestMustSql(t *testing.T) {
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("TestUserFail should have panicked!")
-			}
-		}()
-		// This function should cause a panic
-		Select().From("foo").MustSql()
+func TestSelectBuilderMustSql(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("TestSelectBuilderMustSql should have panicked!")
+		}
 	}()
+	// This function should cause a panic
+	Select().From("foo").MustSql()
 }
 
 func TestSelectWithoutWhereClause(t *testing.T) {
