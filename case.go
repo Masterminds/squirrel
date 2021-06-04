@@ -100,6 +100,16 @@ func (b CaseBuilder) ToSql() (string, []interface{}, error) {
 	return data.ToSql()
 }
 
+// MustSql builds the query into a SQL string and bound args.
+// It panics if there are any errors.
+func (b CaseBuilder) MustSql() (string, []interface{}) {
+	sql, args, err := b.ToSql()
+	if err != nil {
+		panic(err)
+	}
+	return sql, args
+}
+
 // what sets optional value for CASE construct "CASE [value] ..."
 func (b CaseBuilder) what(expr interface{}) CaseBuilder {
 	return builder.Set(b, "What", newPart(expr)).(CaseBuilder)
