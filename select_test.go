@@ -247,6 +247,20 @@ func TestSelectWithEmptyStringWhereClause(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM users", sql)
 }
 
+func TestSelectBuilderDuplicateDistinct(t *testing.T) {
+	sql, _, err := Select("a", "b").
+		Distinct().
+		Distinct().
+		Columns("c").
+		From("e").
+		ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT DISTINCT a, b, c FROM e"
+	assert.Equal(t, expectedSql, sql)
+}
+
 func ExampleSelect() {
 	Select("id", "created", "first_name").From("users") // ... continue building up your query
 

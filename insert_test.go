@@ -110,3 +110,28 @@ func TestInsertBuilderReplace(t *testing.T) {
 
 	assert.Equal(t, expectedSQL, sql)
 }
+
+func TestInsertBuilderDuplicateOptions(t *testing.T) {
+	b := Insert("").
+		Prefix("WITH prefix AS ?", 0).
+		Into("a").
+		Options("DELAYED", "DELAYED", "IGNORE").
+		Columns("b", "c").
+		Values(1, 2).
+		Values(3, Expr("? + 1", 4)).
+		OnConflict("DO NOTHING").
+		Returning("d", "e")
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSQL :=
+		"WITH prefix AS ? " +
+			"INSERT DELAYED IGNORE INTO a (b,c) VALUES (?,?),(?,? + 1) " +
+			"ON CONFLICT DO NOTHING " +
+			"RETURNING d, e"
+	assert.Equal(t, expectedSQL, sql)
+
+	expectedArgs := []interface{}{0, 1, 2, 3, 4}
+	assert.Equal(t, expectedArgs, args)
+}
