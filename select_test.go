@@ -188,6 +188,22 @@ func TestSelectBuilderNestedSelectJoin(t *testing.T) {
 	assert.Equal(t, args, expectedArgs)
 }
 
+func TestSelectBuilderNestedSelectJoinNew(t *testing.T) {
+
+	expectedSql := "SELECT * FROM bar JOIN  (SELECT * FROM baz WHERE foo = ?) AS r ON bar.foo = r.foo"
+	expectedArgs := []interface{}{42}
+
+	nestedSelect := Select("*").From("baz").Where("foo = ?", 42)
+
+	b := Select("*").From("bar").JoinSelect(nestedSelect, "r", "ON bar.foo = r.foo")
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, args, expectedArgs)
+}
+
 func TestSelectWithOptions(t *testing.T) {
 	sql, _, err := Select("*").From("foo").Distinct().Options("SQL_NO_CACHE").ToSql()
 
