@@ -189,6 +189,9 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 					if args == nil {
 						args = []interface{}{}
 					}
+				} else if valVal.Len() == 1 {
+					expr = fmt.Sprintf("%s %s ?", key, equalOpr)
+					args = append(args, valVal.Index(0).Interface())
 				} else {
 					for i := 0; i < valVal.Len(); i++ {
 						args = append(args, valVal.Index(i).Interface())
