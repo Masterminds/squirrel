@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/lann/builder"
 )
@@ -58,7 +58,11 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
+		sql.WriteString(d.OrderBys[0])
+		for _, ob := range d.OrderBys[1:] {
+			sql.WriteString(", ")
+			sql.WriteString(ob)
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -160,12 +164,12 @@ func (b DeleteBuilder) OrderBy(orderBys ...string) DeleteBuilder {
 
 // Limit sets a LIMIT clause on the query.
 func (b DeleteBuilder) Limit(limit uint64) DeleteBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(DeleteBuilder)
+	return builder.Set(b, "Limit", strconv.FormatUint(limit, 10)).(DeleteBuilder)
 }
 
 // Offset sets a OFFSET clause on the query.
 func (b DeleteBuilder) Offset(offset uint64) DeleteBuilder {
-	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(DeleteBuilder)
+	return builder.Set(b, "Offset", strconv.FormatUint(offset, 10)).(DeleteBuilder)
 }
 
 // Suffix adds an expression to the end of the query

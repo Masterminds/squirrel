@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"sort"
-	"strings"
 
 	"github.com/lann/builder"
 )
@@ -79,7 +77,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	}
 
 	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
+		sql.WriteString(d.Options[0])
+		for _, o := range d.Options[1:] {
+			sql.WriteString(" ")
+			sql.WriteString(o)
+		}
 		sql.WriteString(" ")
 	}
 
@@ -89,7 +91,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.Columns) > 0 {
 		sql.WriteString("(")
-		sql.WriteString(strings.Join(d.Columns, ","))
+		sql.WriteString(d.Columns[0])
+		for _, c := range d.Columns[1:] {
+			sql.WriteString(",")
+			sql.WriteString(c)
+		}
 		sql.WriteString(") ")
 	}
 
@@ -121,26 +127,29 @@ func (d *insertData) appendValuesToSQL(w io.Writer, args []interface{}) ([]inter
 
 	io.WriteString(w, "VALUES ")
 
-	valuesStrings := make([]string, len(d.Values))
 	for r, row := range d.Values {
-		valueStrings := make([]string, len(row))
+		io.WriteString(w, "(")
 		for v, val := range row {
 			if vs, ok := val.(Sqlizer); ok {
 				vsql, vargs, err := vs.ToSql()
 				if err != nil {
 					return nil, err
 				}
-				valueStrings[v] = vsql
+				io.WriteString(w, vsql)
 				args = append(args, vargs...)
 			} else {
-				valueStrings[v] = "?"
+				io.WriteString(w, "?")
 				args = append(args, val)
 			}
+			if v != len(row)-1 {
+				io.WriteString(w, ",")
+			}
 		}
-		valuesStrings[r] = fmt.Sprintf("(%s)", strings.Join(valueStrings, ","))
+		io.WriteString(w, ")")
+		if r != len(d.Values)-1 {
+			io.WriteString(w, ",")
+		}
 	}
-
-	io.WriteString(w, strings.Join(valuesStrings, ","))
 
 	return args, nil
 }

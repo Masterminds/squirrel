@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
-	"strings"
+	"strconv"
 
 	"github.com/lann/builder"
 )
@@ -78,7 +78,6 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql.WriteString(d.Table)
 
 	sql.WriteString(" SET ")
-	setSqls := make([]string, len(d.SetClauses))
 	for i, setClause := range d.SetClauses {
 		var valSql string
 		if vs, ok := setClause.value.(Sqlizer); ok {
@@ -87,7 +86,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 				return "", nil, err
 			}
 			if _, ok := vs.(SelectBuilder); ok {
-				valSql = fmt.Sprintf("(%s)", vsql)
+				valSql = "(" + vsql + ")"
 			} else {
 				valSql = vsql
 			}
@@ -96,9 +95,11 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 			valSql = "?"
 			args = append(args, setClause.value)
 		}
-		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSql)
+		sql.WriteString(setClause.column + " = " + valSql)
+		if i != len(d.SetClauses)-1 {
+			sql.WriteString(", ")
+		}
 	}
-	sql.WriteString(strings.Join(setSqls, ", "))
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
@@ -110,7 +111,11 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.OrderBys) > 0 {
 		sql.WriteString(" ORDER BY ")
-		sql.WriteString(strings.Join(d.OrderBys, ", "))
+		sql.WriteString(d.OrderBys[0])
+		for _, ob := range d.OrderBys[1:] {
+			sql.WriteString(", ")
+			sql.WriteString(ob)
+		}
 	}
 
 	if len(d.Limit) > 0 {
@@ -247,12 +252,12 @@ func (b UpdateBuilder) OrderBy(orderBys ...string) UpdateBuilder {
 
 // Limit sets a LIMIT clause on the query.
 func (b UpdateBuilder) Limit(limit uint64) UpdateBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(UpdateBuilder)
+	return builder.Set(b, "Limit", strconv.FormatUint(limit, 10)).(UpdateBuilder)
 }
 
 // Offset sets a OFFSET clause on the query.
 func (b UpdateBuilder) Offset(offset uint64) UpdateBuilder {
-	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(UpdateBuilder)
+	return builder.Set(b, "Offset", strconv.FormatUint(offset, 10)).(UpdateBuilder)
 }
 
 // Suffix adds an expression to the end of the query

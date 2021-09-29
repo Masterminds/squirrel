@@ -84,21 +84,24 @@ func (e expr) ToSql() (sql string, args []interface{}, err error) {
 type concatExpr []interface{}
 
 func (ce concatExpr) ToSql() (sql string, args []interface{}, err error) {
+	var b strings.Builder
+	b.WriteString(sql)
 	for _, part := range ce {
 		switch p := part.(type) {
 		case string:
-			sql += p
+			b.WriteString(p)
 		case Sqlizer:
 			pSql, pArgs, err := p.ToSql()
 			if err != nil {
 				return "", nil, err
 			}
-			sql += pSql
+			b.WriteString(pSql)
 			args = append(args, pArgs...)
 		default:
 			return "", nil, fmt.Errorf("%#v is not a string or Sqlizer", part)
 		}
 	}
+	sql = b.String()
 	return
 }
 
@@ -128,7 +131,7 @@ func Alias(expr Sqlizer, alias string) aliasExpr {
 func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 	sql, args, err = e.expr.ToSql()
 	if err == nil {
-		sql = fmt.Sprintf("(%s) AS %s", sql, e.alias)
+		sql = "(" + sql + ") AS " + e.alias
 	}
 	return
 }
@@ -144,7 +147,6 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	}
 
 	var (
-		exprs       []string
 		equalOpr    = "="
 		inOpr       = "IN"
 		nullOpr     = "IS"
@@ -159,7 +161,8 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	}
 
 	sortedKeys := getSortedKeys(eq)
-	for _, key := range sortedKeys {
+	var b strings.Builder
+	for i, key := range sortedKeys {
 		var expr string
 		val := eq[key]
 
@@ -180,29 +183,33 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 		}
 
 		if val == nil {
-			expr = fmt.Sprintf("%s %s NULL", key, nullOpr)
+			expr = key + " " + nullOpr + " NULL"
 		} else {
 			if isListType(val) {
 				valVal := reflect.ValueOf(val)
-				if valVal.Len() == 0 {
+				valLen := valVal.Len()
+				if valLen == 0 {
 					expr = inEmptyExpr
 					if args == nil {
 						args = []interface{}{}
 					}
 				} else {
-					for i := 0; i < valVal.Len(); i++ {
+					for i := 0; i < valLen; i++ {
 						args = append(args, valVal.Index(i).Interface())
 					}
-					expr = fmt.Sprintf("%s %s (%s)", key, inOpr, Placeholders(valVal.Len()))
+					expr = key + " " + inOpr + " (" + Placeholders(valLen) + ")"
 				}
 			} else {
-				expr = fmt.Sprintf("%s %s ?", key, equalOpr)
+				expr = key + " " + equalOpr + " ?"
 				args = append(args, val)
 			}
 		}
-		exprs = append(exprs, expr)
+		b.WriteString(expr)
+		if i != len(sortedKeys)-1 {
+			b.WriteString(" AND ")
+		}
 	}
-	sql = strings.Join(exprs, " AND ")
+	sql = b.String()
 	return
 }
 
@@ -225,10 +232,9 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 type Like map[string]interface{}
 
 func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
-	var exprs []string
+	var b strings.Builder
+	i := 0
 	for key, val := range lk {
-		expr := ""
-
 		switch v := val.(type) {
 		case driver.Valuer:
 			if val, err = v.Value(); err != nil {
@@ -244,13 +250,16 @@ func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
 				err = fmt.Errorf("cannot use array or slice with like operators")
 				return
 			} else {
-				expr = fmt.Sprintf("%s %s ?", key, opr)
+				b.WriteString(key + " " + opr + " ?")
 				args = append(args, val)
 			}
 		}
-		exprs = append(exprs, expr)
+		if i != len(lk)-1 {
+			b.WriteString(" AND ")
+		}
+		i++
 	}
-	sql = strings.Join(exprs, " AND ")
+	sql = b.String()
 	return
 }
 
@@ -292,8 +301,7 @@ type Lt map[string]interface{}
 
 func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
 	var (
-		exprs []string
-		opr   = "<"
+		opr = "<"
 	)
 
 	if opposite {
@@ -301,12 +309,12 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 	}
 
 	if orEq {
-		opr = fmt.Sprintf("%s%s", opr, "=")
+		opr = opr + "="
 	}
 
 	sortedKeys := getSortedKeys(lt)
-	for _, key := range sortedKeys {
-		var expr string
+	var b strings.Builder
+	for i, key := range sortedKeys {
 		val := lt[key]
 
 		switch v := val.(type) {
@@ -324,12 +332,14 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 			err = fmt.Errorf("cannot use array or slice with less than or greater than operators")
 			return
 		}
-		expr = fmt.Sprintf("%s %s ?", key, opr)
+		b.WriteString(key + " " + opr + " ?")
 		args = append(args, val)
 
-		exprs = append(exprs, expr)
+		if i != len(sortedKeys)-1 {
+			b.WriteString(" AND ")
+		}
 	}
-	sql = strings.Join(exprs, " AND ")
+	sql = b.String()
 	return
 }
 
@@ -370,20 +380,30 @@ func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err
 	if len(c) == 0 {
 		return defaultExpr, []interface{}{}, nil
 	}
-	var sqlParts []string
-	for _, sqlizer := range c {
+	var b strings.Builder
+	hasParts := false
+	for i, sqlizer := range c {
 		partSQL, partArgs, err := sqlizer.ToSql()
 		if err != nil {
 			return "", nil, err
 		}
 		if partSQL != "" {
-			sqlParts = append(sqlParts, partSQL)
+			if !hasParts {
+				b.WriteString("(")
+				hasParts = true
+			}
+			b.WriteString(partSQL)
 			args = append(args, partArgs...)
+			if i != len(c)-1 {
+				b.WriteString(sep)
+			}
 		}
 	}
-	if len(sqlParts) > 0 {
-		sql = fmt.Sprintf("(%s)", strings.Join(sqlParts, sep))
+
+	if hasParts {
+		b.WriteString(")")
 	}
+	sql = b.String()
 	return
 }
 

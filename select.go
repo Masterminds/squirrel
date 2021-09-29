@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/lann/builder"
 )
@@ -85,7 +85,11 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 	sql.WriteString("SELECT ")
 
 	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
+		sql.WriteString(d.Options[0])
+		for _, o := range d.Options[1:] {
+			sql.WriteString(" ")
+			sql.WriteString(o)
+		}
 		sql.WriteString(" ")
 	}
 
@@ -122,7 +126,11 @@ func (d *selectData) toSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(d.GroupBys) > 0 {
 		sql.WriteString(" GROUP BY ")
-		sql.WriteString(strings.Join(d.GroupBys, ", "))
+		sql.WriteString(d.GroupBys[0])
+		for _, gb := range d.GroupBys[1:] {
+			sql.WriteString(", ")
+			sql.WriteString(gb)
+		}
 	}
 
 	if len(d.HavingParts) > 0 {
@@ -371,7 +379,7 @@ func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
 
 // Limit sets a LIMIT clause on the query.
 func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
+	return builder.Set(b, "Limit", strconv.FormatUint(limit, 10)).(SelectBuilder)
 }
 
 // Limit ALL allows to access all records with limit
@@ -381,7 +389,7 @@ func (b SelectBuilder) RemoveLimit() SelectBuilder {
 
 // Offset sets a OFFSET clause on the query.
 func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
-	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
+	return builder.Set(b, "Offset", strconv.FormatUint(offset, 10)).(SelectBuilder)
 }
 
 // RemoveOffset removes OFFSET clause.
