@@ -27,7 +27,7 @@ func (b *sqlizerBuffer) WriteSql(item Sqlizer) {
 
 	var str string
 	var args []interface{}
-	str, args, b.err = item.ToSql()
+	str, args, b.err = nestedToSql(item)
 
 	if b.err != nil {
 		return

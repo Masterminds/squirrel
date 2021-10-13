@@ -247,6 +247,23 @@ func TestSelectWithEmptyStringWhereClause(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM users", sql)
 }
 
+func TestSelectSubqueryPlaceholderNumbering(t *testing.T) {
+	subquery := Select("a").Where("b = ?", 1).PlaceholderFormat(Dollar)
+	with := subquery.Prefix("WITH a AS (").Suffix(")")
+
+	sql, args, err := Select("*").
+		PrefixExpr(with).
+		FromSelect(subquery, "q").
+		Where("c = ?", 2).
+		PlaceholderFormat(Dollar).
+		ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "WITH a AS ( SELECT a WHERE b = $1 ) SELECT * FROM (SELECT a WHERE b = $2) AS q WHERE c = $3"
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, []interface{}{1, 1, 2}, args)
+}
+
 func ExampleSelect() {
 	Select("id", "created", "first_name").From("users") // ... continue building up your query
 
