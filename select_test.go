@@ -264,6 +264,21 @@ func TestSelectSubqueryPlaceholderNumbering(t *testing.T) {
 	assert.Equal(t, []interface{}{1, 1, 2}, args)
 }
 
+func TestSelectSubqueryInConjunctionPlaceholderNumbering(t *testing.T) {
+	subquery := Select("a").Where(Eq{"b": 1}).Prefix("EXISTS(").Suffix(")").PlaceholderFormat(Dollar)
+
+	sql, args, err := Select("*").
+		Where(Or{subquery}).
+		Where("c = ?", 2).
+		PlaceholderFormat(Dollar).
+		ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT * WHERE (EXISTS( SELECT a WHERE b = $1 )) AND c = $2"
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, []interface{}{1, 2}, args)
+}
+
 func ExampleSelect() {
 	Select("id", "created", "first_name").From("users") // ... continue building up your query
 
