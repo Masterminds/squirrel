@@ -338,6 +338,16 @@ func (b SelectBuilder) CrossJoin(join string, rest ...interface{}) SelectBuilder
 	return b.JoinClause("CROSS JOIN "+join, rest...)
 }
 
+// Union adds UNION to the query.
+func (b SelectBuilder) Union(join string, rest ...interface{}) SelectBuilder {
+	return b.JoinClause("UNION "+join, rest...)
+}
+
+// UnionAll adds UNION ALL to the query.
+func (b SelectBuilder) UnionAll(join string, rest ...interface{}) SelectBuilder {
+	return b.JoinClause("UNION ALL "+join, rest...)
+}
+
 // Where adds an expression to the WHERE clause of the query.
 //
 // Expressions are ANDed together in the generated SQL.
