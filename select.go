@@ -14,6 +14,8 @@ type selectData struct {
 	RunWith           BaseRunner
 	Prefixes          []Sqlizer
 	CTEs              []Sqlizer
+	Union             Sqlizer
+	UnionAll          Sqlizer
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
@@ -105,6 +107,22 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 	if d.From != nil {
 		sql.WriteString(" FROM ")
 		args, err = appendToSql([]Sqlizer{d.From}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.Union != nil {
+		sql.WriteString(" UNION ")
+		args, err = appendToSql([]Sqlizer{d.Union}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.UnionAll != nil {
+		sql.WriteString(" UNION ALL ")
+		args, err = appendToSql([]Sqlizer{d.UnionAll}, sql, "", args)
 		if err != nil {
 			return
 		}
@@ -308,6 +326,20 @@ func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilde
 	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
+// UnionSelect sets a union SelectBuilder which removes duplicate rows
+// --> UNION combines the result from multiple SELECT statements into a single result set
+func (b SelectBuilder) UnionSelect(union SelectBuilder, alias string) SelectBuilder {
+	union = union.PlaceholderFormat(Question)
+	return builder.Set(b, "Union", union).(SelectBuilder)
+}
+
+// UnionAllSelect sets a union SelectBuilder which includes all matching rows
+// --> UNION combines the result from multiple SELECT statements into a single result set
+func (b SelectBuilder) UnionAllSelect(union SelectBuilder, alias string) SelectBuilder {
+	union = union.PlaceholderFormat(Question)
+	return builder.Set(b, "UnionAll", union).(SelectBuilder)
+}
+
 // JoinClause adds a join clause to the query.
 func (b SelectBuilder) JoinClause(pred interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Joins", newPart(pred, args...)).(SelectBuilder)
@@ -338,12 +370,12 @@ func (b SelectBuilder) CrossJoin(join string, rest ...interface{}) SelectBuilder
 	return b.JoinClause("CROSS JOIN "+join, rest...)
 }
 
-// Union adds UNION to the query.
+// Union adds UNION to the query. (duplicate rows are removed)
 func (b SelectBuilder) Union(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("UNION "+join, rest...)
 }
 
-// UnionAll adds UNION ALL to the query.
+// UnionAll adds UNION ALL to the query. (includes all matching rows)
 func (b SelectBuilder) UnionAll(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("UNION ALL "+join, rest...)
 }
