@@ -328,14 +328,14 @@ func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilde
 
 // UnionSelect sets a union SelectBuilder which removes duplicate rows
 // --> UNION combines the result from multiple SELECT statements into a single result set
-func (b SelectBuilder) UnionSelect(union SelectBuilder, alias string) SelectBuilder {
+func (b SelectBuilder) UnionSelect(union SelectBuilder) SelectBuilder {
 	union = union.PlaceholderFormat(Question)
 	return builder.Set(b, "Union", union).(SelectBuilder)
 }
 
 // UnionAllSelect sets a union SelectBuilder which includes all matching rows
 // --> UNION combines the result from multiple SELECT statements into a single result set
-func (b SelectBuilder) UnionAllSelect(union SelectBuilder, alias string) SelectBuilder {
+func (b SelectBuilder) UnionAllSelect(union SelectBuilder) SelectBuilder {
 	union = union.PlaceholderFormat(Question)
 	return builder.Set(b, "UnionAll", union).(SelectBuilder)
 }
