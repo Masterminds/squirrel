@@ -279,6 +279,22 @@ func TestSelectSubqueryInConjunctionPlaceholderNumbering(t *testing.T) {
 	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
+func TestSelectJoinClausePlaceholderNumbering(t *testing.T) {
+	subquery := Select("a").Where(Eq{"b": 2}).PlaceholderFormat(Dollar)
+
+	sql, args, err := Select("t1.a").
+		From("t1").
+		Where(Eq{"a": 1}).
+		JoinClause(subquery.Prefix("JOIN (").Suffix(") t2 ON (t1.a = t2.a)")).
+		PlaceholderFormat(Dollar).
+		ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT t1.a FROM t1 JOIN ( SELECT a WHERE b = $1 ) t2 ON (t1.a = t2.a) WHERE a = $2"
+	assert.Equal(t, expectedSql, sql)
+	assert.Equal(t, []interface{}{2, 1}, args)
+}
+
 func ExampleSelect() {
 	Select("id", "created", "first_name").From("users") // ... continue building up your query
 
