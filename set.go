@@ -23,25 +23,19 @@ type setSelect struct {
 	selector SelectBuilder
 }
 
-func (b SetBuilder) setProp(key string, value interface{}) SetBuilder {
-	return builder.Set(b, key, value).(SetBuilder)
-}
-
-func (b SetBuilder) ToSql() (sql string, args []interface{}, err error) {
+func (d *setData) ToSql() (sql string, args []interface{}, err error) {
 	var (
 		selArgs []interface{}
 		selSql  string
 		sqlBuf  = &bytes.Buffer{}
 	)
 
-	data := builder.GetStruct(b).(setData)
-
-	if len(data.Selects) == 0 {
+	if len(d.Selects) == 0 {
 		err = errors.New("require a minimum of 1 select clause in SetBuilder")
 		return sql, args, err
 	}
 
-	for index, selector := range data.Selects {
+	for index, selector := range d.Selects {
 		selSql, selArgs, err = selector.selector.ToSql()
 
 		if err != nil {
@@ -49,17 +43,24 @@ func (b SetBuilder) ToSql() (sql string, args []interface{}, err error) {
 		}
 
 		if index == 0 {
-			sqlBuf.WriteString(selSql) // no operator for first select-clause
+			sqlBuf.WriteString(selSql)
 		} else {
-			sqlBuf.WriteString(" " + selector.op + " ( " + selSql + " ) ")
+			sqlBuf.WriteString(" " + selector.op + " " + selSql)
 		}
 
 		args = append(args, selArgs...)
 	}
 
-	sql, err = data.PlaceholderFormat.ReplacePlaceholders(sqlBuf.String())
+	return sqlBuf.String(), args, err
+}
 
-	return sql, args, err
+func (b SetBuilder) setProp(key string, value interface{}) SetBuilder {
+	return builder.Set(b, key, value).(SetBuilder)
+}
+
+func (b SetBuilder) ToSql() (sql string, args []interface{}, err error) {
+	data := builder.GetStruct(b).(setData)
+	return data.ToSql()
 }
 
 func (b SetBuilder) PlaceholderFormat(fmt PlaceholderFormat) SetBuilder {
@@ -74,9 +75,4 @@ func (b SetBuilder) Union(selector SelectBuilder) SetBuilder {
 func (b SetBuilder) setFirstSelect(selector SelectBuilder) SetBuilder {
 	selector = selector.PlaceholderFormat(Question)
 	return builder.Append(b, "Selects", &setSelect{op: "", selector: selector}).(SetBuilder)
-}
-
-func SelectFromSet(selectBuilder SelectBuilder, set SetBuilder, alias string) SelectBuilder {
-	set = set.PlaceholderFormat(Question)
-	return builder.Set(selectBuilder, "From", Alias(set, alias)).(SelectBuilder)
 }

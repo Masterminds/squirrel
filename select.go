@@ -282,6 +282,13 @@ func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilde
 	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
+// FromSet sets a subquery into the FROM clause of the query.
+func (b SelectBuilder) FromSet(from SetBuilder, alias string) SelectBuilder {
+	// Prevent misnumbered parameters in nested selects (#183).
+	from = from.PlaceholderFormat(Question)
+	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
+}
+
 // JoinClause adds a join clause to the query.
 func (b SelectBuilder) JoinClause(pred interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Joins", newPart(pred, args...)).(SelectBuilder)
