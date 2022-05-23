@@ -23,8 +23,10 @@ import (
 //   limit 10
 
 func TestSetBuilder(t *testing.T) {
-	set := NewSet(
-		Select("user_id").
+	builder := StatementBuilder.PlaceholderFormat(Dollar)
+
+	set := builder.Set(
+		builder.Select("user_id").
 			From("user_identifiers").
 			Where(Eq{
 				"tenant_id":    "default",
@@ -35,7 +37,7 @@ func TestSetBuilder(t *testing.T) {
 	)
 
 	set = set.Union(
-		Select("user_id").
+		builder.Select("user_id").
 			From("user_verifiable_addresses").
 			Where(Eq{
 				"tenant_id":    "default",
@@ -45,7 +47,7 @@ func TestSetBuilder(t *testing.T) {
 		}))
 
 	b := SelectFromSet(
-		Select("u.user_id").
+		builder.Select("u.user_id").
 			Where(Gt{
 				"user_id": "user100",
 			}).OrderBy("u.user_id").
@@ -57,9 +59,9 @@ func TestSetBuilder(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedSql := "SELECT u.user_id FROM (" +
-		"SELECT user_id FROM user_identifiers WHERE tenant_id = ? AND user_pool_id = ? AND identifier_value LIKE ? " +
-		"UNION ( SELECT user_id FROM user_verifiable_addresses WHERE tenant_id = ? AND user_pool_id = ? AND identifier_value LIKE ? ) " +
-		") AS u WHERE user_id > ? ORDER BY u.user_id LIMIT 10"
+		"SELECT user_id FROM user_identifiers WHERE tenant_id = $1 AND user_pool_id = $2 AND identifier_value LIKE $3 " +
+		"UNION ( SELECT user_id FROM user_verifiable_addresses WHERE tenant_id = $4 AND user_pool_id = $5 AND identifier_value LIKE $6 ) " +
+		") AS u WHERE user_id > $7 ORDER BY u.user_id LIMIT 10"
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{"default", "pool", "%", "default", "pool", "%", "user100"}

@@ -31,6 +31,11 @@ func (b StatementBuilderType) Delete(from string) DeleteBuilder {
 	return DeleteBuilder(b).From(from)
 }
 
+// Set returns a SetBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Set(s SelectBuilder) SetBuilder {
+	return SetBuilder(b).setFirstSelect(s)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)

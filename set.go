@@ -7,13 +7,10 @@ import (
 	"github.com/lann/builder"
 )
 
+type SetBuilder builder.Builder
+
 func init() {
 	builder.Register(SetBuilder{}, setData{})
-}
-
-type setSelect struct {
-	op       string
-	selector SelectBuilder
 }
 
 type setData struct {
@@ -21,20 +18,23 @@ type setData struct {
 	PlaceholderFormat PlaceholderFormat
 }
 
-type SetBuilder builder.Builder
-
-func (u SetBuilder) setProp(key string, value interface{}) SetBuilder {
-	return builder.Set(u, key, value).(SetBuilder)
+type setSelect struct {
+	op       string
+	selector SelectBuilder
 }
 
-func (u SetBuilder) ToSql() (sql string, args []interface{}, err error) {
+func (b SetBuilder) setProp(key string, value interface{}) SetBuilder {
+	return builder.Set(b, key, value).(SetBuilder)
+}
+
+func (b SetBuilder) ToSql() (sql string, args []interface{}, err error) {
 	var (
 		selArgs []interface{}
 		selSql  string
 		sqlBuf  = &bytes.Buffer{}
 	)
 
-	data := builder.GetStruct(u).(setData)
+	data := builder.GetStruct(b).(setData)
 
 	if len(data.Selects) == 0 {
 		err = errors.New("require a minimum of 1 select clause in SetBuilder")
@@ -57,33 +57,23 @@ func (u SetBuilder) ToSql() (sql string, args []interface{}, err error) {
 		args = append(args, selArgs...)
 	}
 
-	sql = sqlBuf.String()
+	sql, err = data.PlaceholderFormat.ReplacePlaceholders(sqlBuf.String())
 
-	return sql, args, nil
+	return sql, args, err
 }
 
-func (u SetBuilder) Union(selector SelectBuilder) SetBuilder {
+func (b SetBuilder) PlaceholderFormat(fmt PlaceholderFormat) SetBuilder {
+	return b.setProp("PlaceholderFormat", fmt)
+}
+
+func (b SetBuilder) Union(selector SelectBuilder) SetBuilder {
 	selector = selector.PlaceholderFormat(Question)
-	return builder.Append(u, "Selects", &setSelect{op: "UNION", selector: selector}).(SetBuilder)
+	return builder.Append(b, "Selects", &setSelect{op: "UNION", selector: selector}).(SetBuilder)
 }
 
-func (u SetBuilder) setFirstSelect(selector SelectBuilder) SetBuilder {
-	value, _ := builder.Get(selector, "PlaceholderFormat")
-	bld := u.setProp("PlaceholderFormat", value)
-
+func (b SetBuilder) setFirstSelect(selector SelectBuilder) SetBuilder {
 	selector = selector.PlaceholderFormat(Question)
-
-	return builder.Append(bld, "Selects", &setSelect{op: "", selector: selector}).(SetBuilder)
-}
-
-func (u SetBuilder) PlaceholderFormat(fmt PlaceholderFormat) SetBuilder {
-	return u.setProp("PlaceholderFormat", fmt)
-}
-
-func NewSet(s SelectBuilder) SetBuilder {
-	b := SetBuilder{}
-	b = b.setFirstSelect(s)
-	return b
+	return builder.Append(b, "Selects", &setSelect{op: "", selector: selector}).(SetBuilder)
 }
 
 func SelectFromSet(selectBuilder SelectBuilder, set SetBuilder, alias string) SelectBuilder {
