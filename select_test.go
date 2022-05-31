@@ -493,6 +493,13 @@ func TestSelectBuilderUnionToSql(t *testing.T) {
 	expectedArgs := []interface{}{"test", 5, 6}
 	assert.Equal(t, expectedArgs, args)
 
+	sql, _, err = multi.PlaceholderFormat(Dollar).ToSql()
+	assert.NoError(t, err)
+	expectedSql = `SELECT column1, column2 FROM table1 WHERE column1 = $1 ` +
+		"UNION SELECT column3, column4 FROM table2 WHERE column4 < $2 " +
+		"UNION SELECT column5, column6 FROM table3 WHERE column5 <= $3"
+	assert.Equal(t, expectedSql, sql)
+
 	unionAll := Select("count(true) as C").
 		From("table1").
 		Where(Eq{"column1": []string{"test", "tester"}}).
