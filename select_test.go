@@ -277,6 +277,8 @@ func TestSelectSubqueryInConjunctionPlaceholderNumbering(t *testing.T) {
 	expectedSql := "SELECT * WHERE (EXISTS( SELECT a WHERE b = $1 )) AND c = $2"
 	assert.Equal(t, expectedSql, sql)
 	assert.Equal(t, []interface{}{1, 2}, args)
+}
+
 func TestOneCTE(t *testing.T) {
 	sql, _, err := Select("*").From("cte").With("cte", Select("abc").From("def")).ToSql()
 
@@ -472,4 +474,36 @@ func ExampleSelectBuilder_ToSql() {
 	for rows.Next() {
 		// scan...
 	}
+}
+
+func TestSelectBuilderUnionToSql(t *testing.T) {
+	multi := Select("column1", "column2").
+		From("table1").
+		Where(Eq{"column1": "test"}).
+		UnionSelect(Select("column3", "column4").From("table2").Where(Lt{"column4": 5}).
+			UnionSelect(Select("column5", "column6").From("table3").Where(LtOrEq{"column5": 6})))
+	sql, args, err := multi.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := `SELECT column1, column2 FROM table1 WHERE column1 = ? ` +
+		"UNION SELECT column3, column4 FROM table2 WHERE column4 < ? " +
+		"UNION SELECT column5, column6 FROM table3 WHERE column5 <= ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"test", 5, 6}
+	assert.Equal(t, expectedArgs, args)
+
+	unionAll := Select("count(true) as C").
+		From("table1").
+		Where(Eq{"column1": []string{"test", "tester"}}).
+		UnionAllSelect(Select("count(true) as C").From("table2").Where(Select("true").Prefix("NOT EXISTS(").Suffix(")").From("table3").Where(Eq{"id": 5})))
+	sql, args, err = unionAll.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql = `SELECT count(true) as C FROM table1 WHERE column1 IN (?,?) ` +
+		"UNION ALL SELECT count(true) as C FROM table2 WHERE NOT EXISTS( SELECT true FROM table3 WHERE id = ? )"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs = []interface{}{"test", "tester", 5}
+	assert.Equal(t, expectedArgs, args)
 }

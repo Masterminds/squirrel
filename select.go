@@ -112,22 +112,6 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
-	if d.Union != nil {
-		sql.WriteString(" UNION ")
-		args, err = appendToSql([]Sqlizer{d.Union}, sql, "", args)
-		if err != nil {
-			return
-		}
-	}
-
-	if d.UnionAll != nil {
-		sql.WriteString(" UNION ALL ")
-		args, err = appendToSql([]Sqlizer{d.UnionAll}, sql, "", args)
-		if err != nil {
-			return
-		}
-	}
-
 	if len(d.Joins) > 0 {
 		sql.WriteString(" ")
 		args, err = appendToSql(d.Joins, sql, " ", args)
@@ -139,6 +123,22 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
 		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.Union != nil {
+		sql.WriteString(" UNION ")
+		args, err = appendToSql([]Sqlizer{d.Union}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.UnionAll != nil {
+		sql.WriteString(" UNION ALL ")
+		args, err = appendToSql([]Sqlizer{d.UnionAll}, sql, "", args)
 		if err != nil {
 			return
 		}
