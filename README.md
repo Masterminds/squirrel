@@ -106,6 +106,8 @@ will generate with the Dollar Placeholder:
 SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2]
 ```
 
+for more complete guide how to use squirrel, please check [EXAMPLE.md](EXAMPLE.md). 
+
 ## FAQ
 
 * **How can I build an IN query on composite keys / tuples, e.g. `WHERE (col1, col2) IN ((1,2),(3,4))`? ([#104](https://github.com/Masterminds/squirrel/issues/104))**
@@ -127,10 +129,6 @@ SELECT * FROM nodes WHERE meta->'format' ?| array[$1,$2]
 * **Why doesn't `Eq{"mynumber": []uint8{1,2,3}}` turn into an `IN` query? ([#114](https://github.com/Masterminds/squirrel/issues/114))**
 
     Values of type `[]byte` are handled specially by `database/sql`. In Go, [`byte` is just an alias of `uint8`](https://golang.org/pkg/builtin/#byte), so there is no way to distinguish `[]uint8` from `[]byte`.
-
-* **Some features are poorly documented!**
-
-    This isn't a frequent complaints section!
 
 * **Some features are poorly documented?**
 
