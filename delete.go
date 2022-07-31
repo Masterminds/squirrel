@@ -183,9 +183,25 @@ func (b DeleteBuilder) Query() (*sql.Rows, error) {
 	return data.Query()
 }
 
+func (b DeleteBuilder) QueryRow() RowScanner {
+	data := builder.GetStruct(b).(deleteData)
+	return data.QueryRow()
+}
+
 func (d *deleteData) Query() (*sql.Rows, error) {
 	if d.RunWith == nil {
 		return nil, RunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
+}
+
+func (d *deleteData) QueryRow() RowScanner {
+	if d.RunWith == nil {
+		return &Row{err: RunnerNotSet}
+	}
+	queryRower, ok := d.RunWith.(QueryRower)
+	if !ok {
+		return &Row{err: RunnerNotQueryRunner}
+	}
+	return QueryRowWith(queryRower, d)
 }
