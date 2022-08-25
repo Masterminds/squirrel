@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/lann/builder"
@@ -393,4 +394,23 @@ func (b SelectBuilder) Suffix(sql string, args ...interface{}) SelectBuilder {
 // SuffixExpr adds an expression to the end of the query
 func (b SelectBuilder) SuffixExpr(expr Sqlizer) SelectBuilder {
 	return builder.Append(b, "Suffixes", expr).(SelectBuilder)
+}
+
+// Filters adds all the filters to the Select Builder to the Where clause.
+// returns and error if filterSt is not a struct or if the filters Struct has no bindings with the db tag defined.
+// NOTE: filter will not be applied if it is a Zero value
+func (b SelectBuilder) Filters(filtersSt any) (SelectBuilder, error) {
+	filtersMap, err := MarshallDB(filtersSt)
+	if err != nil {
+		return b, err
+	}
+
+	// Iterate through all the filters to make the where clause
+	for field, value := range filtersMap {
+		reflection := reflect.ValueOf(value)
+		if !reflection.IsZero() {
+			b = b.Where(fmt.Sprintf("%s = ?", field), value)
+		}
+	}
+	return b, nil
 }

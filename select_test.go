@@ -451,3 +451,24 @@ func ExampleSelectBuilder_ToSql() {
 		// scan...
 	}
 }
+
+func TestAddFiltersOK(t *testing.T) {
+	type TestStruct struct {
+		Name     string `db:"table.name"`
+		Lastname string `db:"table.last_name"`
+		Age      int    `db:"table.age"`
+	}
+	filters := TestStruct{
+		Name:     "Testing",
+		Lastname: "More Testing",
+		Age:      15,
+	}
+	query := sq.Select("table.name, table.last_name, table.age").From("table")
+
+	expected := query.Where("table.name = ?", filters.Name).Where("table.last_name = ?", filters.Lastname).Where("table.age = ?", filters.Age)
+
+	result, err := AddSelectFilters(query, filters)
+
+	assert.Nil(t, err)
+	assert.Equal(t, expected, result)
+}
