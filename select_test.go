@@ -451,3 +451,13 @@ func ExampleSelectBuilder_ToSql() {
 		// scan...
 	}
 }
+
+func TestRemoveColumns(t *testing.T) {
+	query := Select("id").
+		From("users").
+		RemoveColumns()
+	query = query.Columns("name")
+	sql, _, err := query.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT name FROM users", sql)
+}
