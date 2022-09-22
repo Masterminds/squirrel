@@ -195,6 +195,34 @@ func TestSelectWithOptions(t *testing.T) {
 	assert.Equal(t, "SELECT DISTINCT SQL_NO_CACHE * FROM foo", sql)
 }
 
+func TestSelectWithIndexHints(t *testing.T) {
+	sql, _, err := Select("*").
+		From("foo").
+		UseIndex("idx1", "idx2").
+		UseIndexForOrderBy("idx3").
+		UseIndexForGroupBy("idx4").
+		UseIndexForJoin("idx5", "idx6", "idx7").
+		ForceIndex("idx8").
+		ForceIndexForOrderBy("idx9", "idx10", "idx11").
+		ForceIndexForGroupBy("idx12", "idx13").
+		ForceIndexForJoin("idx14").
+		IgnoreIndex("idx15").
+		IgnoreIndexForOrderBy("idx16").
+		IgnoreIndexForGroupBy("idx17").
+		IgnoreIndexForJoin("idx18", "idx19").
+		ToSql()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM foo "+
+		"USE INDEX (idx1, idx2) USE INDEX FOR ORDER BY (idx3) "+
+		"USE INDEX FOR GROUP BY (idx4) USE INDEX FOR JOIN (idx5, idx6, idx7) "+
+		"FORCE INDEX (idx8) FORCE INDEX FOR ORDER BY (idx9, idx10, idx11) "+
+		"FORCE INDEX FOR GROUP BY (idx12, idx13) FORCE INDEX FOR JOIN (idx14) "+
+		"IGNORE INDEX (idx15) IGNORE INDEX FOR ORDER BY (idx16) "+
+		"IGNORE INDEX FOR GROUP BY (idx17) IGNORE INDEX FOR JOIN (idx18, idx19)",
+		sql)
+}
+
 func TestSelectWithRemoveLimit(t *testing.T) {
 	sql, _, err := Select("*").From("foo").Limit(10).RemoveLimit().ToSql()
 
