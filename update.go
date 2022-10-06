@@ -101,6 +101,10 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sql.WriteString(strings.Join(setSqls, ", "))
 
 	if len(d.WhereParts) > 0 {
+		if err := ensureWherePartIsNonEmptyMap(d.WhereParts); err != nil {
+			return "", nil, err
+		}
+
 		sql.WriteString(" WHERE ")
 		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
 		if err != nil {

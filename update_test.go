@@ -82,3 +82,12 @@ func TestUpdateBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestUpdateBuilderWhereNilMap(t *testing.T) {
+	m := make(map[string]interface{})
+	db := &DBStub{}
+
+	b := Update("test").Set("x", 1).Where(m).RunWith(db)
+	_, err := b.Exec()
+	assert.Equal(t, ErrUpdateOrDeleteWithNilMap, err)
+}

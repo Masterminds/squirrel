@@ -98,6 +98,11 @@ var RunnerNotSet = fmt.Errorf("cannot run; no Runner set (RunWith)")
 // RunnerNotQueryRunner is returned by QueryRow if the RunWith value doesn't implement QueryRower.
 var RunnerNotQueryRunner = fmt.Errorf("cannot QueryRow; Runner is not a QueryRower")
 
+// ErrUpdateOrDeleteWithNilMap is returned by Update or Delete queries when their Where
+// clause contains only a nil map. A nil map is evaluated to WHERE (1=1), which will cause
+// unexpected queries with an always-true WHERE clause.
+var ErrUpdateOrDeleteWithNilMap = fmt.Errorf("cannot update or delete with a nil map")
+
 // ExecWith Execs the SQL returned by s with db.
 func ExecWith(db Execer, s Sqlizer) (res sql.Result, err error) {
 	query, args, err := s.ToSql()
