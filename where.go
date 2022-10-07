@@ -32,8 +32,10 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 func ensureWherePartIsNonEmptyMap(whereParts []Sqlizer) error {
 	if len(whereParts) == 1 {
 		if wp, ok := whereParts[0].(*wherePart); ok {
-			if _, ok := wp.pred.(map[string]interface{}); ok {
-				return ErrUpdateOrDeleteWithNilMap
+			if m, ok := wp.pred.(map[string]interface{}); ok {
+				if len(m) == 0 {
+					return ErrUpdateOrDeleteWithNilMap
+				}
 			}
 		}
 	}

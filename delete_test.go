@@ -80,9 +80,32 @@ func TestDeleteWithQuery(t *testing.T) {
 	assert.Equal(t, expectedSql, db.LastQuerySql)
 }
 
-func TestDeleteBuilderWhereNilMap(t *testing.T) {
-	m := make(map[string]interface{})
+func TestDeleteBuilderWhereNonNilMap(t *testing.T) {
 	db := &DBStub{}
+	m := map[string]interface{}{
+		"id": 55,
+	}
+
+	b := Delete("test").Where(m).RunWith(db)
+
+	expectedSql := "DELETE FROM test WHERE id = ?"
+	b.Query()
+
+	assert.Equal(t, expectedSql, db.LastQuerySql)
+}
+
+func TestDeleteBuilderWhereNilMap(t *testing.T) {
+	db := &DBStub{}
+	var m map[string]interface{}
+
+	b := Delete("test").Where(m).RunWith(db)
+	_, err := b.Exec()
+	assert.Equal(t, ErrUpdateOrDeleteWithNilMap, err)
+}
+
+func TestDeleteBuilderWhereEmptyMap(t *testing.T) {
+	db := &DBStub{}
+	m := make(map[string]interface{})
 
 	b := Delete("test").Where(m).RunWith(db)
 	_, err := b.Exec()

@@ -83,9 +83,32 @@ func TestUpdateBuilderNoRunner(t *testing.T) {
 	assert.Equal(t, RunnerNotSet, err)
 }
 
-func TestUpdateBuilderWhereNilMap(t *testing.T) {
-	m := make(map[string]interface{})
+func TestUpdateBuilderWhereNonNilMap(t *testing.T) {
 	db := &DBStub{}
+	m := map[string]interface{}{
+		"id": 55,
+	}
+
+	b := Update("test").Set("x", 1).Where(m).RunWith(db)
+
+	expectedSql := "UPDATE test SET x = ? WHERE id = ?"
+	b.Query()
+
+	assert.Equal(t, expectedSql, db.LastQuerySql)
+}
+
+func TestUpdateBuilderWhereNilMap(t *testing.T) {
+	db := &DBStub{}
+	var m map[string]interface{}
+
+	b := Update("test").Set("x", 1).Where(m).RunWith(db)
+	_, err := b.Exec()
+	assert.Equal(t, ErrUpdateOrDeleteWithNilMap, err)
+}
+
+func TestUpdateBuilderWhereEmptyMap(t *testing.T) {
+	db := &DBStub{}
+	m := make(map[string]interface{})
 
 	b := Update("test").Set("x", 1).Where(m).RunWith(db)
 	_, err := b.Exec()
