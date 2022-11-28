@@ -17,7 +17,9 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	case rawSqlizer:
 		return pred.toSqlRaw()
 	case Sqlizer:
-		return pred.ToSql()
+		query, partArgs, err := pred.ToSql()
+		args = append(p.args, partArgs...)
+		return query, args, err
 	case map[string]interface{}:
 		return Eq(pred).ToSql()
 	case string:
