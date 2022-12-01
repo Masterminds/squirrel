@@ -417,3 +417,20 @@ func isListType(val interface{}) bool {
 	valVal := reflect.ValueOf(val)
 	return valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
 }
+
+type cteExpr struct {
+	expr Sqlizer
+	cte  string
+}
+
+func Cte(expr Sqlizer, cte string) cteExpr {
+	return cteExpr{expr, cte}
+}
+
+func (e cteExpr) ToSql() (sql string, args []interface{}, err error) {
+	sql, args, err = e.expr.ToSql()
+	if err == nil {
+		sql = fmt.Sprintf("%s AS (\n%s\n)", e.cte, sql)
+	}
+	return
+}

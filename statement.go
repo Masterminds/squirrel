@@ -31,6 +31,11 @@ func (b StatementBuilderType) Delete(from string) DeleteBuilder {
 	return DeleteBuilder(b).From(from)
 }
 
+// With returns a CommonTableExpressionsBuilder for this StatementBuilderType
+func (b StatementBuilderType) With(cte string) CommonTableExpressionsBuilder {
+	return CommonTableExpressionsBuilder(b).Cte(cte)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -85,6 +90,20 @@ func Update(table string) UpdateBuilder {
 // See DeleteBuilder.Table.
 func Delete(from string) DeleteBuilder {
 	return StatementBuilder.Delete(from)
+}
+
+// With returns a new CommonTableExpressionsBuilder with the given first cte name
+//
+// See CommonTableExpressionsBuilder.Cte
+func With(cte string) CommonTableExpressionsBuilder {
+	return StatementBuilder.With(cte)
+}
+
+// WithRecursive returns a new CommonTableExpressionsBuilder with the RECURSIVE option and the given first cte name
+//
+// See CommonTableExpressionsBuilder.Cte, CommonTableExpressionsBuilder.Recursive
+func WithRecursive(cte string) CommonTableExpressionsBuilder {
+	return StatementBuilder.With(cte).Recursive(true)
 }
 
 // Case returns a new CaseBuilder
