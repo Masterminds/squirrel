@@ -514,3 +514,13 @@ func TestSelectBuilderUnionToSql(t *testing.T) {
 	expectedArgs = []interface{}{"test", "tester"}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestRemoveColumns(t *testing.T) {
+	query := Select("id").
+		From("users").
+		RemoveColumns()
+	query = query.Columns("name")
+	sql, _, err := query.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT name FROM users", sql)
+}
