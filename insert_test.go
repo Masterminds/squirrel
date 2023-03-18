@@ -110,3 +110,22 @@ func TestInsertBuilderReplace(t *testing.T) {
 
 	assert.Equal(t, expectedSQL, sql)
 }
+
+func TestInsertBuilderValuesAlias(t *testing.T) {
+	b := Insert("").
+		Into("a").
+		Columns("b", "c").
+		Values(1, 2).
+		Values(3, Expr("? + 1", 4)).
+		RowAlias("new", "x", "z").
+		Suffix("ON DUPLICATE KEY UPDATE b = new.b")
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSQL := "INSERT INTO a (b,c) VALUES (?,?),(?,? + 1) AS new(x,z) ON DUPLICATE KEY UPDATE b = new.b"
+	assert.Equal(t, expectedSQL, sql)
+
+	expectedArgs := []interface{}{1, 2, 3, 4}
+	assert.Equal(t, expectedArgs, args)
+}

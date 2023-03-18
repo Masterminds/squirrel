@@ -21,8 +21,22 @@ type insertData struct {
 	Into              string
 	Columns           []string
 	Values            [][]interface{}
+	RowAlias          Sqlizer
 	Suffixes          []Sqlizer
 	Select            *SelectBuilder
+}
+
+type rowAlias struct {
+	rowAlias      string
+	columnAliases []string
+}
+
+func (r rowAlias) ToSql() (string, []interface{}, error) {
+	if len(r.columnAliases) == 0 {
+		return fmt.Sprintf("AS %s", r.rowAlias), nil, nil
+	}
+
+	return fmt.Sprintf("AS %s(%s)", r.rowAlias, strings.Join(r.columnAliases, ",")), nil, nil
 }
 
 func (d *insertData) Exec() (sql.Result, error) {
@@ -142,6 +156,16 @@ func (d *insertData) appendValuesToSQL(w io.Writer, args []interface{}) ([]inter
 
 	io.WriteString(w, strings.Join(valuesStrings, ","))
 
+	if d.RowAlias != nil {
+		sql, _, err := d.RowAlias.ToSql()
+		if err != nil {
+			return nil, err
+		}
+
+		io.WriteString(w, " ")
+		io.WriteString(w, sql)
+	}
+
 	return args, nil
 }
 
@@ -254,6 +278,12 @@ func (b InsertBuilder) Columns(columns ...string) InsertBuilder {
 // Values adds a single row's values to the query.
 func (b InsertBuilder) Values(values ...interface{}) InsertBuilder {
 	return builder.Append(b, "Values", values).(InsertBuilder)
+}
+
+// RowAlias defines an alias with one or more optional column aliases which can be used with
+// ON DUPLICATE KEY UPDATE to refer to the row to be inserted.
+func (b InsertBuilder) RowAlias(row string, columns ...string) InsertBuilder {
+	return builder.Set(b, "RowAlias", rowAlias{rowAlias: row, columnAliases: columns}).(InsertBuilder)
 }
 
 // Suffix adds an expression to the end of the query
