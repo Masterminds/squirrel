@@ -16,6 +16,7 @@ type selectData struct {
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
+	IndexHints        []Sqlizer
 	Joins             []Sqlizer
 	WhereParts        []Sqlizer
 	GroupBys          []string
@@ -95,6 +96,14 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 	if d.From != nil {
 		sql.WriteString(" FROM ")
 		args, err = appendToSql([]Sqlizer{d.From}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if len(d.IndexHints) > 0 {
+		sql.WriteString(" ")
+		args, err = appendToSql(d.IndexHints, sql, " ", args)
 		if err != nil {
 			return
 		}
@@ -275,6 +284,71 @@ func (b SelectBuilder) RemoveColumns() SelectBuilder {
 //   Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
 func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Columns", newPart(column, args...)).(SelectBuilder)
+}
+
+// IndexHint adds an index hint  to the query.
+func (b SelectBuilder) IndexHint(pred interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "IndexHints", newPart(pred, args...)).(SelectBuilder)
+}
+
+// UseIndex adds a USE INDEX statement of the query.
+func (b SelectBuilder) UseIndex(indexes ...string) SelectBuilder {
+	return b.IndexHint("USE INDEX (" + strings.Join(indexes, ", ") + ")")
+}
+
+// UseIndexForGroupBy adds a USE INDEX FOR GROUP BY statement of the query.
+func (b SelectBuilder) UseIndexForGroupBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("USE INDEX FOR GROUP BY (" + strings.Join(indexes, ", ") + ")")
+}
+
+// UseIndexForJoin adds a USE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) UseIndexForJoin(indexes ...string) SelectBuilder {
+	return b.IndexHint("USE INDEX FOR JOIN (" + strings.Join(indexes, ", ") + ")")
+}
+
+// UseIndexForOrderBy adds a USE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) UseIndexForOrderBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("USE INDEX FOR ORDER BY (" + strings.Join(indexes, ", ") + ")")
+}
+
+// ForceIndex adds a FORCE INDEX statement of the query.
+func (b SelectBuilder) ForceIndex(indexes ...string) SelectBuilder {
+	return b.IndexHint("FORCE INDEX (" + strings.Join(indexes, ", ") + ")")
+}
+
+// ForceIndexForGroupBy adds a FORCE INDEX FOR GROUP BY statement of the query.
+func (b SelectBuilder) ForceIndexForGroupBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("FORCE INDEX FOR GROUP BY (" + strings.Join(indexes, ", ") + ")")
+}
+
+// ForceIndexForJoin adds a FORCE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) ForceIndexForJoin(indexes ...string) SelectBuilder {
+	return b.IndexHint("FORCE INDEX FOR JOIN (" + strings.Join(indexes, ", ") + ")")
+}
+
+// ForceIndexForOrderBy adds a FORCE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) ForceIndexForOrderBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("FORCE INDEX FOR ORDER BY (" + strings.Join(indexes, ", ") + ")")
+}
+
+// IgnoreIndex adds a IGNORE INDEX statement of the query.
+func (b SelectBuilder) IgnoreIndex(indexes ...string) SelectBuilder {
+	return b.IndexHint("IGNORE INDEX (" + strings.Join(indexes, ", ") + ")")
+}
+
+// IgnoreIndexForGroupBy adds a IGNORE INDEX FOR GROUP BY statement of the query.
+func (b SelectBuilder) IgnoreIndexForGroupBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("IGNORE INDEX FOR GROUP BY (" + strings.Join(indexes, ", ") + ")")
+}
+
+// IgnoreIndexForJoin adds a IGNORE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) IgnoreIndexForJoin(indexes ...string) SelectBuilder {
+	return b.IndexHint("IGNORE INDEX FOR JOIN (" + strings.Join(indexes, ", ") + ")")
+}
+
+// IgnoreIndexForOrderBy adds a IGNORE INDEX FOR ORDER BY statement of the query.
+func (b SelectBuilder) IgnoreIndexForOrderBy(indexes ...string) SelectBuilder {
+	return b.IndexHint("IGNORE INDEX FOR ORDER BY (" + strings.Join(indexes, ", ") + ")")
 }
 
 // From sets the FROM clause of the query.
