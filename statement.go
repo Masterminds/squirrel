@@ -31,6 +31,16 @@ func (b StatementBuilderType) Delete(from string) DeleteBuilder {
 	return DeleteBuilder(b).From(from)
 }
 
+// Create returns a CreateBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Create(table string) CreateBuilder {
+	return CreateBuilder(b).Table(table)
+}
+
+// Drop returns a DropBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Drop(table string) DropBuilder {
+	return DropBuilder(b).Table(table)
+}
+
 // PlaceholderFormat sets the PlaceholderFormat field for any child builders.
 func (b StatementBuilderType) PlaceholderFormat(f PlaceholderFormat) StatementBuilderType {
 	return builder.Set(b, "PlaceholderFormat", f).(StatementBuilderType)
@@ -85,6 +95,20 @@ func Update(table string) UpdateBuilder {
 // See DeleteBuilder.Table.
 func Delete(from string) DeleteBuilder {
 	return StatementBuilder.Delete(from)
+}
+
+// Create returns a new CreateBuilder with the given table name.
+//
+// See CreateBuilder.Table.
+func Create(table string) CreateBuilder {
+	return StatementBuilder.Create(table)
+}
+
+// Drop returns a new DropBuilder with the given table name.
+//
+// See DropBuilder.Table.
+func Drop(table string) DropBuilder {
+	return StatementBuilder.Drop(table)
 }
 
 // Case returns a new CaseBuilder
