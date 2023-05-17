@@ -57,7 +57,6 @@ func (d *dropStmt) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("TABLE ")
 	sql.WriteString(d.Table)
-	sql.WriteString(" ")
 
 	if err != nil {
 		return

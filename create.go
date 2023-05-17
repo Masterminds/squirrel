@@ -58,35 +58,31 @@ func (d *createStmt) ToSql() (sqlStr string, args []interface{}, err error) {
 
 		sql.WriteString(" ")
 	}
-
 	if d.StatementKeyword == "" {
 		sql.WriteString("CREATE ")
 	} else {
 		sql.WriteString(d.StatementKeyword)
 		sql.WriteString(" ")
 	}
-
 	sql.WriteString("TABLE ")
 	sql.WriteString(d.Table)
 	sql.WriteString(" ")
-
 	sql.WriteString("( ")
 	err = d.appendValuesToSQL(sql)
 	if len(d.PrimaryKey) > 0 {
 		sql.WriteString(", PRIMARY KEY ")
 		sql.WriteString("(")
 		args, err = appendToSql(d.PrimaryKey, sql, ", ", args)
-		sql.WriteString(") ")
+		sql.WriteString(")")
 		if err != nil {
 			return
 		}
 	}
-	sql.WriteString(") ")
+	sql.WriteString(" )")
 
 	if err != nil {
 		return
 	}
-
 	if len(d.Suffixes) > 0 {
 		sql.WriteString(" ")
 		args, err = appendToSql(d.Suffixes, sql, " ", args)
@@ -94,7 +90,6 @@ func (d *createStmt) ToSql() (sqlStr string, args []interface{}, err error) {
 			return
 		}
 	}
-
 	sqlStr, err = d.PlaceholderFormat.ReplacePlaceholders(sql.String())
 	return
 }
@@ -112,6 +107,7 @@ func (d *createStmt) appendValuesToSQL(w io.Writer) error {
 	valueStrings := make([]string, len(d.Columns))
 	for i, col := range d.Columns {
 		valueStrings[i] = fmt.Sprintf("%s %s", col, d.Types[i])
+		valueStrings[i] = strings.TrimSuffix(valueStrings[i], " ")
 	}
 	io.WriteString(w, strings.Join(valueStrings, ", "))
 
