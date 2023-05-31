@@ -160,7 +160,6 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 	if len(d.AssumeOrderBy) > 0 && len(d.OrderByParts) > 0 {
 		sql.WriteString(" ")
 		sql.WriteString(d.AssumeOrderBy)
-		sql.WriteString(" ")
 	}
 
 	if len(d.OrderByParts) > 0 {
