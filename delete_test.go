@@ -11,6 +11,12 @@ func TestDeleteBuilderToSql(t *testing.T) {
 		Prefix("WITH prefix AS ?", 0).
 		From("a").
 		Using("u2").
+		JoinClause("CROSS JOIN j1").
+		Join("j2").
+		LeftJoin("j3").
+		RightJoin("j4").
+		InnerJoin("j5").
+		CrossJoin("j6").
 		Where("b = ?", 1).
 		OrderBy("c").
 		Limit(2).
@@ -22,7 +28,9 @@ func TestDeleteBuilderToSql(t *testing.T) {
 
 	expectedSql :=
 		"WITH prefix AS ? " +
-			"DELETE FROM a USING u2 WHERE b = ? ORDER BY c LIMIT 2 OFFSET 3 " +
+			"DELETE FROM a USING u2 " +
+			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 INNER JOIN j5 CROSS JOIN j6 " +
+			"WHERE b = ? ORDER BY c LIMIT 2 OFFSET 3 " +
 			"RETURNING ?"
 	assert.Equal(t, expectedSql, sql)
 

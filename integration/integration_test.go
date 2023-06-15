@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-  sqrl "github.com/Masterminds/squirrel"
+	sqrl "github.com/kana-care/squirrel"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -39,9 +39,9 @@ func TestMain(m *testing.M) {
 	flag.StringVar(&dataSource, "dataSource", "", "integration database data source")
 	flag.Parse()
 
-  if driver == "" {
-    driver = "sqlite3"
-  }
+	if driver == "" {
+		driver = "sqlite3"
+	}
 
 	if driver == "sqlite3" && dataSource == "" {
 		dataSource = ":memory:"
