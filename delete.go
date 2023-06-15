@@ -19,6 +19,7 @@ type deleteData struct {
 	Limit             string
 	Offset            string
 	Suffixes          []Sqlizer
+	Joins             []Sqlizer
 }
 
 func (d *deleteData) Exec() (sql.Result, error) {
@@ -47,6 +48,14 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("DELETE FROM ")
 	sql.WriteString(d.From)
+
+	if len(d.Joins) > 0 {
+		sql.WriteString(" ")
+		args, err = appendToSql(d.Joins, sql, " ", args)
+		if err != nil {
+			return
+		}
+	}
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
@@ -188,4 +197,34 @@ func (d *deleteData) Query() (*sql.Rows, error) {
 		return nil, RunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
+}
+
+// JoinClause adds a join clause to the query.
+func (b DeleteBuilder) JoinClause(pred interface{}, args ...interface{}) DeleteBuilder {
+	return builder.Append(b, "Joins", newPart(pred, args...)).(DeleteBuilder)
+}
+
+// Join adds a JOIN clause to the query.
+func (b DeleteBuilder) Join(join string, rest ...interface{}) DeleteBuilder {
+	return b.JoinClause("JOIN "+join, rest...)
+}
+
+// LeftJoin adds a LEFT JOIN clause to the query.
+func (b DeleteBuilder) LeftJoin(join string, rest ...interface{}) DeleteBuilder {
+	return b.JoinClause("LEFT JOIN "+join, rest...)
+}
+
+// RightJoin adds a RIGHT JOIN clause to the query.
+func (b DeleteBuilder) RightJoin(join string, rest ...interface{}) DeleteBuilder {
+	return b.JoinClause("RIGHT JOIN "+join, rest...)
+}
+
+// InnerJoin adds a INNER JOIN clause to the query.
+func (b DeleteBuilder) InnerJoin(join string, rest ...interface{}) DeleteBuilder {
+	return b.JoinClause("INNER JOIN "+join, rest...)
+}
+
+// CrossJoin adds a CROSS JOIN clause to the query.
+func (b DeleteBuilder) CrossJoin(join string, rest ...interface{}) DeleteBuilder {
+	return b.JoinClause("CROSS JOIN "+join, rest...)
 }
