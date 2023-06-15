@@ -19,6 +19,7 @@ type deleteData struct {
 	Limit             string
 	Offset            string
 	Suffixes          []Sqlizer
+	Usings            []string
 }
 
 func (d *deleteData) Exec() (sql.Result, error) {
@@ -47,6 +48,11 @@ func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	sql.WriteString("DELETE FROM ")
 	sql.WriteString(d.From)
+
+	if len(d.Usings) > 0 {
+		sql.WriteString(" USING ")
+		sql.WriteString(strings.Join(d.Usings, ", "))
+	}
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
@@ -188,4 +194,9 @@ func (d *deleteData) Query() (*sql.Rows, error) {
 		return nil, RunnerNotSet
 	}
 	return QueryWith(d.RunWith, d)
+}
+
+// Using adds an expression to the USING clause of the query
+func (b DeleteBuilder) Using(using ...string) DeleteBuilder {
+	return builder.Set(b, "Usings", using).(DeleteBuilder)
 }
