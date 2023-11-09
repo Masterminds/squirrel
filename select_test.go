@@ -21,6 +21,9 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Column(Alias(Eq{"b": []int{101, 102, 103}}, "b_alias")).
 		Column(Alias(subQ, "subq")).
 		From("e").
+		Index("nameIndex").
+		With(Eq{"FORCE_INFER_SCHEMA": 42}).
+		FlattenOptional("name").
 		JoinClause("CROSS JOIN j1").
 		Join("j2").
 		LeftJoin("j3").
@@ -34,6 +37,7 @@ func TestSelectBuilderToSql(t *testing.T) {
 		Where(Or{Expr("j = ?", 10), And{Eq{"k": 11}, Expr("true")}}).
 		GroupBy("l").
 		Having("m = n").
+		AssumeOrderBy().
 		OrderByClause("? DESC", 1).
 		OrderBy("o ASC", "p DESC").
 		Limit(12).
@@ -48,14 +52,15 @@ func TestSelectBuilderToSql(t *testing.T) {
 			"SELECT DISTINCT a, b, c, IF(d IN (?,?,?), 1, 0) as stat_column, a > ?, " +
 			"(b IN (?,?,?)) AS b_alias, " +
 			"(SELECT aa, bb FROM dd) AS subq " +
-			"FROM e " +
+			"FROM e VIEW nameIndex " +
+			"WITH FORCE_INFER_SCHEMA = ? FLATTEN OPTIONAL BY name " +
 			"CROSS JOIN j1 JOIN j2 LEFT JOIN j3 RIGHT JOIN j4 INNER JOIN j5 CROSS JOIN j6 " +
 			"WHERE f = ? AND g = ? AND h = ? AND i IN (?,?,?) AND (j = ? OR (k = ? AND true)) " +
-			"GROUP BY l HAVING m = n ORDER BY ? DESC, o ASC, p DESC LIMIT 12 OFFSET 13 " +
+			"GROUP BY l HAVING m = n ASSUME ORDER BY ? DESC, o ASC, p DESC LIMIT 12 OFFSET 13 " +
 			"FETCH FIRST ? ROWS ONLY"
 	assert.Equal(t, expectedSql, sql)
 
-	expectedArgs := []interface{}{0, 1, 2, 3, 100, 101, 102, 103, 4, 5, 6, 7, 8, 9, 10, 11, 1, 14}
+	expectedArgs := []interface{}{0, 1, 2, 3, 100, 101, 102, 103, 42, 4, 5, 6, 7, 8, 9, 10, 11, 1, 14}
 	assert.Equal(t, expectedArgs, args)
 }
 

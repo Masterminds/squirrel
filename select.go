@@ -16,10 +16,14 @@ type selectData struct {
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
+	Index             Sqlizer
+	WithParts         []Sqlizer
+	Flatten           []Sqlizer
 	Joins             []Sqlizer
 	WhereParts        []Sqlizer
 	GroupBys          []string
 	HavingParts       []Sqlizer
+	AssumeOrderBy     string
 	OrderByParts      []Sqlizer
 	Limit             string
 	Offset            string
@@ -100,6 +104,30 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 		}
 	}
 
+	if d.Index != nil {
+		sql.WriteString(" VIEW ")
+		args, err = appendToSql([]Sqlizer{d.Index}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if len(d.WithParts) > 0 {
+		sql.WriteString(" WITH ")
+		args, err = appendToSql(d.WithParts, sql, " AND ", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if len(d.Flatten) > 0 {
+		sql.WriteString(" ")
+		args, err = appendToSql(d.Flatten, sql, " ", args)
+		if err != nil {
+			return
+		}
+	}
+
 	if len(d.Joins) > 0 {
 		sql.WriteString(" ")
 		args, err = appendToSql(d.Joins, sql, " ", args)
@@ -127,6 +155,11 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	if len(d.AssumeOrderBy) > 0 && len(d.OrderByParts) > 0 {
+		sql.WriteString(" ")
+		sql.WriteString(d.AssumeOrderBy)
 	}
 
 	if len(d.OrderByParts) > 0 {
@@ -272,7 +305,8 @@ func (b SelectBuilder) RemoveColumns() SelectBuilder {
 // Column adds a result column to the query.
 // Unlike Columns, Column accepts args which will be bound to placeholders in
 // the columns string, for example:
-//   Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
+//
+//	Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
 func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Columns", newPart(column, args...)).(SelectBuilder)
 }
@@ -287,6 +321,48 @@ func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilde
 	// Prevent misnumbered parameters in nested selects (#183).
 	from = from.PlaceholderFormat(Question)
 	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
+}
+
+// Index sets the VIEW clause of the query.
+func (b SelectBuilder) Index(view string) SelectBuilder {
+	return builder.Set(b, "Index", newPart(view)).(SelectBuilder)
+}
+
+// With adds an expression to the WITH clause of the query.
+//
+// See Where.
+func (b SelectBuilder) With(pred interface{}, rest ...interface{}) SelectBuilder {
+	return builder.Append(b, "WithParts", newWherePart(pred, rest...)).(SelectBuilder)
+}
+
+// FlattenClause adds a flatten clause to the query.
+func (b SelectBuilder) FlattenClause(pred interface{}, args ...interface{}) SelectBuilder {
+	return builder.Append(b, "Flatten", newPart(pred, args...)).(SelectBuilder)
+}
+
+// Flatten adds a FLATTEN BY clause to the query.
+func (b SelectBuilder) Flatten(flatten string, rest ...interface{}) SelectBuilder {
+	return b.FlattenClause("FLATTEN BY "+flatten, rest...)
+}
+
+// FlattenList adds a FLATTEN BY clause to the query.
+func (b SelectBuilder) FlattenList(flatten string, rest ...interface{}) SelectBuilder {
+	return b.FlattenClause("FLATTEN LIST BY "+flatten, rest...)
+}
+
+// FlattenDict adds a FLATTEN BY clause to the query.
+func (b SelectBuilder) FlattenDict(flatten string, rest ...interface{}) SelectBuilder {
+	return b.FlattenClause("FLATTEN DICT BY "+flatten, rest...)
+}
+
+// FlattenOptional adds a FLATTEN BY clause to the query.
+func (b SelectBuilder) FlattenOptional(flatten string, rest ...interface{}) SelectBuilder {
+	return b.FlattenClause("FLATTEN OPTIONAL BY "+flatten, rest...)
+}
+
+// FlattenOptional adds a FLATTEN BY clause to the query.
+func (b SelectBuilder) FlattenColumns(flatten string, rest ...interface{}) SelectBuilder {
+	return b.FlattenClause("FLATTEN COLUMNS", rest...)
 }
 
 // JoinClause adds a join clause to the query.
@@ -356,6 +432,11 @@ func (b SelectBuilder) GroupBy(groupBys ...string) SelectBuilder {
 // See Where.
 func (b SelectBuilder) Having(pred interface{}, rest ...interface{}) SelectBuilder {
 	return builder.Append(b, "HavingParts", newWherePart(pred, rest...)).(SelectBuilder)
+}
+
+// AssumeOrderBy adds a ASSUME clause to the query.
+func (b SelectBuilder) AssumeOrderBy() SelectBuilder {
+	return builder.Set(b, "AssumeOrderBy", "ASSUME").(SelectBuilder)
 }
 
 // OrderByClause adds ORDER BY clause to the query.
