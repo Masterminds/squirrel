@@ -394,6 +394,14 @@ func (a And) ToSql() (string, []interface{}, error) {
 	return conj(a).join(" AND ", sqlTrue)
 }
 
+func (a And) MustSql() (string, []interface{}) {
+	sql, args, err := a.ToSql()
+	if err != nil {
+		panic(err)
+	}
+	return sql, args
+}
+
 // Or conjunction Sqlizers
 type Or conj
 

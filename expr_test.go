@@ -325,6 +325,14 @@ func TestEmptyAndToSql(t *testing.T) {
 	expectedArgs := []interface{}{}
 	assert.Equal(t, expectedArgs, args)
 }
+func TestAndMustSql(t *testing.T) {
+	sql, args := And{}.MustSql()
+	expectedSql := "(1=1)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{}
+	assert.Equal(t, expectedArgs, args)
+}
 
 func TestEmptyOrToSql(t *testing.T) {
 	sql, args, err := Or{}.ToSql()
