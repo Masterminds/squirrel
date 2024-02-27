@@ -242,8 +242,8 @@ func (b InsertBuilder) Options(options ...string) InsertBuilder {
 }
 
 // Into sets the INTO clause of the query.
-func (b InsertBuilder) Into(from string) InsertBuilder {
-	return builder.Set(b, "Into", from).(InsertBuilder)
+func (b InsertBuilder) Into(into string) InsertBuilder {
+	return builder.Set(b, "Into", into).(InsertBuilder)
 }
 
 // Columns adds insert columns to the query.
