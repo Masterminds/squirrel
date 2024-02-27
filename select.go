@@ -13,6 +13,9 @@ type selectData struct {
 	PlaceholderFormat PlaceholderFormat
 	RunWith           BaseRunner
 	Prefixes          []Sqlizer
+	CTEs              []Sqlizer
+	Union             Sqlizer
+	UnionAll          Sqlizer
 	Options           []string
 	Columns           []Sqlizer
 	From              Sqlizer
@@ -78,6 +81,15 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" ")
 	}
 
+	if len(d.CTEs) > 0 {
+		sql.WriteString("WITH ")
+		args, err = appendToSql(d.CTEs, sql, ", ", args)
+		if err != nil {
+			return
+		}
+		sql.WriteString(" ")
+	}
+
 	sql.WriteString("SELECT ")
 
 	if len(d.Options) > 0 {
@@ -111,6 +123,22 @@ func (d *selectData) toSqlRaw() (sqlStr string, args []interface{}, err error) {
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
 		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.Union != nil {
+		sql.WriteString(" UNION ")
+		args, err = appendToSql([]Sqlizer{d.Union}, sql, "", args)
+		if err != nil {
+			return
+		}
+	}
+
+	if d.UnionAll != nil {
+		sql.WriteString(" UNION ALL ")
+		args, err = appendToSql([]Sqlizer{d.UnionAll}, sql, "", args)
 		if err != nil {
 			return
 		}
@@ -253,6 +281,22 @@ func (b SelectBuilder) Options(options ...string) SelectBuilder {
 	return builder.Extend(b, "Options", options).(SelectBuilder)
 }
 
+// With adds a non-recursive CTE to the query.
+func (b SelectBuilder) With(alias string, expr Sqlizer) SelectBuilder {
+	return b.WithCTE(CTE{Alias: alias, ColumnList: []string{}, Recursive: false, Expression: expr})
+}
+
+// WithRecursive adds a recursive CTE to the query.
+func (b SelectBuilder) WithRecursive(alias string, expr Sqlizer) SelectBuilder {
+	return b.WithCTE(CTE{Alias: alias, ColumnList: []string{}, Recursive: true, Expression: expr})
+}
+
+// WithCTE adds an arbitrary Sqlizer to the query.
+// The sqlizer will be sandwiched between the keyword WITH and, if there's more than one CTE, a comma.
+func (b SelectBuilder) WithCTE(cte Sqlizer) SelectBuilder {
+	return builder.Append(b, "CTEs", cte).(SelectBuilder)
+}
+
 // Columns adds result columns to the query.
 func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
 	parts := make([]interface{}, 0, len(columns))
@@ -289,6 +333,20 @@ func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilde
 	return builder.Set(b, "From", Alias(from, alias)).(SelectBuilder)
 }
 
+// UnionSelect sets a union SelectBuilder which removes duplicate rows
+// --> UNION combines the result from multiple SELECT statements into a single result set
+func (b SelectBuilder) UnionSelect(union SelectBuilder) SelectBuilder {
+	union = union.PlaceholderFormat(Question)
+	return builder.Set(b, "Union", union).(SelectBuilder)
+}
+
+// UnionAllSelect sets a union SelectBuilder which includes all matching rows
+// --> UNION combines the result from multiple SELECT statements into a single result set
+func (b SelectBuilder) UnionAllSelect(union SelectBuilder) SelectBuilder {
+	union = union.PlaceholderFormat(Question)
+	return builder.Set(b, "UnionAll", union).(SelectBuilder)
+}
+
 // JoinClause adds a join clause to the query.
 func (b SelectBuilder) JoinClause(pred interface{}, args ...interface{}) SelectBuilder {
 	return builder.Append(b, "Joins", newPart(pred, args...)).(SelectBuilder)
@@ -317,6 +375,16 @@ func (b SelectBuilder) InnerJoin(join string, rest ...interface{}) SelectBuilder
 // CrossJoin adds a CROSS JOIN clause to the query.
 func (b SelectBuilder) CrossJoin(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("CROSS JOIN "+join, rest...)
+}
+
+// Union adds UNION to the query. (duplicate rows are removed)
+func (b SelectBuilder) Union(join string, rest ...interface{}) SelectBuilder {
+	return b.JoinClause("UNION "+join, rest...)
+}
+
+// UnionAll adds UNION ALL to the query. (includes all matching rows)
+func (b SelectBuilder) UnionAll(join string, rest ...interface{}) SelectBuilder {
+	return b.JoinClause("UNION ALL "+join, rest...)
 }
 
 // Where adds an expression to the WHERE clause of the query.

@@ -279,6 +279,30 @@ func TestSelectSubqueryInConjunctionPlaceholderNumbering(t *testing.T) {
 	assert.Equal(t, []interface{}{1, 2}, args)
 }
 
+func TestOneCTE(t *testing.T) {
+	sql, _, err := Select("*").From("cte").With("cte", Select("abc").From("def")).ToSql()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "WITH cte AS (SELECT abc FROM def) SELECT * FROM cte", sql)
+}
+
+func TestTwoCTEs(t *testing.T) {
+	sql, _, err := Select("*").From("cte").With("cte", Select("abc").From("def")).With("cte2", Select("ghi").From("jkl")).ToSql()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "WITH cte AS (SELECT abc FROM def), cte2 AS (SELECT ghi FROM jkl) SELECT * FROM cte", sql)
+}
+
+func TestCTEErrorBubblesUp(t *testing.T) {
+
+	// a SELECT with no columns raises an error
+	_, _, err := Select("*").From("cte").With("cte", SelectBuilder{}.From("def")).ToSql()
+
+	assert.Error(t, err)
+}
+
 func TestSelectJoinClausePlaceholderNumbering(t *testing.T) {
 	subquery := Select("a").Where(Eq{"b": 2}).PlaceholderFormat(Dollar)
 
@@ -450,6 +474,45 @@ func ExampleSelectBuilder_ToSql() {
 	for rows.Next() {
 		// scan...
 	}
+}
+
+func TestSelectBuilderUnionToSql(t *testing.T) {
+	multi := Select("column1", "column2").
+		From("table1").
+		Where(Eq{"column1": "test"}).
+		UnionSelect(Select("column3", "column4").From("table2").Where(Lt{"column4": 5}).
+			UnionSelect(Select("column5", "column6").From("table3").Where(LtOrEq{"column5": 6})))
+	sql, args, err := multi.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := `SELECT column1, column2 FROM table1 WHERE column1 = ? ` +
+		"UNION SELECT column3, column4 FROM table2 WHERE column4 < ? " +
+		"UNION SELECT column5, column6 FROM table3 WHERE column5 <= ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"test", 5, 6}
+	assert.Equal(t, expectedArgs, args)
+
+	sql, _, err = multi.PlaceholderFormat(Dollar).ToSql()
+	assert.NoError(t, err)
+	expectedSql = `SELECT column1, column2 FROM table1 WHERE column1 = $1 ` +
+		"UNION SELECT column3, column4 FROM table2 WHERE column4 < $2 " +
+		"UNION SELECT column5, column6 FROM table3 WHERE column5 <= $3"
+	assert.Equal(t, expectedSql, sql)
+
+	unionAll := Select("count(true) as C").
+		From("table1").
+		Where(Eq{"column1": []string{"test", "tester"}}).
+		UnionAllSelect(Select("count(true) as C").From("table2").Where(Select("true").Prefix("NOT EXISTS(").Suffix(")").From("table3").Where("id=table2.column3")))
+	sql, args, err = unionAll.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql = `SELECT count(true) as C FROM table1 WHERE column1 IN (?,?) ` +
+		"UNION ALL SELECT count(true) as C FROM table2 WHERE NOT EXISTS( SELECT true FROM table3 WHERE id=table2.column3 )"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs = []interface{}{"test", "tester"}
+	assert.Equal(t, expectedArgs, args)
 }
 
 func TestRemoveColumns(t *testing.T) {
