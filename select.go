@@ -294,14 +294,38 @@ func (b SelectBuilder) JoinClause(pred interface{}, args ...interface{}) SelectB
 	return builder.Append(b, "Joins", newPart(pred, args...)).(SelectBuilder)
 }
 
+// JoinSelect sets a subquery into the Join clause of the query.
+func (b SelectBuilder) JoinSelect(from SelectBuilder, alias string, pred interface{}, args ...interface{}) SelectBuilder {
+	// Prevent misnumbered parameters in nested selects (#183).
+	from = from.PlaceholderFormat(Question)
+	b = b.JoinClause("JOIN ")
+	return builder.Append(b, "Joins", Alias(from, alias), newPart(pred, args...)).(SelectBuilder)
+}
+
 // Join adds a JOIN clause to the query.
 func (b SelectBuilder) Join(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("JOIN "+join, rest...)
 }
 
+// LeftJoinSelect sets a subquery into the Left Join clause of the query.
+func (b SelectBuilder) LeftJoinSelect(from SelectBuilder, alias string, pred interface{}, args ...interface{}) SelectBuilder {
+	// Prevent misnumbered parameters in nested selects (#183).
+	from = from.PlaceholderFormat(Question)
+	b = b.JoinClause("LEFT JOIN ")
+	return builder.Append(b, "Joins", Alias(from, alias), newPart(pred, args...)).(SelectBuilder)
+}
+
 // LeftJoin adds a LEFT JOIN clause to the query.
 func (b SelectBuilder) LeftJoin(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("LEFT JOIN "+join, rest...)
+}
+
+// RightJoinSelect sets a subquery into the Left Join clause of the query.
+func (b SelectBuilder) RightJoinSelect(from SelectBuilder, alias string, pred interface{}, args ...interface{}) SelectBuilder {
+	// Prevent misnumbered parameters in nested selects (#183).
+	from = from.PlaceholderFormat(Question)
+	b = b.JoinClause("RIGHT JOIN ")
+	return builder.Append(b, "Joins", Alias(from, alias), newPart(pred, args...)).(SelectBuilder)
 }
 
 // RightJoin adds a RIGHT JOIN clause to the query.
