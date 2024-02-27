@@ -277,6 +277,15 @@ func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBui
 	return builder.Append(b, "Columns", newPart(column, args...)).(SelectBuilder)
 }
 
+// ReplaceColumns replaces the query columns
+func (b SelectBuilder) ReplaceColumns(columns ...string) SelectBuilder {
+	var parts []Sqlizer
+	for _, str := range columns {
+		parts = append(parts, newPart(str))
+	}
+	return builder.Set(b, "Columns", parts).(SelectBuilder)
+}
+
 // From sets the FROM clause of the query.
 func (b SelectBuilder) From(from string) SelectBuilder {
 	return builder.Set(b, "From", newPart(from)).(SelectBuilder)
