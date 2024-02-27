@@ -134,6 +134,8 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 }
 
 // Eq is syntactic sugar for use with Where/Having/Set methods.
+// Ex:
+//     .Where(Eq{"id": 1}) == "id = ?"
 type Eq map[string]interface{}
 
 func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
@@ -221,7 +223,7 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 
 // Like is syntactic sugar for use with LIKE conditions.
 // Ex:
-//     .Where(Like{"name": "%irrel"})
+//     .Where(Like{"name": "%irrel"}) == "name LIKE ?"
 type Like map[string]interface{}
 
 func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
@@ -260,7 +262,7 @@ func (lk Like) ToSql() (sql string, args []interface{}, err error) {
 
 // NotLike is syntactic sugar for use with LIKE conditions.
 // Ex:
-//     .Where(NotLike{"name": "%irrel"})
+//     .Where(NotLike{"name": "%irrel"}) == "name NOT LIKE ?"
 type NotLike Like
 
 func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
@@ -269,7 +271,7 @@ func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
 
 // ILike is syntactic sugar for use with ILIKE conditions.
 // Ex:
-//    .Where(ILike{"name": "sq%"})
+//    .Where(ILike{"name": "sq%"}) == "name ILIKE ?"
 type ILike Like
 
 func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
@@ -278,7 +280,7 @@ func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
 
 // NotILike is syntactic sugar for use with ILIKE conditions.
 // Ex:
-//    .Where(NotILike{"name": "sq%"})
+//    .Where(NotILike{"name": "sq%"}) == "name NOT ILIKE ?"
 type NotILike Like
 
 func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
@@ -287,7 +289,7 @@ func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
 
 // Lt is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//     .Where(Lt{"id": 1})
+//     .Where(Lt{"id": 1}) == "id < 1"
 type Lt map[string]interface{}
 
 func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
