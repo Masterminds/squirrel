@@ -30,7 +30,7 @@ func (d *deleteData) Exec() (sql.Result, error) {
 
 func (d *deleteData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.From) == 0 {
-		err = fmt.Errorf("delete statements must specify a From table")
+		err = ErrNoTable
 		return
 	}
 

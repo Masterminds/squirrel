@@ -52,11 +52,11 @@ func (d *insertData) QueryRow() RowScanner {
 
 func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Into) == 0 {
-		err = errors.New("insert statements must specify a table")
+		err = ErrNoTable
 		return
 	}
 	if len(d.Values) == 0 && d.Select == nil {
-		err = errors.New("insert statements must have at least one set of values or select clause")
+		err = ErrNoValues
 		return
 	}
 

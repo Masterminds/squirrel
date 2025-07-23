@@ -15,6 +15,11 @@ func (b StatementBuilderType) Insert(into string) InsertBuilder {
 	return InsertBuilder(b).Into(into)
 }
 
+// Merge returns a MergeBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Merge(into string) MergeBuilder {
+	return MergeBuilder(b).Into(into)
+}
+
 // Replace returns a InsertBuilder for this StatementBuilderType with the
 // statement keyword set to "REPLACE".
 func (b StatementBuilderType) Replace(into string) InsertBuilder {
@@ -63,6 +68,13 @@ func Select(columns ...string) SelectBuilder {
 // See InsertBuilder.Into.
 func Insert(into string) InsertBuilder {
 	return StatementBuilder.Insert(into)
+}
+
+// Merge returns a new MergeBuilder with the given table name.
+//
+// See MergeBuilder.Into.
+func Merge(into string) MergeBuilder {
+	return StatementBuilder.Merge(into)
 }
 
 // Replace returns a new InsertBuilder with the statement keyword set to

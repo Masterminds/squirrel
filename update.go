@@ -56,7 +56,7 @@ func (d *updateData) QueryRow() RowScanner {
 
 func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	if len(d.Table) == 0 {
-		err = fmt.Errorf("update statements must specify a table")
+		err = ErrNoTable
 		return
 	}
 	if len(d.SetClauses) == 0 {
