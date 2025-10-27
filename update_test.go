@@ -89,6 +89,26 @@ func TestUpdateBuilderFrom(t *testing.T) {
 	assert.Equal(t, "UPDATE employees SET sales_count = ? FROM accounts WHERE accounts.name = ?", sql)
 }
 
+func TestUpdateBuilderParamFrom(t *testing.T) {
+	fromArgs := []interface{}{
+		1, 5,
+		2, 5,
+	}
+	sql, _, err := Update("employees").
+		Set("sales_count", Expr("c.sales_count")).
+		From("(VALUES (?, ?), (?, ?)) AS c(id, sales_count)", fromArgs...).
+		Where("id = c.id").
+		ToSql()
+	assert.NoError(t, err)
+
+	expectedSql :=
+		"UPDATE employees " +
+			"SET sales_count = c.sales_count " +
+			"FROM (VALUES (?, ?), (?, ?)) AS c(id, sales_count) " +
+			"WHERE id = c.id"
+	assert.Equal(t, expectedSql, sql)
+}
+
 func TestUpdateBuilderFromSelect(t *testing.T) {
 	sql, _, err := Update("employees").
 		Set("sales_count", 100).

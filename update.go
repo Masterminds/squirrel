@@ -244,8 +244,8 @@ func (b UpdateBuilder) SetMap(clauses map[string]interface{}) UpdateBuilder {
 
 // From adds FROM clause to the query
 // FROM is valid construct in postgresql only.
-func (b UpdateBuilder) From(from string) UpdateBuilder {
-	return builder.Set(b, "From", newPart(from)).(UpdateBuilder)
+func (b UpdateBuilder) From(from string, args ...interface{}) UpdateBuilder {
+	return builder.Set(b, "From", newPart(from, args...)).(UpdateBuilder)
 }
 
 // FromSelect sets a subquery into the FROM clause of the query.
