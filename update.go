@@ -226,6 +226,15 @@ func (b UpdateBuilder) Set(column string, value interface{}) UpdateBuilder {
 	return builder.Append(b, "SetClauses", setClause{column: column, value: value}).(UpdateBuilder)
 }
 
+// SetCoalesceNullIf sets the column to COALESCE(NULLIF(?, zeroValue), column).
+func (b UpdateBuilder) SetCoalesceNullIf(column string, value, zeroValue interface{}) UpdateBuilder {
+	expr := Expr(fmt.Sprintf("COALESCE(NULLIF(?, ?), %s)", column), value, zeroValue)
+	return builder.Append(b, "SetClauses", setClause{
+		column: column,
+		value:  expr,
+	}).(UpdateBuilder)
+}
+
 // SetMap is a convenience method which calls .Set for each key/value pair in clauses.
 func (b UpdateBuilder) SetMap(clauses map[string]interface{}) UpdateBuilder {
 	keys := make([]string, len(clauses))
