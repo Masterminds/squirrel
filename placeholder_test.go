@@ -65,3 +65,11 @@ func BenchmarkPlaceholdersArray(b *testing.B) {
 func BenchmarkPlaceholdersStrings(b *testing.B) {
 	Placeholders(b.N)
 }
+
+func BenchmarkReplacePlaceholders(b *testing.B) {
+	var ph dollarFormat
+
+	for i := 0; i < b.N; i++ {
+		ph.ReplacePlaceholders("?")
+	}
+}

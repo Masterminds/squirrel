@@ -2,7 +2,7 @@ package squirrel
 
 import (
 	"bytes"
-	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -104,7 +104,8 @@ func replacePositionalPlaceholders(sql, prefix string) (string, error) {
 		} else {
 			i++
 			buf.WriteString(sql[:p])
-			fmt.Fprintf(buf, "%s%d", prefix, i)
+			buf.WriteString(prefix)
+			buf.WriteString(strconv.Itoa(i))
 			sql = sql[p+1:]
 		}
 	}
