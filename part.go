@@ -1,7 +1,6 @@
 package squirrel
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -24,7 +23,10 @@ func (p part) ToSql() (sql string, args []interface{}, err error) {
 		sql = pred
 		args = p.args
 	default:
-		err = fmt.Errorf("expected string or Sqlizer, not %T", pred)
+		// For non-string, non-Sqlizer values (int, float, etc.),
+		// use a placeholder and pass the value as an argument.
+		sql = "?"
+		args = []interface{}{pred}
 	}
 	return
 }
