@@ -21,8 +21,8 @@ func (p part) ToSql() (sql string, args []interface{}, err error) {
 	case Sqlizer:
 		sql, args, err = nestedToSql(pred)
 	case string:
-		sql = pred
-		args = p.args
+		// Route through Expr so slice/array args expand placeholders.
+		return Expr(pred, p.args...).ToSql()
 	default:
 		err = fmt.Errorf("expected string or Sqlizer, not %T", pred)
 	}

@@ -21,8 +21,8 @@ func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	case map[string]interface{}:
 		return Eq(pred).ToSql()
 	case string:
-		sql = pred
-		args = p.args
+		// Route through Expr so slice/array args expand placeholders (e.g. IN ?).
+		return Expr(pred, p.args...).ToSql()
 	default:
 		err = fmt.Errorf("expected string-keyed map or string, not %T", pred)
 	}
