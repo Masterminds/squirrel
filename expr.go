@@ -33,6 +33,12 @@ func (e expr) ToSql() (sql string, args []interface{}, err error) {
 	for _, arg := range e.args {
 		if _, ok := arg.(Sqlizer); ok {
 			simple = false
+			break
+		}
+		if isListType(arg) {
+			// Slice/array args need placeholder expansion (e.g. "id IN ?" + []int{...}).
+			simple = false
+			break
 		}
 	}
 	if simple {
@@ -65,6 +71,24 @@ func (e expr) ToSql() (sql string, args []interface{}, err error) {
 			buf.WriteString(sp[:i])
 			buf.WriteString(isql)
 			args = append(args, iargs...)
+		} else if isListType(ap[0]) {
+			// list argument; expand "?" into "(?,?,...)" like Eq/NotEq helpers
+			valVal := reflect.ValueOf(ap[0])
+			n := valVal.Len()
+			buf.WriteString(sp[:i])
+			if n == 0 {
+				// empty IN lists are falsey; empty NOT IN lists are truey, but
+				// Expr cannot know the surrounding operator. Expand to no
+				// placeholders: "()" matches historical Placeholders(0).
+				buf.WriteString("()")
+			} else {
+				buf.WriteByte('(')
+				buf.WriteString(Placeholders(n))
+				buf.WriteByte(')')
+				for j := 0; j < n; j++ {
+					args = append(args, valVal.Index(j).Interface())
+				}
+			}
 		} else {
 			// normal argument; append it and the placeholder
 			buf.WriteString(sp[:i+1])

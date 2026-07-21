@@ -462,3 +462,23 @@ func ExampleEq() {
 		"company": 20,
 	})
 }
+
+
+func TestExprListArgExpansion(t *testing.T) {
+	sql, args, err := Expr("id NOT IN ?", []int{1, 2, 3}).ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "id NOT IN (?,?,?)", sql)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+
+	sql, args, err = Expr("id IN ?", []string{}).ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "id IN ()", sql)
+	assert.Empty(t, args)
+}
+
+func TestWhereRawSQLListArgExpansion(t *testing.T) {
+	sql, args, err := Select("something FROM somewhere").Where("id NOT IN ?", []int{1, 2, 3}).ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT something FROM somewhere WHERE id NOT IN (?,?,?)", sql)
+	assert.Equal(t, []interface{}{1, 2, 3}, args)
+}
