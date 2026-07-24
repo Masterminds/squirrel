@@ -167,6 +167,120 @@ func TestGtOrEqToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestBetweenToSql(t *testing.T) {
+	b := Between{"id": []int{1, 5}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 5}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenInterfaceSliceToSql(t *testing.T) {
+	b := Between{"age": []interface{}{18, 65}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "age BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{18, 65}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenArrayToSql(t *testing.T) {
+	b := Between{"score": [2]int{0, 100}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "score BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{0, 100}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenEmptyToSql(t *testing.T) {
+	sql, args, err := Between{}.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "(1=1)"
+	assert.Equal(t, expectedSql, sql)
+	assert.Empty(t, args)
+}
+
+func TestBetweenOrder(t *testing.T) {
+	b := Between{"a": []int{1, 2}, "b": []int{3, 4}, "c": []int{5, 6}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "a BETWEEN ? AND ? AND b BETWEEN ? AND ? AND c BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 2, 3, 4, 5, 6}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenNilError(t *testing.T) {
+	_, _, err := Between{"id": nil}.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot use null with between operators")
+}
+
+func TestBetweenNonListError(t *testing.T) {
+	_, _, err := Between{"id": 1}.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "between operator expects a two-element list or array")
+}
+
+func TestBetweenWrongLenError(t *testing.T) {
+	_, _, err := Between{"id": []int{1}}.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "between operator expects a two-element list or array")
+
+	_, _, err = Between{"id": []int{1, 2, 3}}.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "between operator expects a two-element list or array")
+}
+
+func TestNotBetweenToSql(t *testing.T) {
+	b := NotBetween{"id": []int{1, 5}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id NOT BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 5}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBtAliasToSql(t *testing.T) {
+	b := Bt{"id": []int{1, 5}}
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "id BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 5}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestBetweenInSelectWhere(t *testing.T) {
+	sql, args, err := Select("*").From("users").Where(Between{"age": []int{18, 65}}).ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT * FROM users WHERE age BETWEEN ? AND ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{18, 65}
+	assert.Equal(t, expectedArgs, args)
+}
+
 func TestExprNilToSql(t *testing.T) {
 	var b Sqlizer
 	b = NotEq{"name": nil}

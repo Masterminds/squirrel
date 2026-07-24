@@ -364,6 +364,76 @@ func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {
 	return Lt(gtOrEq).toSql(true, true)
 }
 
+// Between is syntactic sugar for use with Where/Having methods.
+// Each value must be a two-element list or array representing the lower and
+// upper bounds of the range (inclusive).
+// Ex:
+//     .Where(Between{"id": []int{1, 5}}) == "id BETWEEN ? AND ?"
+//     .Where(Between{"age": []interface{}{18, 65}}) == "age BETWEEN ? AND ?"
+type Between map[string]interface{}
+
+// Bt is an alias for Between.
+type Bt = Between
+
+func (bt Between) toSql(opposite bool) (sql string, args []interface{}, err error) {
+	if len(bt) == 0 {
+		// Empty Between{} evaluates to true, matching Eq{}.
+		sql = sqlTrue
+		return
+	}
+
+	opr := "BETWEEN"
+	if opposite {
+		opr = "NOT BETWEEN"
+	}
+
+	sortedKeys := getSortedKeys(bt)
+	var exprs []string
+	for _, key := range sortedKeys {
+		val := bt[key]
+
+		switch v := val.(type) {
+		case driver.Valuer:
+			if val, err = v.Value(); err != nil {
+				return
+			}
+		}
+
+		if val == nil {
+			err = fmt.Errorf("cannot use null with between operators")
+			return
+		}
+		if !isListType(val) {
+			err = fmt.Errorf("between operator expects a two-element list or array")
+			return
+		}
+
+		valVal := reflect.ValueOf(val)
+		if valVal.Len() != 2 {
+			err = fmt.Errorf("between operator expects a two-element list or array")
+			return
+		}
+
+		exprs = append(exprs, fmt.Sprintf("%s %s ? AND ?", key, opr))
+		args = append(args, valVal.Index(0).Interface(), valVal.Index(1).Interface())
+	}
+	sql = strings.Join(exprs, " AND ")
+	return
+}
+
+func (bt Between) ToSql() (sql string, args []interface{}, err error) {
+	return bt.toSql(false)
+}
+
+// NotBetween is syntactic sugar for use with Where/Having methods.
+// Ex:
+//     .Where(NotBetween{"id": []int{1, 5}}) == "id NOT BETWEEN ? AND ?"
+type NotBetween Between
+
+func (nbt NotBetween) ToSql() (sql string, args []interface{}, err error) {
+	return Between(nbt).toSql(true)
+}
+
 type conj []Sqlizer
 
 func (c conj) join(sep, defaultExpr string) (sql string, args []interface{}, err error) {
