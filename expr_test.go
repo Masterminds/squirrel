@@ -337,6 +337,14 @@ func TestEmptyOrToSql(t *testing.T) {
 	assert.Equal(t, expectedArgs, args)
 }
 
+func TestNilOrToSql(t *testing.T) {
+	var filter Or
+	sql, args, err := filter.ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "", sql)
+	assert.Nil(t, args)
+}
+
 func TestLikeToSql(t *testing.T) {
 	b := Like{"name": "%irrel"}
 	sql, args, err := b.ToSql()

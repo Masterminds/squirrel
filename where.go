@@ -10,6 +10,16 @@ func newWherePart(pred interface{}, args ...interface{}) Sqlizer {
 	return &wherePart{pred: pred, args: args}
 }
 
+func ignoredWherePred(pred interface{}) bool {
+	if pred == nil || pred == "" {
+		return true
+	}
+	if or, ok := pred.(Or); ok && or == nil {
+		return true
+	}
+	return false
+}
+
 func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:

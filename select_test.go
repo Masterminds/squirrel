@@ -241,6 +241,13 @@ func TestSelectWithNilWhereClause(t *testing.T) {
 	assert.Equal(t, "SELECT * FROM users", sql)
 }
 
+func TestSelectWithNilOrClause(t *testing.T) {
+	var filter Or
+	sql, _, err := Select("*").From("users").Where(filter).ToSql()
+	assert.NoError(t, err)
+	assert.Equal(t, "SELECT * FROM users", sql)
+}
+
 func TestSelectWithEmptyStringWhereClause(t *testing.T) {
 	sql, _, err := Select("*").From("users").Where("").ToSql()
 	assert.NoError(t, err)

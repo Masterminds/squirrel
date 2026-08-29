@@ -150,6 +150,9 @@ func (b DeleteBuilder) From(from string) DeleteBuilder {
 //
 // See SelectBuilder.Where for more information.
 func (b DeleteBuilder) Where(pred interface{}, args ...interface{}) DeleteBuilder {
+	if ignoredWherePred(pred) {
+		return b
+	}
 	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(DeleteBuilder)
 }
 
