@@ -259,6 +259,9 @@ func (b UpdateBuilder) FromSelect(from SelectBuilder, alias string) UpdateBuilde
 //
 // See SelectBuilder.Where for more information.
 func (b UpdateBuilder) Where(pred interface{}, args ...interface{}) UpdateBuilder {
+	if ignoredWherePred(pred) {
+		return b
+	}
 	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(UpdateBuilder)
 }
 

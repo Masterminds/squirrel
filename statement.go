@@ -45,6 +45,9 @@ func (b StatementBuilderType) RunWith(runner BaseRunner) StatementBuilderType {
 //
 // See SelectBuilder.Where for more information.
 func (b StatementBuilderType) Where(pred interface{}, args ...interface{}) StatementBuilderType {
+	if ignoredWherePred(pred) {
+		return b
+	}
 	return builder.Append(b, "WhereParts", newWherePart(pred, args...)).(StatementBuilderType)
 }
 
