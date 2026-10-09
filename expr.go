@@ -401,6 +401,93 @@ func (o Or) ToSql() (string, []interface{}, error) {
 	return conj(o).join(" OR ", sqlFalse)
 }
 
+// Nor conjunction Sqlizers
+type Nor conj
+
+func (n Nor) toSqlRaw() (string, []interface{}, error) {
+	if len(n) == 0 {
+		return sqlTrue, []interface{}{}, nil
+	}
+	sql, args, err := conj(n).join(" OR ", sqlFalse)
+	if err != nil {
+		return "", nil, err
+	}
+	if sql == "" || sql == sqlFalse {
+		return sqlTrue, []interface{}{}, nil
+	}
+	return fmt.Sprintf("NOT %s", sql), args, nil
+}
+
+func (n Nor) ToSql() (string, []interface{}, error) {
+	return n.toSqlRaw()
+}
+
+type notExpr struct {
+	pred Sqlizer
+}
+
+// Not negates a Sqlizer.
+//
+// Ex:
+//     Not(Eq{"id": 1}) // NOT (id = ?)
+//     Not(And{Eq{"a": 1}, Eq{"b": 2}}) // NOT (a = ? AND b = ?)
+func Not(pred Sqlizer) Sqlizer {
+	return notExpr{pred: pred}
+}
+
+func (n notExpr) toSqlRaw() (sql string, args []interface{}, err error) {
+	if n.pred == nil {
+		return "", nil, nil
+	}
+	sql, args, err = nestedToSql(n.pred)
+	if err != nil {
+		return "", nil, err
+	}
+	sql = strings.TrimSpace(sql)
+	if sql == "" {
+		return "", nil, nil
+	}
+	if hasMatchingOuterParen(sql) {
+		return fmt.Sprintf("NOT %s", sql), args, nil
+	}
+	return fmt.Sprintf("NOT (%s)", sql), args, nil
+}
+
+func (n notExpr) ToSql() (string, []interface{}, error) {
+	return n.toSqlRaw()
+}
+
+func hasMatchingOuterParen(s string) bool {
+	if len(s) < 2 || s[0] != '(' || s[len(s)-1] != ')' {
+		return false
+	}
+	depth := 0
+	inSingleQuote := false
+	inDoubleQuote := false
+	for i := 0; i < len(s)-1; i++ {
+		ch := s[i]
+		if ch == '\'' && !inDoubleQuote {
+			if i == 0 || s[i-1] != '\\' {
+				inSingleQuote = !inSingleQuote
+			}
+		} else if ch == '"' && !inSingleQuote {
+			if i == 0 || s[i-1] != '\\' {
+				inDoubleQuote = !inDoubleQuote
+			}
+		} else if !inSingleQuote && !inDoubleQuote {
+			if ch == '(' {
+				depth++
+			} else if ch == ')' {
+				depth--
+				if depth == 0 {
+					return false
+				}
+			}
+		}
+	}
+	return depth == 1
+}
+
 func getSortedKeys(exp map[string]interface{}) []string {
 	sortedKeys := make([]string, 0, len(exp))
 	for k := range exp {

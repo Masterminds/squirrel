@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -335,6 +336,179 @@ func TestEmptyOrToSql(t *testing.T) {
 
 	expectedArgs := []interface{}{}
 	assert.Equal(t, expectedArgs, args)
+}
+
+func TestEmptyNorToSql(t *testing.T) {
+	sql, args, err := Nor{}.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "(1=1)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestNorToSql(t *testing.T) {
+	{
+		b := Nor{Eq{"age": 20}}
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (age = ?)", sql)
+		assert.Equal(t, []interface{}{20}, args)
+	}
+	{
+		b := Nor{Eq{"age": 20}, Eq{"owner": "a"}}
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (age = ? OR owner = ?)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		b := Nor{And{Eq{"a": 1}, Eq{"b": 2}}, Eq{"c": 3}}
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT ((a = ? AND b = ?) OR c = ?)", sql)
+		assert.Equal(t, []interface{}{1, 2, 3}, args)
+	}
+	{
+		b := Nor{nil}
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "(1=1)", sql)
+		assert.Empty(t, args)
+	}
+}
+
+func TestNotToSql(t *testing.T) {
+	{
+		sql, args, err := Not(nil).ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "", sql)
+		assert.Empty(t, args)
+	}
+	{
+		b := Not(Eq{"id": 1})
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (id = ?)", sql)
+		assert.Equal(t, []interface{}{1}, args)
+	}
+	{
+		b := Not(And{Eq{"age": 20}, Eq{"owner": "a"}})
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (age = ? AND owner = ?)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		b := Not(Or{Eq{"age": 20}, Eq{"owner": "a"}})
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (age = ? OR owner = ?)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		b := Not(Nor{Eq{"a": 1}, Eq{"b": 2}})
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (NOT (a = ? OR b = ?))", sql)
+		assert.Equal(t, []interface{}{1, 2}, args)
+	}
+	{
+		b := Not(Not(Eq{"id": 1}))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (NOT (id = ?))", sql)
+		assert.Equal(t, []interface{}{1}, args)
+	}
+	{
+		b := Not(Expr("a = 1 AND b = 2"))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (a = 1 AND b = 2)", sql)
+		assert.Empty(t, args)
+	}
+	{
+		b := Not(Expr("(a = 1) AND (b = 2)"))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT ((a = 1) AND (b = 2))", sql)
+		assert.Empty(t, args)
+	}
+	{
+		b := Not(Expr("(a = 1 AND b = 2)"))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (a = 1 AND b = 2)", sql)
+		assert.Empty(t, args)
+	}
+	{
+		b := Not(Expr("col = 'val(1)'"))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (col = 'val(1)')", sql)
+		assert.Empty(t, args)
+	}
+	{
+		b := Not(Expr("(col = 'val(1)')"))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "NOT (col = 'val(1)')", sql)
+		assert.Empty(t, args)
+	}
+}
+
+func TestSelectWithNotAndNor(t *testing.T) {
+	{
+		b := Select("*").From("table_name").Where(Not(And{Eq{"age": 20}, Eq{"owner1": "a"}}))
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "SELECT * FROM table_name WHERE NOT (age = ? AND owner1 = ?)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		b := Select("*").From("table_name").Where(Nor{Eq{"age": 20}, Eq{"owner1": "a"}})
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "SELECT * FROM table_name WHERE NOT (age = ? OR owner1 = ?)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		b := Select("*").From("table_name").
+			Where(Nor{Eq{"age": 20}, Eq{"owner1": "a"}}).
+			PlaceholderFormat(Dollar)
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "SELECT * FROM table_name WHERE NOT (age = $1 OR owner1 = $2)", sql)
+		assert.Equal(t, []interface{}{20, "a"}, args)
+	}
+	{
+		sub := Select("1").From("banned").Where(Eq{"user_id": 10})
+		b := Select("*").From("users").
+			Where(Not(Expr("EXISTS (?)", sub))).
+			PlaceholderFormat(Dollar)
+		sql, args, err := b.ToSql()
+		assert.NoError(t, err)
+		assert.Equal(t, "SELECT * FROM users WHERE NOT (EXISTS (SELECT 1 FROM banned WHERE user_id = $1))", sql)
+		assert.Equal(t, []interface{}{10}, args)
+	}
+}
+
+type badSqlizer struct{}
+
+func (badSqlizer) ToSql() (string, []interface{}, error) {
+	return "", nil, fmt.Errorf("bad sqlizer error")
+}
+
+func TestNotAndNorErrors(t *testing.T) {
+	_, _, err := Not(badSqlizer{}).ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "bad sqlizer error")
+
+	_, _, err = Nor{badSqlizer{}}.ToSql()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "bad sqlizer error")
 }
 
 func TestLikeToSql(t *testing.T) {

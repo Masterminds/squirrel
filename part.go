@@ -30,6 +30,9 @@ func (p part) ToSql() (sql string, args []interface{}, err error) {
 }
 
 func nestedToSql(s Sqlizer) (string, []interface{}, error) {
+	if s == nil {
+		return "", nil, nil
+	}
 	if raw, ok := s.(rawSqlizer); ok {
 		return raw.toSqlRaw()
 	} else {
