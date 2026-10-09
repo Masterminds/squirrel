@@ -148,3 +148,177 @@ func TestCaseBuilderMustSql(t *testing.T) {
 	}()
 	Case("").MustSql()
 }
+
+func TestCaseWithIntegerValues(t *testing.T) {
+	caseStmt := Case("order_no").
+		When("ORD001", 500).
+		When("ORD002", 600)
+
+	sql, args, err := Update("orders").
+		Set("amount", caseStmt).
+		Where(Eq{"order_no": []string{"ORD001", "ORD002", "ORD003"}}).
+		ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "UPDATE orders SET amount = CASE order_no WHEN ORD001 THEN ? WHEN ORD002 THEN ? END " +
+		"WHERE order_no IN (?,?,?)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{500, 600, "ORD001", "ORD002", "ORD003"}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithPrimitivesInWhenAndElse(t *testing.T) {
+	caseStmt := Case("status").
+		When(1, 100).
+		When(2, 200).
+		Else(0)
+
+	qb := Select().Column(caseStmt).From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE status " +
+		"WHEN ? THEN ? " +
+		"WHEN ? THEN ? " +
+		"ELSE ? " +
+		"END " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 100, 2, 200, 0}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithPrimitivesInWhat(t *testing.T) {
+	caseStmt := Case(1).
+		When(1, "one").
+		When(2, "two").
+		Else("other")
+
+	qb := Select().Column(caseStmt).From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE ? " +
+		"WHEN ? THEN one " +
+		"WHEN ? THEN two " +
+		"ELSE other " +
+		"END " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 1, 2}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithFloatBoolAndUint(t *testing.T) {
+	caseStmt := Case(true).
+		When(true, 1.25).
+		When(false, 2.5).
+		Else(uint(0))
+
+	qb := Select().Column(caseStmt).From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE ? " +
+		"WHEN ? THEN ? " +
+		"WHEN ? THEN ? " +
+		"ELSE ? " +
+		"END " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{true, true, 1.25, false, 2.5, uint(0)}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithMapCondition(t *testing.T) {
+	caseStmt := Case().
+		When(map[string]interface{}{"status": "pending"}, 10).
+		Else(0)
+
+	qb := Select().Column(caseStmt).From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE " +
+		"WHEN status = ? THEN ? " +
+		"ELSE ? " +
+		"END " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{"pending", 10, 0}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithWhatMethod(t *testing.T) {
+	caseStmt := Case().
+		What("category").
+		When(1, 10).
+		Else(0)
+
+	qb := Select().Column(caseStmt).From("table")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE category " +
+		"WHEN ? THEN ? " +
+		"ELSE ? " +
+		"END " +
+		"FROM table"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 10, 0}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithDollarPlaceholders(t *testing.T) {
+	caseStmt := Case("order_no").
+		When("ORD001", 500).
+		When("ORD002", 600).
+		Else(0)
+
+	qb := StatementBuilder.PlaceholderFormat(Dollar).
+		Select().
+		Column(caseStmt).
+		From("orders")
+	sql, args, err := qb.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "SELECT CASE order_no " +
+		"WHEN ORD001 THEN $1 " +
+		"WHEN ORD002 THEN $2 " +
+		"ELSE $3 " +
+		"END " +
+		"FROM orders"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{500, 600, 0}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestCaseWithNilValues(t *testing.T) {
+	caseStmt := Case("status").
+		When(1, nil).
+		Else(nil)
+
+	sql, args, err := caseStmt.ToSql()
+
+	assert.NoError(t, err)
+
+	expectedSql := "CASE status WHEN ? THEN ? ELSE ? END"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, nil, nil}
+	assert.Equal(t, expectedArgs, args)
+}

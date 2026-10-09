@@ -42,6 +42,24 @@ func (b *sqlizerBuffer) ToSql() (string, []interface{}, error) {
 	return b.String(), b.args, b.err
 }
 
+func newCasePart(pred interface{}, args ...interface{}) Sqlizer {
+	if len(args) > 0 {
+		return newPart(pred, args...)
+	}
+	switch val := pred.(type) {
+	case nil:
+		return Expr("?", nil)
+	case Sqlizer:
+		return val
+	case map[string]interface{}:
+		return Eq(val)
+	case string:
+		return newPart(val)
+	default:
+		return Expr("?", val)
+	}
+}
+
 // whenPart is a helper structure to describe SQLs "WHEN ... THEN ..." expression
 type whenPart struct {
 	when Sqlizer
@@ -49,7 +67,7 @@ type whenPart struct {
 }
 
 func newWhenPart(when interface{}, then interface{}) whenPart {
-	return whenPart{newPart(when), newPart(then)}
+	return whenPart{newCasePart(when), newCasePart(then)}
 }
 
 // caseData holds all the data required to build a CASE SQL construct
@@ -110,19 +128,26 @@ func (b CaseBuilder) MustSql() (string, []interface{}) {
 	return sql, args
 }
 
+// What sets optional value for CASE construct "CASE [value] ..."
+func (b CaseBuilder) What(expr interface{}, args ...interface{}) CaseBuilder {
+	var val Sqlizer
+	if expr != nil {
+		val = newCasePart(expr, args...)
+	}
+	return builder.Set(b, "What", val).(CaseBuilder)
+}
+
 // what sets optional value for CASE construct "CASE [value] ..."
 func (b CaseBuilder) what(expr interface{}) CaseBuilder {
-	return builder.Set(b, "What", newPart(expr)).(CaseBuilder)
+	return b.What(expr)
 }
 
 // When adds "WHEN ... THEN ..." part to CASE construct
 func (b CaseBuilder) When(when interface{}, then interface{}) CaseBuilder {
-	// TODO: performance hint: replace slice of WhenPart with just slice of parts
-	// where even indices of the slice belong to "when"s and odd indices belong to "then"s
 	return builder.Append(b, "WhenParts", newWhenPart(when, then)).(CaseBuilder)
 }
 
-// What sets optional "ELSE ..." part for CASE construct
-func (b CaseBuilder) Else(expr interface{}) CaseBuilder {
-	return builder.Set(b, "Else", newPart(expr)).(CaseBuilder)
+// Else sets optional "ELSE ..." part for CASE construct
+func (b CaseBuilder) Else(expr interface{}, args ...interface{}) CaseBuilder {
+	return builder.Set(b, "Else", newCasePart(expr, args...)).(CaseBuilder)
 }
