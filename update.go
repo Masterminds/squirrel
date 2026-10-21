@@ -83,7 +83,7 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 	for i, setClause := range d.SetClauses {
 		var valSql string
 		if vs, ok := setClause.value.(Sqlizer); ok {
-			vsql, vargs, err := vs.ToSql()
+			vsql, vargs, err := nestedToSql(vs)
 			if err != nil {
 				return "", nil, err
 			}

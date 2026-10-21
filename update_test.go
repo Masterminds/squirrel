@@ -105,3 +105,29 @@ func TestUpdateBuilderFromSelect(t *testing.T) {
 			"WHERE employees.account_id = subquery.id"
 	assert.Equal(t, expectedSql, sql)
 }
+
+func TestUpdateBuilderSubqueryPlaceholderFormats(t *testing.T) {
+	testCases := []struct {
+		name              string
+		placeholderFormat PlaceholderFormat
+		expectedSQL       string
+	}{
+		{"Dollar", Dollar, "UPDATE table1 SET initial_count = $1, count_column = (SELECT count(*) AS count FROM table0 WHERE arg1 = $2) WHERE arg2 = $3"},
+		{"Question", Question, "UPDATE table1 SET initial_count = ?, count_column = (SELECT count(*) AS count FROM table0 WHERE arg1 = ?) WHERE arg2 = ?"},
+		{"Colon", Colon, "UPDATE table1 SET initial_count = :1, count_column = (SELECT count(*) AS count FROM table0 WHERE arg1 = :2) WHERE arg2 = :3"},
+		{"AtP", AtP, "UPDATE table1 SET initial_count = @p1, count_column = (SELECT count(*) AS count FROM table0 WHERE arg1 = @p2) WHERE arg2 = @p3"},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			psql := StatementBuilder.PlaceholderFormat(tc.placeholderFormat)
+			subQuery := psql.Select("count(*) AS count").From("table0").Where(Eq{"arg1": "inner"})
+			sql, args, err := psql.Update("table1").
+				Set("initial_count", "set").
+				Set("count_column", subQuery).
+				Where(Eq{"arg2": "outer"}).ToSql()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedSQL, sql)
+			assert.Equal(t, []interface{}{"set", "inner", "outer"}, args)
+		})
+	}
+}
