@@ -165,7 +165,7 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 
 		switch v := val.(type) {
 		case driver.Valuer:
-			if val, err = v.Value(); err != nil {
+			if val, err = callValuerValue(v); err != nil {
 				return
 			}
 		}
@@ -231,7 +231,7 @@ func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
 
 		switch v := val.(type) {
 		case driver.Valuer:
-			if val, err = v.Value(); err != nil {
+			if val, err = callValuerValue(v); err != nil {
 				return
 			}
 		}
@@ -311,7 +311,7 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 
 		switch v := val.(type) {
 		case driver.Valuer:
-			if val, err = v.Value(); err != nil {
+			if val, err = callValuerValue(v); err != nil {
 				return
 			}
 		}
@@ -408,6 +408,17 @@ func getSortedKeys(exp map[string]interface{}) []string {
 	}
 	sort.Strings(sortedKeys)
 	return sortedKeys
+}
+
+// callValuerValue treats nil pointers to value-receiver Valuers as NULL,
+// while allowing pointer-receiver Valuers to handle nil receivers themselves.
+func callValuerValue(v driver.Valuer) (driver.Value, error) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr && rv.IsNil() &&
+		rv.Type().Elem().Implements(reflect.TypeOf((*driver.Valuer)(nil)).Elem()) {
+		return nil, nil
+	}
+	return v.Value()
 }
 
 func isListType(val interface{}) bool {
