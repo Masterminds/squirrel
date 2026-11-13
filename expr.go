@@ -133,6 +133,14 @@ func (e aliasExpr) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
+func (e aliasExpr) toSqlRaw() (sql string, args []interface{}, err error) {
+	sql, args, err = nestedToSql(e.expr)
+	if err == nil {
+		sql = fmt.Sprintf("(%s) AS %s", sql, e.alias)
+	}
+	return
+}
+
 // Eq is syntactic sugar for use with Where/Having/Set methods.
 type Eq map[string]interface{}
 
